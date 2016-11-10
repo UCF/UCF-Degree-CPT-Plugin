@@ -11,7 +11,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 add_action( 'plugins_loaded', function() {
-	define( 'UCF_DEGREE__PLUGIN_URL', plugins_url( '/ucf-degree-cpt' ) );
+	define( 'UCF_DEGREE__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) ) ) );
 	define( 'UCF_DEGREE__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 	include_once 'includes/ucf-degree-program-type-tax.php';
