@@ -17,10 +17,15 @@ add_action( 'plugins_loaded', function() {
 	include_once 'includes/ucf-degree-program-type-tax.php';
 	include_once 'includes/ucf-degree-career-path-tax.php';
 	include_once 'includes/ucf-degree-posttype.php';
+	include_once 'includes/ucf-degree-api.php';
 
 	add_action( 'init', array( 'UCF_Degree_ProgramType', 'register_programtype'), 0 );
 	add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 0 );
 	add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 0 );
+
+	if ( is_plugin_active( 'rest-api/plugin.php' ) ) {
+		add_action( 'init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
+	}
 
 } );
 
