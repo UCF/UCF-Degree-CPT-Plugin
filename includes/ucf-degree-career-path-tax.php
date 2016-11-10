@@ -47,6 +47,4 @@ if ( ! class_exists( 'UCF_Degree_CareerPath' ) ) {
 			);
 		}
 	}
-
-	add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 0 );
 }
