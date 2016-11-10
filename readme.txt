@@ -1,4 +1,4 @@
-=== UCF Events Plugin ===
+=== UCF Degree Custom Post Type Plugin ===
 Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3

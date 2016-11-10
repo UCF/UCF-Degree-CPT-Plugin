@@ -1,4 +1,4 @@
-# UCF Events Plugin #
+# UCF Degree Custom Post Type Plugin #
 
 Provides a custom post type, taxonomies and help functions for describing degree programs.
 
