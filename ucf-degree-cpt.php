@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: UCF Degree Custom Post Type
-Description: Provides a degree program custom post type, college taxonomy and related meta fields.
+Description: Provides a degree program custom post type, career paths and program type taxonomies and related meta fields.
 Version: 0.0.1
 Author: UCF Web Communications
 License: GPL3
