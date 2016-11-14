@@ -12,7 +12,7 @@ if ( ! function_exists( 'ucf_degree_append_meta' ) ) {
 	 **/
 	function ucf_degree_append_meta( $post ) {
 		$meta = get_post_meta( $post->ID );
-		$post->meta = $meta;
+		$post->meta = ucf_degree_reduce_meta_values( $meta );
 		return apply_filters( 'ucf_degree_append_meta', $post );
 	}
 }
@@ -29,13 +29,36 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 					$retval[$term->term_id] = array(
 						'term'  => array(
 							'name'  => $term->name,
-							'alias' => get_term_meta( $term->term_id, $taxonomy_slug.'_alias', true ),
+							'meta' => ucf_degree_reduce_meta_values( get_term_meta( $term->term_id, null ) ),
 						),
 						'posts' => array()
 					);
 				}
 
 				$retval[$term->term_id]['posts'][] = $post;
+			}
+		}
+
+		return $retval;
+	}
+}
+
+if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
+	/**
+	 * Converts all single index arrays to values
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $meta_array array | Array of meta values
+	 * @return array
+	 **/
+	function ucf_degree_reduce_meta_values( $meta_array ) {
+		$retval = $meta_array;
+
+		foreach( $meta_array as $key=>$value ) {
+			if ( is_array( $value ) && count( $value) === 1 ) {
+				$retval[$key] = $value[0];
+			} else {
+				$retval[$key] = $value;
 			}
 		}
 
