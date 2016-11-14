@@ -26,7 +26,6 @@ add_action( 'plugins_loaded', function() {
 	add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 0 );
 
 	add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
-
 } );
 
 ?>

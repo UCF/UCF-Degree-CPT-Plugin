@@ -29,7 +29,7 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 					$retval[$term->term_id] = array(
 						'term'  => array(
 							'name'  => $term->name,
-							'meta' => ucf_degree_reduce_meta_values( get_term_meta( $term->term_id, null ) ),
+							'meta' => ucf_degree_reduce_meta_values( get_term_meta( $term->term_id ) ),
 						),
 						'posts' => array()
 					);
