@@ -8,6 +8,66 @@ if ( ! class_exists( 'UCF_Degree_ProgramType' ) ) {
 	class UCF_Degree_ProgramType {
 		public static function register_programtype() {
 			register_taxonomy( 'program_types', array( 'degree' ), self::args() );
+			self::register_meta_fields();
+		}
+
+		public static function register_meta_fields() {
+			add_action( 'program_types_add_form_fields', array( 'UCF_Degree_ProgramType', 'add_program_types_fields' ), 10, 1 );
+			add_action( 'program_types_edit_form_fields', array( 'UCF_Degree_ProgramType', 'edit_program_types_fields' ), 10, 2 );
+			add_action( 'created_program_types', array( 'UCF_Degree_ProgramType', 'save_program_types_meta' ), 10, 2 );
+			add_action( 'edited_program_types', array( 'UCF_Degree_ProgramType', 'edited_program_types_meta' ), 10, 2 );
+		}
+
+		public static function add_program_types_fields( $taxonomy ) {
+?>
+			<div class="form-field term-group">
+				<label for="program_types_alias"><?php _e( 'Program Type Alias', 'ucf_degree' ); ?></label>
+				<input type="text" id="program_types_alias" name="program_type_alias">
+			</div>
+			<div class="form-field term-group">
+				<label for="program_types_color"><?php _e( 'Program Type Color', 'ucf_degree' ); ?></label>
+				<input class="wp-color-field" type="text" id="program_types_color" name="program_types_color">
+			</div>
+<?php
+		}
+
+		public static function edit_program_types_fields( $term, $taxonomy ) {
+			$alias = get_term_meta( $term->term_id, 'program_types_alias', true );
+			$color = get_term_meta( $term->term_id, 'program_types_color', true );
+?>
+			<tr class="form-field term-group-wrap">
+				<th scope="row"><label for="program_types_alias"><?php _e( 'Program Type Alias', 'ucf_degree' ); ?></label></th>
+				<td><input type="text" id="program_types_alias" name="program_types_alias" value="<?php echo $alias; ?>"></td>
+			</tr>
+			<tr class="form-field term-group-wrap">
+				<th scope="row"><label for="program_types_color"><?php _e( 'Program Type Color', 'ucf_degree' ); ?></label></th>
+				<td><input class="wp-color-field" type="text" id="program_types_color" name="program_types_color" value="<?php echo $color; ?>"></td>
+			</tr>
+<?php
+		}
+
+		public static function save_program_types_meta( $term_id, $tt_id ) {
+			if ( isset( $_POST['program_types_alias'] ) && '' !== $_POST['program_types_alias'] ) {
+				$alias = $_POST['program_types_alias'];
+				add_term_meta( $term_id, 'program_types_alias', $alias, true );
+			}
+
+			if ( isset( $_POST['program_types_color'] ) && '' !== $_POST['program_types_color'] ) {
+				$color = $_POST['program_types_color'];
+				add_term_meta( $term_id, 'program_types_color', $color, true );
+			}
+		}
+
+		public static function edited_program_types_meta( $term_id, $tt_id ) {
+			if ( isset( $_POST['program_types_alias'] ) && '' !== $_POST['program_types_alias'] ) {
+				$alias = $_POST['program_types_alias'];
+				update_term_meta( $term_id, 'program_types_alias', $alias, true );
+			}
+
+			if ( isset( $_POST['program_types_color'] ) && '' !== $_POST['program_types_color'] ) {
+				$color = $_POST['program_types_color'];
+				update_term_meta( $term_id, 'program_types_color', $color, true );
+			}
 		}
 
 		public static function labels() {

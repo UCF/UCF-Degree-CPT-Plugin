@@ -2,6 +2,10 @@
   "private": true,
   "devDependencies": {
     "gulp": "~3.9.0",
-    "gulp-readme-to-markdown": "^0.2.0"
+    "gulp-concat": "^2.6.1",
+    "gulp-jshint": "^2.0.3",
+    "gulp-readme-to-markdown": "^0.2.0",
+    "gulp-uglify": "^2.0.0",
+    "jshint": "^2.9.4"
   }
 }
