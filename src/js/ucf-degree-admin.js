@@ -1,8 +1,6 @@
 var initializeColorPicker = function($) {
   if ( $.fn.wpColorPicker ) {
     $('.wp-color-field').wpColorPicker();
-  } else {
-    console.log('is undefined');
   }
 };
 
