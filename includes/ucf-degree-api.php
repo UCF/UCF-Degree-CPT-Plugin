@@ -65,6 +65,9 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 **/
 		public static function get_taxonomy_terms( $object, $tax, $request ) {
 			$terms = wp_get_post_terms( $object['id'], $tax );
+			foreach( $terms as $term ) {
+				$term->meta = ucf_degree_reduce_meta_values( get_term_meta( $term->term_id ) );
+			}
 			return $terms;
 		}
 
