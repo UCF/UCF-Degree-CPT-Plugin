@@ -30,8 +30,8 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			ob_start();
 			if ( ! self::rest_api_enabled() ) :
 		?>
-			<p style="background-color: #428bca; color: #fff; padding: 24px 48px;">
-				<span class=""></span> The UCF Degree Rest API routes require the <a style="color: #fff;" href="https://wordpress.org/plugins/rest-api/" target="_blank"> WP Rest API v2 Plugin</a> to be installed.
+			<p class="notice notice-info" style="padding: 24px 12px;">
+				<span class="dashicons dashicons-info" style="color: #00a0d2;"></span> The UCF Degree Rest API routes require the <a href="https://wordpress.org/plugins/rest-api/" target="_blank"> WP Rest API v2 Plugin</a> to be installed.
 			</p>
 		<?php
 			endif;

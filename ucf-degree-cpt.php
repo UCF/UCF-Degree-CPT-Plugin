@@ -41,7 +41,7 @@ add_action( 'plugins_loaded', function() {
 	add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 10, 0 );
 	add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 10, 0 );
 
-	if ( is_plugin_active( 'rest-api/plugin.php' ) && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
+	if ( UCF_Degree_Config::rest_api_enabled() && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
 		add_action( 'ucf_degree_post_type_args', array( 'UCF_Degree_API', 'add_rest_route_to_args' ) );
 		add_action( 'init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
 	}
