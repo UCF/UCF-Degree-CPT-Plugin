@@ -41,7 +41,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		}
 
 		public static function args() {
-			return array(
+			$args = array(
 				'label'                 => __( 'Degree', 'ucf_degree' ),
 				'description'           => __( 'Degree Programs', 'ucf_degree' ),
 				'labels'                => self::labels(),
@@ -61,6 +61,10 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 				'publicly_queryable'    => true,
 				'capability_type'       => 'post',
 			);
+
+			$args = apply_filters( 'ucf_degree_post_type_args', $args );
+
+			return $args;
 		}
 
 		public static function taxonomies() {
@@ -83,3 +87,5 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		}
 	}
 }
+
+?>
