@@ -71,6 +71,8 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 				'career_paths'
 			);
 
+			$retval = apply_filters( 'ucf_degree_taxonomies', $retval );
+
 			foreach( $retval as $taxonomy ) {
 				if ( ! taxonomy_exists( $taxonomy ) ) {
 					unset( $retval[$taxonomy] );

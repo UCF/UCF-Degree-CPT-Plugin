@@ -18,6 +18,7 @@ add_action( 'plugins_loaded', function() {
 	include_once 'includes/ucf-degree-program-type-tax.php';
 	include_once 'includes/ucf-degree-career-path-tax.php';
 	include_once 'includes/ucf-degree-posttype.php';
+	include_once 'includes/ucf-degree-utils.php';
 	include_once 'admin/ucf-degree-admin.php';
 
 	add_action( 'init', array( 'UCF_Degree_ProgramType', 'register_programtype'), 0 );
@@ -25,7 +26,6 @@ add_action( 'plugins_loaded', function() {
 	add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 0 );
 
 	add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
-
 } );
 
 ?>
