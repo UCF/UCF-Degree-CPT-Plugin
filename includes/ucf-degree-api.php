@@ -86,3 +86,5 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		}
 	}
 }
+
+?>
