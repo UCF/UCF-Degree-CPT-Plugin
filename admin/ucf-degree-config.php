@@ -254,6 +254,12 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			);
 		}
 
+		/**
+		 * Displays the plugin's settings page form.
+		 * @author Jo Dickson
+		 * @since 0.0.1
+		 * @return void | echoes output
+		 **/
 		public static function options_page_html() {
 			ob_start();
 		?>
