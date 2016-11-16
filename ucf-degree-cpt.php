@@ -22,6 +22,11 @@ include_once 'includes/ucf-degree-utils.php';
 include_once 'admin/ucf-degree-admin.php';
 include_once 'admin/ucf-degree-config.php';
 
+include_once 'common/ucf-degree-list-common.php';
+
+include_once 'shortcodes/ucf-degree-list-shortcode.php';
+include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
+
 if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 	function ucf_events_plugin_activation() {
 		UCF_Degree_Config::add_options();
