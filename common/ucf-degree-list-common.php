@@ -1,6 +1,6 @@
 <?php
 /**
- * Defined hooks for displaying lists of degrees.
+ * Defines hooks for displaying lists of degrees.
  **/
 if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 	class UCF_Degree_List_Common {

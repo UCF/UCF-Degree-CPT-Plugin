@@ -12,7 +12,36 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 			* @return string | The html output of the shortcode.
 			**/ 
 		public static function shortcode( $atts, $content='' ) {
-			
+			$atts = shortcode_atts( array (
+				'post_type' => 'degree',
+				'post_slug' => null,
+				'layout'    => 'classic',
+				'title'     => null
+			), $atts);
+
+			$post = null;
+
+			if ( $atts['post_slug'] ) {
+				$args = array(
+					'name'        => $atts['post_slug'],
+					'post_type'   => $atts['post_type'],
+					'numberposts' => 1
+				);
+
+				$posts = get_posts( $args );
+
+				$post = is_array( $posts ) ? $posts[0] : null;
+			}
+
+			if ( ! $post ) {
+				global $post;
+			}
+
+			if ( $post ) {
+				$items = wp_get_post_terms( $post->ID, 'career_paths' );
+
+				UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
+			}
 		}
 	}
 
