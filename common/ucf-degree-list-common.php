@@ -4,7 +4,7 @@
  **/
 if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 	class UCF_Degree_List_Common {
-		public function display_degrees( $items, $layout, $title, $display_type='default', $grouped=false ) {
+		public function display_degrees( $items, $layout, $title, $display_type='default', $grouped=false, $groupby_field=null ) {
 			// Display before
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_before' ) ) {
 				do_action( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type );
@@ -22,7 +22,7 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 
 			// Display items grouped
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_grouped' ) && $grouped ) {
-				do_action( 'ucf_degree_list_display_' . $layout . '_grouped', $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout . '_grouped', $items, $title, $display_type, $groupby_field );
 			} 
 
 			// Display after
@@ -81,18 +81,21 @@ if ( ! function_exists( 'ucf_degree_list_display_classic' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_grouped' ) ) {
-	function ucf_degree_list_display_classic_grouped( $items, $title, $display_type ) {
+	function ucf_degree_list_display_classic_grouped( $items, $title, $display_type, $groupby_field ) {
 		ob_start();
 		foreach( $items as $item ) : // For each group
+			$heading = ( ! empty( $groupby_field ) && isset( $item['term']['meta'][$groupby_field] ) )
+				? $item['term']['meta'][$groupby_field] 
+				: $item['term']['name'];
 	?>
-		<h3 class="degree-list-heading"><?php echo $item['term']['name']; ?></h3>
+		<h3 class="degree-list-heading"><?php echo $heading; ?></h3>
 		<?php ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
 	<?php
 		endforeach;
 		echo ob_get_clean();
 	}
 
-	add_action( 'ucf_degree_list_display_classic_grouped', 'ucf_degree_list_display_classic_grouped', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic_grouped', 'ucf_degree_list_display_classic_grouped', 10, 4 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_after' ) ) {
