@@ -25,10 +25,10 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				'posts_per_page' => -1,
 			);
 
-			if ( $atts['tax_filter'] && $atts['terms'] ) {
+			if ( $atts['filter_by_tax'] && $atts['terms'] ) {
 				$args['tax_query'] = array(
 					array(
-						'taxonomy' => $atts['tax_filter'],
+						'taxonomy' => $atts['filter_by_tax'],
 						'field'    => 'slug',
 						'terms'    => explode( ',', $atts['terms'] )
 					)
