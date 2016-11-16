@@ -18,7 +18,7 @@ if ( ! function_exists( 'ucf_degree_append_meta' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
-	function ucf_degree_group_posts_by_tax( $taxonomy_slug, $posts, $order='ASC' ) {
+	function ucf_degree_group_posts_by_tax( $taxonomy_slug, $posts ) {
 		$retval = array();
 
 		foreach( $posts as $post ) {
