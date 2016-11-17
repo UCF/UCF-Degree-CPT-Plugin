@@ -13,6 +13,7 @@ if ( ! defined( 'WPINC' ) ) {
 define( 'UCF_DEGREE__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) ) ) );
 define( 'UCF_DEGREE__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UCF_DEGREE__STATIC_URL', UCF_DEGREE__PLUGIN_URL . '/static' );
+define( 'UCF_DEGREE__PLUGIN_FILE', __FILE__ );
 
 include_once 'includes/ucf-degree-program-type-tax.php';
 include_once 'includes/ucf-degree-career-path-tax.php';
@@ -29,17 +30,20 @@ include_once 'shortcodes/ucf-degree-list-shortcode.php';
 include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 
 if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
-	function ucf_events_plugin_activation() {
+	function ucf_degree_plugin_activation() {
 		UCF_Degree_Config::add_options();
 		flush_rewrite_rules();
 	}
 }
 
 if ( ! function_exists( 'ucf_degree_plugin_deactivation' ) ) {
-	function ucf_events_plugin_deactivation() {
+	function ucf_degree_plugin_deactivation() {
 		UCF_Degree_Config::delete_options();
 	}
 }
+
+register_activation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_activation' );
+register_deactivation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_deactivation' );
 
 add_action( 'plugins_loaded', function() {
 
