@@ -19,7 +19,7 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 				'title'     => null
 			), $atts);
 
-			$post = null;
+			$_post = null;
 
 			if ( $atts['post_slug'] ) {
 				$args = array(
@@ -30,17 +30,17 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 
 				$posts = get_posts( $args );
 
-				$post = is_array( $posts ) ? $posts[0] : null;
+				$_post = is_array( $posts ) ? $posts[0] : null;
 			}
 
-			if ( ! $post ) {
+			if ( ! $_post ) {
 				global $post;
+				$_post = $post;
 			}
 
-			if ( $post ) {
-				$items = wp_get_post_terms( $post->ID, 'career_paths' );
-
-				UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
+			if ( $_post ) {
+				$items = wp_get_post_terms( $_post->ID, 'career_paths' );
+				return UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
 			}
 		}
 	}
