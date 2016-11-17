@@ -43,7 +43,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 
 			$grouped = ! empty( $atts['groupby'] ) ? true : false;
 
-			UCF_Degree_List_Common::display_degrees( $posts, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			return UCF_Degree_List_Common::display_degrees( $posts, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
 		}
 	}
 
