@@ -5,6 +5,8 @@
 if ( ! class_exists( 'UCF_Degree_Career_Paths_Common' ) ) {
 	class UCF_Degree_Career_Paths_Common {
 		public function display_career_paths( $items, $layout, $title, $display_type='default' ) {
+			ob_start();
+
 			// Display before
 			if ( has_action( 'ucf_career_paths_display_' . $layout . '_before' ) ) {
 				do_action( 'ucf_career_paths_display_' . $layout . '_before', $items, $title, $display_type );
@@ -24,6 +26,8 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_Common' ) ) {
 			if ( has_action( 'ucf_career_paths_display_' . $layout . '_after' ) ) {
 				do_action( 'ucf_career_paths_display_' . $layout . '_after', $items, $title, $display_type );
 			}
+
+			return ob_get_clean();
 		}
 	}
 }

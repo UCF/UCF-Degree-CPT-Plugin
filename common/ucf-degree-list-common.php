@@ -5,6 +5,8 @@
 if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 	class UCF_Degree_List_Common {
 		public function display_degrees( $items, $layout, $title, $display_type='default', $grouped=false, $groupby_field=null ) {
+			ob_start();
+
 			// Display before
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_before' ) ) {
 				do_action( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type );
@@ -29,6 +31,8 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_after' ) ) {
 				do_action( 'ucf_degree_list_display_' . $layout . '_after', $items, $title, $display_type );
 			}
+
+			return ob_get_clean();
 		}
 	}
 }

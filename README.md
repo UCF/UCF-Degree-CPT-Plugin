@@ -15,7 +15,7 @@ Provides a custom post type, taxonomies and help functions for describing degree
 2. Activate the plugin through the "Plugins" screen in WordPress
 
 ### WP CLI Installation ###
-1. `$ wp plugin install --activate https://github.com/UCF/UCF-Degree-CPT/archive/master.zip`.  See [WP-CLI Docs](http://wp-cli.org/commands/plugin/install/) for more command options.
+1. `$ wp plugin install --activate https://github.com/UCF/UCF-Degree-CPT-Plugin/archive/master.zip`.  See [WP-CLI Docs](http://wp-cli.org/commands/plugin/install/) for more command options.
 
 
 ## Changelog ##

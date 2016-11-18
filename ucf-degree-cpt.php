@@ -56,6 +56,10 @@ add_action( 'plugins_loaded', function() {
 		add_action( 'init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
 	}
 
+	if ( ! shortcode_exists( 'career-paths' ) ) {
+		add_shortcode( 'career-paths', array( 'UCF_Degree_Career_Paths_List_Shortcode', 'shortcode' ) );
+	}
+
 	add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
 } );
 
