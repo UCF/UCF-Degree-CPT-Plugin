@@ -11,8 +11,23 @@ if ( ! function_exists( 'ucf_degree_append_meta' ) ) {
 	 * @param WP_POST | The WP_POST object with the additional `meta` array attached as a field.
 	 **/
 	function ucf_degree_append_meta( $post ) {
+		// Post meta
 		$meta = get_post_meta( $post->ID );
 		$post->meta = ucf_degree_reduce_meta_values( $meta );
+
+		// Taxonomies + terms
+		$taxonomies = UCF_Degree_PostType::taxonomies();
+		$terms_by_tax = array_fill_keys( $taxonomies, array() );
+
+		foreach ( $taxonomies as $tax ) {
+			$terms = wp_get_post_terms( $post->ID, $tax );
+			if ( !is_wp_error( $terms ) ) {
+				$terms_by_tax[$tax] = $terms;
+			}
+		}
+
+		$post->taxonomies = $terms_by_tax;
+
 		return apply_filters( 'ucf_degree_append_meta', $post );
 	}
 }
@@ -23,7 +38,7 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 
 		foreach( $posts as $post ) {
 			$post_terms = wp_get_post_terms( $post->ID, $taxonomy_slug );
-			
+
 			foreach( $post_terms as $term ) {
 				if ( ! is_array( $retval[$term->term_id] ) ) {
 					$retval[$term->term_id] = array(
@@ -55,7 +70,7 @@ if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
 		$retval = $meta_array;
 
 		foreach( $meta_array as $key=>$value ) {
-			if ( is_array( $value ) && count( $value) === 1 ) {
+			if ( is_array( $value ) && count( $value ) === 1 ) {
 				$retval[$key] = $value[0];
 			} else {
 				$retval[$key] = $value;
