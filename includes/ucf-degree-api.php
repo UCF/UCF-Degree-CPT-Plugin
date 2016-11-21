@@ -14,7 +14,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @return void
 		 **/
 		public static function register_rest_routes() {
-			add_action( 'rest_api_init', array( 'UCF_Degree_API', 'register_fields' ) );
+			self::register_fields();
 			add_action( 'rest_prepare_degree', array( 'UCF_Degree_API', 'remove_tags' ), 10, 3 );
 		}
 
@@ -52,6 +52,15 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					)
 				);
 			}
+
+			register_rest_field( 'degree',
+				'thumbnail',
+				array(
+					'get_callback'    => array( 'UCF_Degree_API', 'get_degree_thumbnail' ),
+					'update_callback' => null,
+					'schema'          => null
+				)
+			);
 		}
 
 		/**
@@ -69,6 +78,26 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 				$term->meta = ucf_degree_reduce_meta_values( get_term_meta( $term->term_id ) );
 			}
 			return $terms;
+		}
+
+		/**
+		 * Gets a post thumbnail src url
+		 * @author Jim Barnes
+		 * @since 0.0.1
+		 * @param $object array | The data object that will be returned to the Rest API
+		 * @param $field_name string | The field name
+		 * @param $request array | The request object, which includes get and post parameters
+		 * @return mixed | In this case a thumbnail src url.
+		 **/
+		public static function get_degree_thumbnail( $object, $field_name, $request ) {
+			$retval = null;
+			$thumbnail_id = get_post_thumbnail_id( $object['id'] );
+			if ( $thumbnail_id ) {
+				$thumbnail = wp_get_attachment_image_src( $thumbnail_id );
+				$retval = isset( $thumbnail[0] ) ? $thumbnail[0] : null; 
+			}
+
+			return $retval;
 		}
 
 		/**
