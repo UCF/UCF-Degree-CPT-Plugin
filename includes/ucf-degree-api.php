@@ -16,15 +16,6 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		public static function register_rest_routes() {
 			self::register_fields();
 			add_action( 'rest_prepare_degree', array( 'UCF_Degree_API', 'remove_tags' ), 10, 3 );
-
-			register_rest_route(
-				'wp/v2',
-				'degrees/typeahead-search/(?P<s>.+)',
-				array(
-					'methods'  => 'GET',
-					'callback' => array( 'UCF_Degree_API', 'get_typeahead_results' )
-				)
-			);
 		}
 
 		/**
@@ -70,14 +61,6 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					'schema'          => null
 				)
 			);
-		}
-
-		public static function get_typeahead_results( $request ) {
-			$s = urldecode( $request['s'] );
-			ucf_degree_search_add_filters();
-			$posts = query_posts( array( 'post_type' => 'degree', 'suppress_filters' => FALSE, 'ucf_search' => $s ) );
-			ucf_degree_search_remove_filters();
-			return $posts;
 		}
 
 		/**
@@ -127,7 +110,9 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @return Object
 		 **/ 
 		public static function remove_tags( $data, $post, $request ) {
-			unset( $data->data['tags'] );
+			if ( isset( $data->data['tags'] ) ) {
+				unset( $data->data['tags'] );
+			}
 			return $data;
 		}
 	}
