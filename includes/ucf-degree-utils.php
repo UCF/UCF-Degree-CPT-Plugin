@@ -91,7 +91,7 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 	function ucf_degree_search_join_filter( $join='' ) {
 		global $wpdb, $wp_query;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['filters']['degree_search'] ) ) {
+		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
 			$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
 			$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
 			$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
@@ -108,8 +108,8 @@ if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
 	function ucf_degree_search_where_filter( $where='' ) {
 		global $wpdb, $wp_query;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['filters']['degree_search'] ) ) {
-			$s = isset( $wp_query->query['degree_search'] ) ?: $_GET['filters']['degree_search'];
+		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
+			$s = isset( $wp_query->query['degree_search'] ) ?: $_GET['degree_search'];
 			$where = " AND post_type = 'degree' AND post_status = 'publish' AND (";
 			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
 			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
@@ -126,7 +126,7 @@ if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
 	function ucf_degree_search_groupby_filter( $groupby ) {
 		global $wpdb, $wp_query;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['filters']['degree_search'] ) ) {
+		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
 			$groupby = "$wpdb->posts.ID";
 		}
 
