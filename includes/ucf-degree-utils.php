@@ -81,4 +81,65 @@ if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
 	}
 }
 
+/**
+ * Joins term and meta tables to the default query.
+ * NOTE: Meant for use with the below 'where_filter' and should be added and removed manually.
+ * @author Jim Barnes
+ * @since 0.0.1
+ **/
+if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
+	function ucf_degree_search_join_filter( $join='' ) {
+		global $wpdb, $wp_query;
+
+		$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
+		$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
+		$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
+		$join .= " left join $wpdb->postmeta as wpm ON ($wpdb->posts.ID = wpm.post_id)";
+
+		return $join;
+	}
+}
+
+if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
+	function ucf_degree_search_where_filter( $where='' ) {
+		global $wpdb, $wp_query;
+
+		if ( isset( $wp_query->query['ucf_search'] ) ) {
+			$s = $wp_query->query['ucf_search'];
+			$where = " AND post_type = 'degree' AND post_status = 'publish' AND (";
+			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb::prepare( " lower(wpm.meta_value) LIKE %s)", '%'. $s . '%' );
+		}
+
+		var_dump( $where );
+
+		return $where;
+	}
+}
+
+if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
+	function ucf_degree_search_groupby_filter( $groupby ) {
+		global $wpdb;
+		$groupby = "$wpdb->posts.ID";
+		return $groupby;
+	}
+}
+
+if ( ! function_exists( 'ucf_degree_search_add_filters' ) ) {
+	function ucf_degree_search_add_filters() {
+		add_filter( 'posts_join', 'ucf_degree_search_join_filter' );
+		add_filter( 'posts_where', 'ucf_degree_search_where_filter' );
+		add_filter( 'posts_groupby', 'ucf_degree_search_groupby_filter' );
+	}
+}
+
+if ( ! function_exists( 'ucf_degree_search_remove_filters' ) ) {
+	function ucf_degree_search_remove_filters() {
+		remove_filter( 'posts_join', 'ucf_degree_search_join_filter' );
+		remove_filter( 'posts_where', 'ucf_degree_search_where_filter' );
+		remove_filter( 'posts_groupby', 'ucf_degree_search_groupby_filter' );
+	}
+}
+
 ?>
