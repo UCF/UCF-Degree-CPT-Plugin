@@ -88,10 +88,12 @@ if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
  * @since 0.0.1
  **/
 if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
-	function ucf_degree_search_join_filter( $join='' ) {
-		global $wpdb, $wp_query;
+	function ucf_degree_search_join_filter( $join, &$wp_query ) {
+		global $wpdb;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
+		//var_dump( $wp_query );
+
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
 			$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
 			$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
 			$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
@@ -101,15 +103,15 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 		return $join;
 	}
 
-	add_filter( 'posts_join', 'ucf_degree_search_join_filter' );
+	add_filter( 'posts_join', 'ucf_degree_search_join_filter', 10, 2 );
 }
 
 if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
-	function ucf_degree_search_where_filter( $where='' ) {
-		global $wpdb, $wp_query;
+	function ucf_degree_search_where_filter( $where, &$wp_query ) {
+		global $wpdb;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
-			$s = isset( $wp_query->query['degree_search'] ) ?: $_GET['degree_search'];
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
+			$s = $wp_query->query['degree_search'];
 			$where = " AND post_type = 'degree' AND post_status = 'publish' AND (";
 			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
 			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
@@ -119,21 +121,42 @@ if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
 		return $where;
 	}
 
-	add_filter( 'posts_where', 'ucf_degree_search_where_filter' );
+	add_filter( 'posts_where', 'ucf_degree_search_where_filter', 10, 2 );
 }
 
 if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
-	function ucf_degree_search_groupby_filter( $groupby ) {
-		global $wpdb, $wp_query;
+	function ucf_degree_search_groupby_filter( $groupby, &$wp_query ) {
+		global $wpdb;
 
-		if ( isset( $wp_query->query['degree_search'] ) || isset( $_GET['degree_search'] ) ) {
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
 			$groupby = "$wpdb->posts.ID";
 		}
 
 		return $groupby;
 	}
 
-	add_filter( 'posts_groupby', 'ucf_degree_search_groupby_filter' );
+	add_filter( 'posts_groupby', 'ucf_degree_search_groupby_filter', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
+	function ucf_degree_valid_query_vars( $valid_vars, $request ) {
+		$valid_vars[] = 'degree_search';
+		return $valid_vars; 
+	}
+
+	add_filter( 'rest_query_vars', 'ucf_degree_valid_query_vars', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
+	function ucf_degree_add_query_args( $args, $request ) {
+		if ( isset( $request['degree_search'] ) ) {
+			$args['degree_search'] = $request['degree_search'];
+		}
+
+		return $args;
+	}
+
+	add_filter( 'rest_degree_query', 'ucf_degree_add_query_args', 10, 2 );
 }
 
 ?>
