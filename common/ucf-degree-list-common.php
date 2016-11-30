@@ -58,7 +58,9 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
 				break;
 			case 'default':
 			default:
-				$formatted_title = '<h2 class="ucf-degree-list-title">' . $title . '</h2>';
+				if ( $title ) {
+					$formatted_title = '<h2 class="ucf-degree-list-title">' . $title . '</h2>';
+				}
 				break;
 		}
 
