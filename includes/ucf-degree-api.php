@@ -110,7 +110,9 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @return Object
 		 **/ 
 		public static function remove_tags( $data, $post, $request ) {
-			unset( $data->data['tags'] );
+			if ( isset( $data->data['tags'] ) ) {
+				unset( $data->data['tags'] );
+			}
 			return $data;
 		}
 	}

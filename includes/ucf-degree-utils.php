@@ -81,4 +81,109 @@ if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
 	}
 }
 
+if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
+	/**
+	* Joins term and meta tables to the default query when the degree_search query param is preesnt.
+	* @author Jim Barnes
+	* @since 0.0.1
+	* @param $join string | The join string to be modified
+	* @param $wp_query WP_Query passed by reference
+	**/
+	function ucf_degree_search_join_filter( $join, &$wp_query ) {
+		global $wpdb;
+
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
+			$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
+			$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
+			$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
+			$join .= " left join $wpdb->postmeta as wpm ON ($wpdb->posts.ID = wpm.post_id)";
+		}
+		
+		return $join;
+	}
+
+	add_filter( 'posts_join', 'ucf_degree_search_join_filter', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
+	/**
+	 * Modifies the where clause on the default query to search postmeta, terms and post_title like the degree_search keyword.
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $where string | The where string to be modified
+	 * @param $wp_query WP_Query passed by reference
+	 **/
+	function ucf_degree_search_where_filter( $where, &$wp_query ) {
+		global $wpdb;
+
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
+			$s = $wp_query->query['degree_search'];
+			$where .= " AND (";
+			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb::prepare( " lower(wpm.meta_value) LIKE %s)", '%'. $s . '%' );
+		}
+
+		return $where;
+	}
+
+	add_filter( 'posts_where', 'ucf_degree_search_where_filter', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
+	/**
+	 * Modifies the groupby clause to group by posts.ID because of the left joins above.
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $groupby string | The groupby string to be modified
+	 * @param $wp_query WP_Query passed by reference
+	 **/
+	function ucf_degree_search_groupby_filter( $groupby, &$wp_query ) {
+		global $wpdb;
+
+		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
+			$groupby = "$wpdb->posts.ID";
+		}
+
+		return $groupby;
+	}
+
+	add_filter( 'posts_groupby', 'ucf_degree_search_groupby_filter', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
+	/**
+	 * Adds 'degree_search' to the array of allowed rest query variables
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $valid_vars array<string> The current array of valid query vars
+	 * @param $request The http request object
+	 **/
+	function ucf_degree_valid_query_vars( $valid_vars, $request ) {
+		$valid_vars[] = 'degree_search';
+		return $valid_vars; 
+	}
+
+	add_filter( 'rest_query_vars', 'ucf_degree_valid_query_vars', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
+	/**
+	 * Adds the 'degree_search' variable to the args if it is defined
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $args array The args for the request
+	 * @param $request The http request object
+	 **/
+	function ucf_degree_add_query_args( $args, $request ) {
+		if ( isset( $request['degree_search'] ) ) {
+			$args['degree_search'] = $request['degree_search'];
+		}
+
+		return $args;
+	}
+
+	add_filter( 'rest_degree_query', 'ucf_degree_add_query_args', 10, 2 );
+}
+
 ?>
