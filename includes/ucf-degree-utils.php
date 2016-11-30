@@ -157,9 +157,8 @@ if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
 	 * @author Jim Barnes
 	 * @since 0.0.1
 	 * @param $valid_vars array<string> The current array of valid query vars
-	 * @param $request The http request object
 	 **/
-	function ucf_degree_valid_query_vars( $valid_vars, $request ) {
+	function ucf_degree_valid_query_vars( $valid_vars ) {
 		$valid_vars[] = 'degree_search';
 		return $valid_vars;
 	}
