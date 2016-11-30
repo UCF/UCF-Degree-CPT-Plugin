@@ -118,7 +118,7 @@ if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
 
 		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
 			$s = $wp_query->query['degree_search'];
-			$where = " AND post_type = 'degree' AND post_status = 'publish' AND (";
+			$where .= " AND (";
 			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
 			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
 			$where .= $wpdb::prepare( " lower(wpm.meta_value) LIKE %s)", '%'. $s . '%' );
