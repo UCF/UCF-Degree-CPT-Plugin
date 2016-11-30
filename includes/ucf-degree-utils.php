@@ -81,13 +81,14 @@ if ( ! function_exists( 'ucf_degree_reduce_meta_values' ) ) {
 	}
 }
 
-/**
- * Joins term and meta tables to the default query.
- * NOTE: Meant for use with the below 'where_filter' and should be added and removed manually.
- * @author Jim Barnes
- * @since 0.0.1
- **/
 if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
+	/**
+	* Joins term and meta tables to the default query when the degree_search query param is preesnt.
+	* @author Jim Barnes
+	* @since 0.0.1
+	* @param $join string | The join string to be modified
+	* @param $wp_query WP_Query passed by reference
+	**/
 	function ucf_degree_search_join_filter( $join, &$wp_query ) {
 		global $wpdb;
 
@@ -105,6 +106,13 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
+	/**
+	 * Modifies the where clause on the default query to search postmeta, terms and post_title like the degree_search keyword.
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $where string | The where string to be modified
+	 * @param $wp_query WP_Query passed by reference
+	 **/
 	function ucf_degree_search_where_filter( $where, &$wp_query ) {
 		global $wpdb;
 
@@ -123,6 +131,13 @@ if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
+	/**
+	 * Modifies the groupby clause to group by posts.ID because of the left joins above.
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $groupby string | The groupby string to be modified
+	 * @param $wp_query WP_Query passed by reference
+	 **/
 	function ucf_degree_search_groupby_filter( $groupby, &$wp_query ) {
 		global $wpdb;
 
@@ -137,6 +152,13 @@ if ( ! function_exists( 'ucf_degree_search_groupby_filter' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
+	/**
+	 * Adds 'degree_search' to the array of allowed rest query variables
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $valid_vars array<string> The current array of valid query vars
+	 * @param $request The http request object
+	 **/
 	function ucf_degree_valid_query_vars( $valid_vars, $request ) {
 		$valid_vars[] = 'degree_search';
 		return $valid_vars; 
@@ -146,6 +168,13 @@ if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
+	/**
+	 * Adds the 'degree_search' variable to the args if it is defined
+	 * @author Jim Barnes
+	 * @since 0.0.1
+	 * @param $args array The args for the request
+	 * @param $request The http request object
+	 **/
 	function ucf_degree_add_query_args( $args, $request ) {
 		if ( isset( $request['degree_search'] ) ) {
 			$args['degree_search'] = $request['degree_search'];
