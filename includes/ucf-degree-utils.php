@@ -40,7 +40,7 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 			$post_terms = wp_get_post_terms( $post->ID, $taxonomy_slug );
 
 			foreach( $post_terms as $term ) {
-				if ( ! is_array( $retval[$term->term_id] ) ) {
+				if ( ! isset( $retval[$term->term_id] ) || ! is_array( $retval[$term->term_id] ) ) {
 					$retval[$term->term_id] = array(
 						'term'  => array(
 							'name'  => $term->name,
@@ -98,7 +98,7 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 			$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
 			$join .= " left join $wpdb->postmeta as wpm ON ($wpdb->posts.ID = wpm.post_id)";
 		}
-		
+
 		return $join;
 	}
 
@@ -157,11 +157,10 @@ if ( ! function_exists( 'ucf_degree_valid_query_vars' ) ) {
 	 * @author Jim Barnes
 	 * @since 0.0.1
 	 * @param $valid_vars array<string> The current array of valid query vars
-	 * @param $request The http request object
 	 **/
-	function ucf_degree_valid_query_vars( $valid_vars, $request ) {
+	function ucf_degree_valid_query_vars( $valid_vars ) {
 		$valid_vars[] = 'degree_search';
-		return $valid_vars; 
+		return $valid_vars;
 	}
 
 	add_filter( 'rest_query_vars', 'ucf_degree_valid_query_vars', 10, 2 );
