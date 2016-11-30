@@ -9,22 +9,22 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_Common' ) ) {
 
 			// Display before
 			if ( has_action( 'ucf_career_paths_display_' . $layout . '_before' ) ) {
-				echo apply_filters( 'ucf_career_paths_display_' . $layout . '_before', $items, $title, $display_type );
+				do_action( 'ucf_career_paths_display_' . $layout . '_before', $items, $title, $display_type );
 			}
 
 			// Display title
 			if ( has_action( 'ucf_career_paths_display_' . $layout . '_title' ) ) {
-				echo apply_filters( 'ucf_career_paths_display_' . $layout . '_title', $items, $title, $display_type );
+				do_action( 'ucf_career_paths_display_' . $layout . '_title', $items, $title, $display_type );
 			}
 
 			// Display items
 			if ( has_action( 'ucf_career_paths_display_' . $layout ) ) {
-				echo apply_filters( 'ucf_career_paths_display_' . $layout, $items, $title, $display_type );
+				do_action( 'ucf_career_paths_display_' . $layout, $items, $title, $display_type );
 			}
 
 			// Display after
 			if ( has_action( 'ucf_career_paths_display_' . $layout . '_after' ) ) {
-				echo apply_filters( 'ucf_career_paths_display_' . $layout . '_after', $items, $title, $display_type );
+				do_action( 'ucf_career_paths_display_' . $layout . '_after', $items, $title, $display_type );
 			}
 
 			return ob_get_clean();
@@ -38,10 +38,10 @@ if ( ! function_exists( 'ucf_career_paths_display_classic_before' ) ) {
 	?>
 		<div class="ucf-career-paths-wrapper">
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_career_paths_display_classic_before', 'ucf_career_paths_display_classic_before', 10, 3 );
+	add_action( 'ucf_career_paths_display_classic_before', 'ucf_career_paths_display_classic_before', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_career_paths_display_classic_title' ) ) {
@@ -57,10 +57,10 @@ if ( ! function_exists( 'ucf_career_paths_display_classic_title' ) ) {
 				break;
 		}
 
-		return $formatted_title;
+		echo $formatted_title;
 	}
 
-	add_filter( 'ucf_career_paths_display_classic_title', 'ucf_career_paths_display_classic_title', 10, 3 );
+	add_action( 'ucf_career_paths_display_classic_title', 'ucf_career_paths_display_classic_title', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_career_paths_display_classic' ) ) {
@@ -73,10 +73,10 @@ if ( ! function_exists( 'ucf_career_paths_display_classic' ) ) {
 	<?php endforeach; ?>
 		</ul>
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_career_paths_display_classic', 'ucf_career_paths_display_classic', 10, 3 );
+	add_action( 'ucf_career_paths_display_classic', 'ucf_career_paths_display_classic', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_career_paths_display_classic_after' ) ) {
@@ -85,10 +85,10 @@ if ( ! function_exists( 'ucf_career_paths_display_classic_after' ) ) {
 	?>
 		</div>
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_career_paths_display_classic_after', 'ucf_career_paths_display_classic_after', 10, 3 );
+	add_action( 'ucf_career_paths_display_classic_after', 'ucf_career_paths_display_classic_after', 10, 3 );
 }
 
 ?>

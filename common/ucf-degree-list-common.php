@@ -9,27 +9,27 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 
 			// Display before
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_before' ) ) {
-				echo apply_filters( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type );
 			}
 
 			// Display title
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_title' ) ) {
-				echo apply_filters( 'ucf_degree_list_display_' . $layout . '_title', $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout . '_title', $items, $title, $display_type );
 			}
 
 			// Display items ungrouped
 			if ( has_action( 'ucf_degree_list_display_' . $layout ) && ! $grouped ) {
-				echo apply_filters( 'ucf_degree_list_display_' . $layout, $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout, $items, $title, $display_type );
 			}
 
 			// Display items grouped
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_grouped' ) && $grouped ) {
-				echo apply_filters( 'ucf_degree_list_display_' . $layout . '_grouped', $items, $title, $display_type, $groupby_field );
+				do_action( 'ucf_degree_list_display_' . $layout . '_grouped', $items, $title, $display_type, $groupby_field );
 			}
 
 			// Display after
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_after' ) ) {
-				echo apply_filters( 'ucf_degree_list_display_' . $layout . '_after', $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout . '_after', $items, $title, $display_type );
 			}
 
 			return ob_get_clean();
@@ -43,10 +43,10 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_before' ) ) {
 	?>
 		<div class="degree-list-wrapper">
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_degree_list_display_classic_before', 'ucf_degree_list_display_classic_before', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic_before', 'ucf_degree_list_display_classic_before', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
@@ -62,10 +62,10 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
 				break;
 		}
 
-		return $formatted_title;
+		echo $formatted_title;
 	}
 
-	add_filter( 'ucf_degree_list_display_classic_title', 'ucf_degree_list_display_classic_title', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic_title', 'ucf_degree_list_display_classic_title', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic' ) ) {
@@ -78,10 +78,10 @@ if ( ! function_exists( 'ucf_degree_list_display_classic' ) ) {
 	<?php endforeach; ?>
 		</ul>
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_degree_list_display_classic', 'ucf_degree_list_display_classic', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic', 'ucf_degree_list_display_classic', 10, 3 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_grouped' ) ) {
@@ -92,14 +92,16 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_grouped' ) ) {
 				? $item['term']['meta'][$groupby_field]
 				: $item['term']['name'];
 	?>
-		<h3 class="degree-list-heading"><?php echo $heading; ?></h3>
-		<?php echo ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
+		<div class="degree-list-group">
+			<h3 class="degree-list-heading"><?php echo $heading; ?></h3>
+			<?php echo ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
+		</div>
 	<?php
 		endforeach;
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_degree_list_display_classic_grouped', 'ucf_degree_list_display_classic_grouped', 10, 4 );
+	add_action( 'ucf_degree_list_display_classic_grouped', 'ucf_degree_list_display_classic_grouped', 10, 4 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_after' ) ) {
@@ -108,8 +110,8 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_after' ) ) {
 	?>
 		</div>
 	<?php
-		return ob_get_clean();
+		echo ob_get_clean();
 	}
 
-	add_filter( 'ucf_degree_list_display_classic_after', 'ucf_degree_list_display_classic_after', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic_after', 'ucf_degree_list_display_classic_after', 10, 3 );
 }

@@ -10,7 +10,7 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 			* @since 0.0.1
 			* @param $atts array | An array of attributes
 			* @return string | The html output of the shortcode.
-			**/ 
+			**/
 		public static function shortcode( $atts, $content='' ) {
 			$atts = shortcode_atts( array (
 				'post_type' => 'degree',
@@ -20,6 +20,7 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 			), $atts);
 
 			$_post = null;
+			$retval = '';
 
 			if ( $atts['post_slug'] ) {
 				$args = array(
@@ -40,8 +41,12 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 
 			if ( $_post ) {
 				$items = wp_get_post_terms( $_post->ID, 'career_paths' );
-				return UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
+				$retval = UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
 			}
+
+			ob_start();
+			echo $retval;
+			return ob_get_clean();
 		}
 	}
 

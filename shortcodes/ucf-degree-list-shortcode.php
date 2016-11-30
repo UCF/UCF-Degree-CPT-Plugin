@@ -10,7 +10,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 		* @since 0.0.1
 		* @param $atts array | An array of attributes
 		* @return string | The html output of the shortcode.
-		**/ 
+		**/
 		public static function shortcode( $atts ) {
 			$atts = shortcode_atts( array(
 				'title'         => 'Degrees',
@@ -43,7 +43,9 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 
 			$grouped = ! empty( $atts['groupby'] ) ? true : false;
 
-			return UCF_Degree_List_Common::display_degrees( $posts, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			ob_start();
+			echo UCF_Degree_List_Common::display_degrees( $posts, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			return ob_get_clean();
 		}
 	}
 
