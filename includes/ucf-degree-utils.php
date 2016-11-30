@@ -91,8 +91,6 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 	function ucf_degree_search_join_filter( $join, &$wp_query ) {
 		global $wpdb;
 
-		//var_dump( $wp_query );
-
 		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
 			$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
 			$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
