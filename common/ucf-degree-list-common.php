@@ -9,7 +9,7 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 
 			// Display before
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_before' ) ) {
-				do_action( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type );
+				do_action( 'ucf_degree_list_display_' . $layout . '_before', $items, $title, $display_type, $grouped );
 			}
 
 			// Display title
@@ -38,15 +38,15 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_before' ) ) {
-	function ucf_degree_list_display_classic_before( $items, $title, $display_type ) {
+	function ucf_degree_list_display_classic_before( $items, $title, $display_type, $grouped ) {
 		ob_start();
 	?>
-		<div class="degree-list-wrapper">
+		<div class="degree-list-wrapper <?php if ( $grouped ) { ?>degree-list-grouped-wrapper<?php } ?>">
 	<?php
 		echo ob_get_clean();
 	}
 
-	add_action( 'ucf_degree_list_display_classic_before', 'ucf_degree_list_display_classic_before', 10, 3 );
+	add_action( 'ucf_degree_list_display_classic_before', 'ucf_degree_list_display_classic_before', 10, 4 );
 }
 
 if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
