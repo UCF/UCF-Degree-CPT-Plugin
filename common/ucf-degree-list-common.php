@@ -25,7 +25,7 @@ if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 			// Display items grouped
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_grouped' ) && $grouped ) {
 				echo apply_filters( 'ucf_degree_list_display_' . $layout . '_grouped', $items, $title, $display_type, $groupby_field );
-			} 
+			}
 
 			// Display after
 			if ( has_action( 'ucf_degree_list_display_' . $layout . '_after' ) ) {
@@ -89,11 +89,11 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_grouped' ) ) {
 		ob_start();
 		foreach( $items as $item ) : // For each group
 			$heading = ( ! empty( $groupby_field ) && isset( $item['term']['meta'][$groupby_field] ) )
-				? $item['term']['meta'][$groupby_field] 
+				? $item['term']['meta'][$groupby_field]
 				: $item['term']['name'];
 	?>
 		<h3 class="degree-list-heading"><?php echo $heading; ?></h3>
-		<?php ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
+		<?php echo ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
 	<?php
 		endforeach;
 		return ob_get_clean();
