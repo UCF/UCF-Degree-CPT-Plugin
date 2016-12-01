@@ -23,6 +23,8 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 			$args = array(
 				'post_type'      => 'degree',
 				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC'
 			);
 
 			if ( $atts['filter_by_tax'] && $atts['terms'] ) {
