@@ -54,6 +54,8 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 			}
 		}
 
+		ksort( $retval );
+
 		return $retval;
 	}
 }
