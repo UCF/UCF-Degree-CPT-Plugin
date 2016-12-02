@@ -37,17 +37,29 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				);
 			}
 
-			$posts = get_posts( $args );
-
-			if ( $atts['groupby'] ) {
-				$posts = ucf_degree_group_posts_by_tax( $atts['groupby'], $posts );
-			}
+			$items = get_posts( $args );
 
 			$grouped = ! empty( $atts['groupby'] ) ? true : false;
 
+			if ( $grouped ) {
+				$items = ucf_degree_group_posts_by_tax( $atts['groupby'], $items );
+
+				foreach ( $items as $key => $item ) {
+					$items[$key]['group_name'] = ( ! empty( $atts['groupby_field'] ) && isset( $item['term']['meta'][$atts['groupby_field']] ) )
+						? $item['term']['meta'][$atts['groupby_field']]
+						: $item['term']['name'];
+				}
+
+				usort( $items, array( 'UCF_Degree_List_Shortcode', 'sort_grouped_degrees' ) );
+			}
+
 			ob_start();
-			echo UCF_Degree_List_Common::display_degrees( $posts, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			echo UCF_Degree_List_Common::display_degrees( $items, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
 			return ob_get_clean();
+		}
+
+		public static function sort_grouped_degrees( $a, $b ) {
+			return strcmp( $a['group_name'], $b['group_name'] );
 		}
 	}
 
