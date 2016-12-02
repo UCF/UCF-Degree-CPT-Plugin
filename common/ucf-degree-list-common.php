@@ -90,12 +90,9 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_grouped' ) ) {
 	function ucf_degree_list_display_classic_grouped( $items, $title, $display_type, $groupby_field ) {
 		ob_start();
 		foreach( $items as $item ) : // For each group
-			$heading = ( ! empty( $groupby_field ) && isset( $item['term']['meta'][$groupby_field] ) )
-				? $item['term']['meta'][$groupby_field]
-				: $item['term']['name'];
 	?>
 		<div class="degree-list-group">
-			<h3 class="degree-list-heading"><?php echo $heading; ?></h3>
+			<h3 class="degree-list-heading"><?php echo $item['group_name']; ?></h3>
 			<?php echo ucf_degree_list_display_classic( $item['posts'], $title, $display_type ); ?>
 		</div>
 	<?php
