@@ -123,7 +123,9 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			$postmeta = get_post_meta( $object['id'] );
 			
 			foreach( $postmeta as $key => $val ) {
-				$retval[$key] = $val[0];
+				if ( substr( $key, 0, 6 ) === 'degree' ) {
+					$retval[$key] = $val[0];
+				}
 			}
 
 			return $retval;
