@@ -3,7 +3,12 @@
  * Register the routes for the custom Degree Search api
  */
 class UCF_Degree_Search_API extends WP_REST_Controller {
-	public static function register_route() {
+	/**
+	 * Registers the rest routes for the degree search api
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 **/
+	public static function register_rest_routes() {
 		$root    = 'ucf-degree-search';
 		$version = 'v1';
 		$base    = 'degrees';
@@ -13,11 +18,18 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_degrees' ),
 				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions'),
-				'args'                => array( 'UCF_Degree_Search_API', 'get_args' )
+				'args'                => array( 'UCF_Degree_Search_API', 'get_degrees_args' )
 			)
 		) );
 	}
 
+	/**
+	 * Callback for the /degrees endpoint
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request object | Contains get params
+	 * @return WP_REST_Response
+	 **/
 	public static function get_degrees( $request ) {
 		$search = $request['search'];
 		$colleges = $request['colleges'];
@@ -69,6 +81,14 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		return new WP_REST_Response( $retval, 200 );
 	}
 
+	/**
+	 * Prepares each degree for response
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $post WP_Post | The post object to format
+	 * @param $request WP_REST_Request | The request option
+	 * @return Array | The formatted post
+	 **/
 	public static function perpare_degree_for_response( $post, $request ) {
 		$retval = array(
 			'title' => $post->post_title,
@@ -79,11 +99,22 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		return $retval;
 	}
 
+	/**
+	 * Get permissions callback. Read only, so just return true.
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 **/
 	public static function get_permissions() {
 		return true;
 	}
 
-	public static function get_args() {
+	/**
+	 * Defines the args available for the /degrees/ endpoint
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return array | The array of args
+	 **/
+	public static function get_degrees_args() {
 		return array(
 			array(
 				'search' => array(
@@ -102,6 +133,14 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		);
 	}
 
+	/**
+	 * Custom sanitation callback for colleges/program_types
+	 * Allows for string or array of string
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $array string|Array | The string or array to sanitize
+	 * @return string|array | The string or array sanitized
+	 **/
 	public static function sanitize_array( $array ) {
 		if ( is_array( $array ) ) {
 			$valid = false;
