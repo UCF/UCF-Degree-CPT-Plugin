@@ -75,7 +75,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$posts = get_posts( $args );
 
 		foreach( $posts as $post ) {
-			$retval[] = self::perpare_degree_for_response( $post, $request );
+			$retval[] = self::prepare_degree_for_response( $post, $request );
 		}
 
 		return new WP_REST_Response( $retval, 200 );
@@ -89,7 +89,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * @param $request WP_REST_Request | The request option
 	 * @return Array | The formatted post
 	 **/
-	public static function perpare_degree_for_response( $post, $request ) {
+	public static function prepare_degree_for_response( $post, $request ) {
 		$retval = array(
 			'title' => $post->post_title,
 			'url'   => get_permalink( $post ),
