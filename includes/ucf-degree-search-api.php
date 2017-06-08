@@ -5,12 +5,12 @@
 class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static
 		$order = array(
-			'Majors',
-			'Minors',
-			'Graduate Degrees',
-			'Certificates',
-			'Articulated Programs',
-			'Accelerated Programs'
+			'Undergraduate Degree',
+			'Minor',
+			'Certificate',
+			'Graduate Degree',
+			'Articulated Degree',
+			'Accelerated Degree'
 		);
 
 	/**
@@ -58,14 +58,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			'order'                   => 'ASC',
 			'order_by_taxonomy'       => 'program_types',
 			'order_by_taxonomy_field' => 'name',
-			'order_by_taxonomy_order' => array(
-				'Undergraduate Degree',
-				'Minor',
-				'Certificate',
-				'Graduate Degree',
-				'Articulated Degree',
-				'Accelerated Degree'
-			),
+			'order_by_taxonomy_order' => self::$order,
 			'suppress_filters'        => false
 		);
 
