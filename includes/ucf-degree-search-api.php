@@ -3,6 +3,16 @@
  * Register the routes for the custom Degree Search api
  */
 class UCF_Degree_Search_API extends WP_REST_Controller {
+	public static
+		$order = array(
+			'Majors',
+			'Minors',
+			'Graduate Degrees',
+			'Certificates',
+			'Articulated Programs',
+			'Accelerated Programs'
+		);
+
 	/**
 	 * Registers the rest routes for the degree search api
 	 * @author Jim Barnes
@@ -34,30 +44,33 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$search = $request['search'];
 		$colleges = $request['colleges'];
 		$program_types = $request['program_types'];
+		$page = $request['page'] ? $request['page'] : 1;
+
+		$count = 0;
 
 		$retval = array();
 
 		$args = array(
-			'post_type'      => 'degree',
-			'posts_per_page' => -1,
-			'order'          => 'ASC',
-			'orerby'         => 'post_title'
+			'post_type'               => 'degree',
+			'posts_per_page'          => 100,
+			'paged'                   => $page,
+			'orderby'                 => 'post_title',
+			'order'                   => 'ASC',
+			'order_by_taxonomy'       => 'program_types',
+			'order_by_taxonomy_field' => 'name',
+			'order_by_taxonomy_order' => array(
+				'Undergraduate Degree',
+				'Minor',
+				'Certificate',
+				'Graduate Degree',
+				'Articulated Degree',
+				'Accelerated Degree'
+			),
+			'suppress_filters'        => false
 		);
 
 		if ( $search ) {
 			$args['s'] = $search;
-		}
-
-		if ( $colleges ) {
-			if ( ! isset( $args['tax_query'] ) ) {
-				$args['tax_query'] = array();
-			}
-
-			$args['tax_query'][] = array(
-				'taxonomy' => 'colleges',
-				'field'    => 'slug',
-				'terms'    => $colleges
-			);
 		}
 
 		if ( $program_types ) {
@@ -72,11 +85,45 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			);
 		}
 
-		$posts = get_posts( $args );
+		if ( $colleges ) {
+			if ( ! isset( $args['tax_query'] ) ) {
+				$args['tax_query'] = array();
+			}
+
+			$args['tax_query'][] = array(
+				'taxonomy' => 'colleges',
+				'field'    => 'slug',
+				'terms'    => $colleges
+			);
+		}
+
+		$query = new WP_Query( $args );
+		$number_pages = $query->max_num_pages;
+		$total_posts = $query->found_posts;
+
+		$posts = $query->posts;
 
 		foreach( $posts as $post ) {
-			$retval[] = self::prepare_degree_for_response( $post, $request );
+			$program_type = wp_get_post_terms( $post->ID, 'program_types' );
+			$program_type = is_array( $program_type ) ? $program_type[0] : null;
+
+			if ( ! isset( $retval[$program_type->slug] ) ) {
+				$alias = get_term_meta( $program_type->term_id, 'program_types_alias', true );
+				$alias = $alias ? $alias : $program_type->name;
+
+				$retval[$program_type->slug] = array(
+					'alias'   => $alias,
+					'count'   => 0,
+					'degrees' => array()
+				);
+			}
+
+			$retval[$program_type->slug]['degrees'][] = self::prepare_degree_for_response( $post, $request );
+			$retval[$program_type->slug]['count']++;
+			$count++;
 		}
+
+		$retval = self::prepare_response( $retval, $count, $page, $number_pages, $total_posts );
 
 		return new WP_REST_Response( $retval, 200 );
 	}
@@ -90,10 +137,16 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * @return Array | The formatted post
 	 **/
 	public static function prepare_degree_for_response( $post, $request ) {
+		$permalink = get_permalink( $post );
+		$hours = get_post_meta( $post->ID, 'degree_hours', true );
+		$terms = wp_get_post_terms( $post->ID, 'program_types' );
+		$term = is_array( $terms ) ? $terms[0]->slug : null;
+
 		$retval = array(
 			'title' => $post->post_title,
-			'url'   => get_permalink( $post ),
-			'hours' => get_post_meta( $post->ID, 'degree_hours', true )
+			'url'   => $permalink,
+			'hours' => $hours,
+			'type'  => $term
 		);
 
 		return $retval;
@@ -131,6 +184,40 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Prepares the response object
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $results Array | The array of degrees grouped by type
+	 * @param $count int | The count of degrees
+	 * @param $page int | The current page
+	 * @param $number_pages int | The total number of pages.
+	 * @param $total_posts int | The total number of posts.
+	 * @return Array | The response array
+	 **/
+	public static function prepare_response( $results, $count, $page, $number_pages, $total_posts ) {
+		$start = (((int)$page - 1) * 100) + 1;
+		$end = $start + $count - 1;
+
+		$retval = array(
+			'count'       => $count,
+			'totalPosts'  => (int)$total_posts,
+			'startIndex'  => $start,
+			'endIndex'    => $end,
+			'currentPage' => (int)$page,
+			'totalPages'  => $number_pages,
+			'types'       => array()
+		);
+
+		foreach( $results as $type => $data ) {
+			if ( $data['count'] !== 0 ) {
+				$retval['types'][] = $results[$type];
+			}
+		}
+
+		return $retval;
 	}
 
 	/**
