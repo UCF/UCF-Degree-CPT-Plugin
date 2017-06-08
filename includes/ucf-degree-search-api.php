@@ -7,8 +7,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$order = array(
 			'Undergraduate Degree',
 			'Minor',
-			'Certificate',
 			'Graduate Degree',
+			'Certificate',
 			'Articulated Degree',
 			'Accelerated Degree'
 		);
@@ -29,6 +29,15 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_degrees' ),
 				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions'),
 				'args'                => array( 'UCF_Degree_Search_API', 'get_degrees_args' )
+			)
+		) );
+
+		register_rest_route( "{$root}/{$version}", "/{$base}/program-types", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_program_types' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_program_types_args' )
 			)
 		) );
 	}
@@ -235,5 +244,67 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		}
 
 		return $array;
+	}
+
+	/**
+	 * Returns an array of program_types
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request | The request object
+	 * @return WP_REST_Response | The response object
+	 **/
+	public static function get_program_types( $request ) {
+		$retval = array();
+
+		$args = array(
+			'taxonomy'   => 'program_types',
+			'hide_empty' => true
+		);
+
+		$terms = get_terms( $args );
+
+		// Sort our program types by our custom order.
+		usort( $terms, array( 'UCF_Degree_Search_API', 'custom_program_types_order' ) );
+
+		foreach( $terms as $term ) {
+			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
+
+			$alias = get_term_meta( $term->term_id, 'program_types_alias', true );
+			$alias = $alias ? $alias : $term->name;
+
+			$retval[] = array(
+				'name' => $alias,
+				'slug' => $term->slug,
+				'count' => $term->count
+			);
+		}
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Returns args for the get_program_types callback
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return array
+	 **/
+	public static function get_program_types_args() {
+		return array();
+	}
+
+	public static function custom_program_types_order( $a, $b ) {
+		$order = UCF_Degree_Search_API::$order;
+
+		foreach( $order as $value ) {
+			if ( $a->name === $value ) {
+				return 0;
+				break;
+			}
+
+			if ( $b->name === $value ) {
+				return 1;
+				break;
+			}
+		}
 	}
 }
