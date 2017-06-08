@@ -21,6 +21,7 @@ include_once 'includes/ucf-degree-posttype.php';
 include_once 'includes/ucf-degree-api.php';
 include_once 'includes/ucf-degree-search-api.php';
 include_once 'includes/ucf-degree-utils.php';
+include_once 'includes/ucf-degree-search-custom-filters.php';
 include_once 'admin/ucf-degree-admin.php';
 include_once 'admin/ucf-degree-config.php';
 
@@ -56,6 +57,8 @@ add_action( 'plugins_loaded', function() {
 		add_action( 'ucf_degree_post_type_args', array( 'UCF_Degree_API', 'add_rest_route_to_args' ) );
 		add_action( 'rest_api_init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
 		add_action( 'rest_api_init', array( 'UCF_Degree_Search_API', 'register_rest_routes' ) );
+
+		add_action( 'posts_orderby', array( 'UCF_Degree_Search_Custom_Filters', 'order_by_tax_orderby' ), 15, 2 );
 	}
 
 	if ( ! shortcode_exists( 'career-paths' ) ) {
