@@ -1,5 +1,5 @@
 <?php
-/** 
+/**
  * Implements a simple API for degree data
  * Depends on the WP REST API plugin being
  * installed.
@@ -103,7 +103,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			$thumbnail_id = get_post_thumbnail_id( $object['id'] );
 			if ( $thumbnail_id ) {
 				$thumbnail = wp_get_attachment_image_src( $thumbnail_id );
-				$retval = isset( $thumbnail[0] ) ? $thumbnail[0] : null; 
+				$retval = isset( $thumbnail[0] ) ? $thumbnail[0] : null;
 			}
 
 			return $retval;
@@ -121,7 +121,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		public static function get_post_meta( $object, $field_name, $request ) {
 			$retval = array();
 			$postmeta = get_post_meta( $object['id'] );
-			
+
 			foreach( $postmeta as $key => $val ) {
 				if ( substr( $key, 0, 6 ) === 'degree' ) {
 					$retval[$key] = $val[0];
@@ -139,7 +139,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @param $post WP_POST | The post object
 		 * @param $request Object | The request object
 		 * @return Object
-		 **/ 
+		 **/
 		public static function remove_tags( $data, $post, $request ) {
 			if ( isset( $data->data['tags'] ) ) {
 				unset( $data->data['tags'] );
