@@ -7,8 +7,9 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$order = array(
 			'Undergraduate Degree',
 			'Minor',
+			'Master',
+			'Doctorate',
 			'Certificate',
-			'Graduate Degree',
 			'Articulated Degree',
 			'Accelerated Degree'
 		);
@@ -21,14 +22,49 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static function register_rest_routes() {
 		$root    = 'ucf-degree-search';
 		$version = 'v1';
-		$base    = 'degrees';
 
-		register_rest_route( "{$root}/{$version}", "/{$base}", array(
+		register_rest_route( "{$root}/{$version}", "/degrees", array(
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_degrees' ),
 				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions'),
 				'args'                => array( 'UCF_Degree_Search_API', 'get_degrees_args' )
+			)
+		) );
+
+		register_rest_route( "{$root}/{$version}", "/program-types", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_program_types' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_program_types_args' )
+			)
+		) );
+
+		register_rest_route( "{$root}/{$version}", "/program-types/counts", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_program_types_counts' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_program_types_counts_args' )
+			)
+		) );
+
+		register_rest_route( "{$root}/{$version}", "/colleges", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_colleges' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_colleges_args' )
+			)
+		) );
+
+		register_rest_route( "{$root}/{$version}", "/colleges/counts", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_colleges_counts' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_colleges_counts_args' )
 			)
 		) );
 	}
@@ -45,6 +81,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$colleges = $request['colleges'];
 		$program_types = $request['program_types'];
 		$page = $request['page'] ? $request['page'] : 1;
+		$limit = $request['limit'] ? $request['limit'] : 100;
 
 		$count = 0;
 
@@ -52,7 +89,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 		$args = array(
 			'post_type'               => 'degree',
-			'posts_per_page'          => 100,
+			'posts_per_page'          => $limit,
 			'paged'                   => $page,
 			'orderby'                 => 'post_title',
 			'order'                   => 'ASC',
@@ -116,7 +153,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$count++;
 		}
 
-		$retval = self::prepare_response( $retval, $count, $page, $number_pages, $total_posts );
+		$retval = self::prepare_response( $retval, $count, $page, $number_pages, $total_posts, $limit );
 
 		return new WP_REST_Response( $retval, 200 );
 	}
@@ -174,6 +211,10 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'program_types' => array(
 					'default'           => false,
 					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
+				),
+				'limit'         => array(
+					'default'           => false,
+					'sanitize_callback' => 'absint'
 				)
 			)
 		);
@@ -188,10 +229,11 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * @param $page int | The current page
 	 * @param $number_pages int | The total number of pages.
 	 * @param $total_posts int | The total number of posts.
+	 * @param $limit int | The limit of posts per page
 	 * @return Array | The response array
 	 **/
-	public static function prepare_response( $results, $count, $page, $number_pages, $total_posts ) {
-		$start = (((int)$page - 1) * 100) + 1;
+	public static function prepare_response( $results, $count, $page, $number_pages, $total_posts, $limit ) {
+		$start = (((int)$page - 1) * $limit) + 1;
 		$end = $start + $count - 1;
 
 		$retval = array(
@@ -236,4 +278,227 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 		return $array;
 	}
+
+	/**
+	 * Returns an array of program_types
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request | The request object
+	 * @return WP_REST_Response | The response object
+	 **/
+	public static function get_program_types( $request ) {
+		$retval = array();
+
+		$args = array(
+			'taxonomy'   => 'program_types',
+			'hide_empty' => true
+		);
+
+		$terms = get_terms( $args );
+
+		// Sort our program types by our custom order.
+		usort( $terms, array( 'UCF_Degree_Search_API', 'custom_program_types_order' ) );
+
+		foreach( $terms as $term ) {
+			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
+
+			$alias = get_term_meta( $term->term_id, 'program_types_alias', true );
+			$alias = $alias ? $alias : $term->name;
+
+			$retval[] = array(
+				'name' => $alias,
+				'slug' => $term->slug,
+				'count' => $term->count
+			);
+		}
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Returns args for the get_program_types callback
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return array
+	 **/
+	public static function get_program_types_args() {
+		return array();
+	}
+
+	/**
+	 * Returns the counts of program_types based on search query
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request | The request object.
+	 * @return WP_REST_Response | The response object.
+	 **/
+	public static function get_program_types_counts( $request ) {
+		$s = $request['search'];
+
+		$args = array(
+			'post_type'      => 'degree',
+			'posts_per_page' => -1,
+			's'              => $s,
+			'fields'         => 'ids'
+		);
+
+		$posts = get_posts( $args );
+
+		$retval = array();
+
+		foreach( $posts as $post ) {
+			$terms = wp_get_post_terms( $post, 'program_types' );
+			$term = is_array( $terms ) ? $terms[0]->slug : null;
+
+			if ( ! $term ) continue;
+
+			if ( ! isset( $retval[$term] ) ) {
+				$retval[$term] = 0;
+			}
+
+			$retval[$term]++;
+		}
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Returns the `get_program_types_counts` args
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return Array
+	 **/
+	public static function get_program_types_counts_args() {
+		return array(
+			array(
+				'search' => array(
+					'default'           => false,
+					'sanitize_callback' => 'sanitize_text_field'
+				),
+			)
+		);
+	}
+
+	/**
+	 * Returns an array of colleges
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request | The request object
+	 * @return WP_REST_Response | The response object
+	 **/
+	public static function get_colleges( $request ) {
+		$retval = array();
+
+		$args = array(
+			'taxonomy'   => 'colleges',
+			'hide_empty' => true
+		);
+
+		$terms = get_terms( $args );
+
+		foreach( $terms as $term ) {
+			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
+
+			$alias = get_term_meta( $term->term_id, 'colleges_alias', true );
+			$alias = $alias ? $alias : $term->name;
+
+			$retval[] = array(
+				'name' => $alias,
+				'slug' => $term->slug,
+				'count' => $term->count
+			);
+		}
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Returns the allowable args for get_colleges
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return array
+	 **/
+	public static function get_colleges_args() {
+		return array();
+	}
+
+	/**
+	 * Returns the counts of colleges based on search query
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $request WP_REST_Request | The request object.
+	 * @return WP_REST_Response | The response object.
+	 **/
+	public static function get_colleges_counts( $request ) {
+		$s = $request['search'];
+
+		$args = array(
+			'post_type'      => 'degree',
+			'posts_per_page' => -1,
+			's'              => $s,
+			'fields'         => 'ids'
+		);
+
+		$posts = get_posts( $args );
+
+		$retval = array();
+
+		foreach( $posts as $post ) {
+			$terms = wp_get_post_terms( $post, 'colleges' );
+			$term = is_array( $terms ) ? $terms[0]->slug : null;
+
+			if ( ! $term ) continue;
+
+			if ( ! isset( $retval[$term] ) ) {
+				$retval[$term] = 0;
+			}
+
+			$retval[$term]++;
+		}
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Returns the `get_program_types_counts` args
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @return Array
+	 **/
+	public static function get_colleges_counts_args() {
+		return array(
+			array(
+				'search' => array(
+					'default'           => false,
+					'sanitize_callback' => 'sanitize_text_field'
+				),
+			)
+		);
+	}
+
+	/**
+	 * Custom sorter for program_types
+	 * @author Jim Barnes
+	 * @since 1.0.2
+	 * @param $a Object | Element `a` to compare
+	 * @param $b Object | Element `b` to compare
+	 * @return int | Returns order priority
+	 **/
+	public static function custom_program_types_order( $a, $b ) {
+		$order = UCF_Degree_Search_API::$order;
+
+		foreach( $order as $value ) {
+			if ( $a->name === $value ) {
+				return 0;
+				break;
+			}
+
+			if ( $b->name === $value ) {
+				return 1;
+				break;
+			}
+		}
+	}
+
+
 }
