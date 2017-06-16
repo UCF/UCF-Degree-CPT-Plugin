@@ -265,8 +265,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 **/
 	public static function sanitize_array( $array ) {
 		if ( is_array( $array ) ) {
-			$valid = false;
-
 			foreach( $array as $key => $val ) {
 				$array[$key] = sanitize_text_field( $val );
 			}
@@ -334,6 +332,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 **/
 	public static function get_program_types_counts( $request ) {
 		$s = $request['search'];
+		$colleges = $request['colleges'];
 
 		$args = array(
 			'post_type'      => 'degree',
@@ -342,11 +341,23 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			'fields'         => 'ids'
 		);
 
-		$posts = get_posts( $args );
+		if ( $colleges ) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'colleges',
+					'field'    => 'slug',
+					'terms'    => $colleges
+				)
+			);
+		}
+
+		$query = new WP_Query( $args );
 
 		$retval = array();
 
-		foreach( $posts as $post ) {
+		$retval['all'] = $query->found_posts;
+
+		foreach( $query->posts as $post ) {
 			$terms = wp_get_post_terms( $post, 'program_types' );
 			$term = is_array( $terms ) ? $terms[0]->slug : null;
 
@@ -371,10 +382,14 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static function get_program_types_counts_args() {
 		return array(
 			array(
-				'search' => array(
-					'default'           => false,
+				'search'  => array(
+					'default'           => '',
 					'sanitize_callback' => 'sanitize_text_field'
 				),
+				'colleges' => array(
+					'default'           => false,
+					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
+				)
 			)
 		);
 	}
@@ -431,19 +446,32 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 **/
 	public static function get_colleges_counts( $request ) {
 		$s = $request['search'];
+		$program_types = $request['program_types'];
 
 		$args = array(
 			'post_type'      => 'degree',
 			'posts_per_page' => -1,
 			's'              => $s,
-			'fields'         => 'ids'
+			'fields'         => 'ids',
 		);
 
-		$posts = get_posts( $args );
+		if ( $program_types ) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => $program_types
+				)
+			);
+		}
+
+		$query = new WP_Query( $args );
 
 		$retval = array();
 
-		foreach( $posts as $post ) {
+		$retval['all'] = $query->found_posts;
+
+		foreach( $query->posts as $post ) {
 			$terms = wp_get_post_terms( $post, 'colleges' );
 			$term = is_array( $terms ) ? $terms[0]->slug : null;
 
@@ -469,9 +497,13 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		return array(
 			array(
 				'search' => array(
-					'default'           => false,
+					'default'           => '',
 					'sanitize_callback' => 'sanitize_text_field'
 				),
+				'program_types' => array(
+					'default'           => false,
+					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
+				)
 			)
 		);
 	}
