@@ -10,8 +10,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			'Master',
 			'Doctorate',
 			'Certificate',
-			'Articulated Degree',
-			'Accelerated Degree'
+			'Articulated Program',
+			'Accelerated Program'
 		);
 
 	/**
