@@ -20,7 +20,16 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
-N/A
+# 1.0.2 #
+Bug Fixes:
+* Fixed rewrite rule issues on plugin activation/deactivation.
+
+# 1.0.1 #
+Bug Fixes:
+* Updated to detect if the now built-in REST API is available.
+
+Enhancements:
+* Added postmeta to the meta field of the api.
 
 ## Upgrade Notice ##
 

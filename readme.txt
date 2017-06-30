@@ -2,8 +2,8 @@
 Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
-Tested up to: 4.5.3
-Stable tag: 1.0.0
+Tested up to: 4.7.3
+Stable tag: 1.0.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -27,7 +27,16 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 == Changelog ==
 
-N/A
+=== 1.0.2 ===
+Bug Fixes:
+* Fixed rewrite rule issues on plugin activation/deactivation.
+
+=== 1.0.1 ===
+Bug Fixes:
+* Updated to detect if the now built-in REST API is available.
+
+Enhancements:
+* Added postmeta to the meta field of the api.
 
 == Upgrade Notice ==
 

@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF Degree Custom Post Type
 Description: Provides a degree program custom post type, career paths and program type taxonomies and related meta fields.
-Version: 0.0.1
+Version: 1.0.2
 Author: UCF Web Communications
 License: GPL3
 */
@@ -19,7 +19,9 @@ include_once 'includes/ucf-degree-program-type-tax.php';
 include_once 'includes/ucf-degree-career-path-tax.php';
 include_once 'includes/ucf-degree-posttype.php';
 include_once 'includes/ucf-degree-api.php';
+include_once 'includes/ucf-degree-search-api.php';
 include_once 'includes/ucf-degree-utils.php';
+include_once 'includes/ucf-degree-search-custom-filters.php';
 include_once 'admin/ucf-degree-admin.php';
 include_once 'admin/ucf-degree-config.php';
 
@@ -31,6 +33,9 @@ include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 
 if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 	function ucf_degree_plugin_activation() {
+		UCF_Degree_ProgramType::register_programtype();
+		UCF_Degree_CareerPath::register_careerpath();
+		UCF_Degree_PostType::register_degree_posttype();
 		UCF_Degree_Config::add_options();
 		flush_rewrite_rules();
 	}
@@ -39,6 +44,7 @@ if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 if ( ! function_exists( 'ucf_degree_plugin_deactivation' ) ) {
 	function ucf_degree_plugin_deactivation() {
 		UCF_Degree_Config::delete_options();
+		flush_rewrite_rules();
 	}
 }
 
@@ -54,6 +60,9 @@ add_action( 'plugins_loaded', function() {
 	if ( UCF_Degree_Config::rest_api_enabled() && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
 		add_action( 'ucf_degree_post_type_args', array( 'UCF_Degree_API', 'add_rest_route_to_args' ) );
 		add_action( 'rest_api_init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
+		add_action( 'rest_api_init', array( 'UCF_Degree_Search_API', 'register_rest_routes' ) );
+
+		add_action( 'posts_orderby', array( 'UCF_Degree_Search_Custom_Filters', 'order_by_tax_orderby' ), 15, 2 );
 	}
 
 	if ( ! shortcode_exists( 'career-paths' ) ) {
