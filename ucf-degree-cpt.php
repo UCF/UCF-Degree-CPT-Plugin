@@ -33,6 +33,9 @@ include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 
 if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 	function ucf_degree_plugin_activation() {
+		UCF_Degree_ProgramType::register_programtype();
+		UCF_Degree_CareerPath::register_careerpath();
+		UCF_Degree_PostType::register_degree_posttype();
 		UCF_Degree_Config::add_options();
 		flush_rewrite_rules();
 	}
@@ -41,6 +44,7 @@ if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 if ( ! function_exists( 'ucf_degree_plugin_deactivation' ) ) {
 	function ucf_degree_plugin_deactivation() {
 		UCF_Degree_Config::delete_options();
+		flush_rewrite_rules();
 	}
 }
 
