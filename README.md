@@ -20,6 +20,14 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 1.0.2 #
+Bug Fixes:
+* Fixed rewrite rule issues on plugin activation/deactivation.
+
+Enhancements:
+* Added a custom REST route for the Angular degree search.
+* The degree-search api now orders the results by program_types using the new `order_by-taxonomy`, `order_by_taxonomy_field` and `order_by_taxonomy_order` fields.
+
 # 1.0.1 #
 Bug Fixes:
 * Updated to detect if the now built-in REST API is available.
