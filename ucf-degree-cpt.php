@@ -27,6 +27,7 @@ include_once 'admin/ucf-degree-config.php';
 
 include_once 'common/ucf-degree-list-common.php';
 include_once 'common/ucf-degree-career-paths-common.php';
+include_once 'common/ucf-degree-program-types-common.php';
 
 include_once 'shortcodes/ucf-degree-list-shortcode.php';
 include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
