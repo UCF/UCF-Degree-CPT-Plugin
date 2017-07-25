@@ -185,4 +185,40 @@ if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
 	add_filter( 'rest_degree_query', 'ucf_degree_add_query_args', 10, 2 );
 }
 
+if ( ! function_exists( 'ucf_degree_add_recurrence_intervals' ) ) {
+	function ucf_degree_add_recurrence_intervals( $schedules ) {
+		if ( ! isset( $schedules['daily'] ) ) {
+			$schedules['daily'] = array(
+				'interval' => 24 * 60 * 60, // 24 hours * 60 minutes * 60 seconds
+				'display'  => __( 'Daily', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedules['weekly'] ) ) {
+			$schedules['weekly'] = array(
+				'interval' => 7 * 24 * 60 * 60, // 7 days * 24 hours * 60 minutes * 60 seconds
+				'display'  => __( 'Weekly', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedule['bi-weekly'] ) ) {
+			$schedules['bi-weekly'] = array(
+				'interval' => 14 * 24 * 60 * 60, // 14 days * 24 hours * 60 minutes * 60 seconds
+				'display' => __( 'Bi-Weekly', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedule['monthly'] ) ) {
+			$schedules['monthly'] = array(
+				'interval' => 30 * 24 * 60 * 60, // 30 days * 24 hours * 60 minutes * 60 seconds
+				'display' => __( 'Monthly', 'ucf_degree' )
+			);
+		}
+
+		return $schedules;
+	}
+
+	add_filter( 'cron_schedules', 'ucf_degree_add_recurrence_intervals' );
+}
+
 ?>
