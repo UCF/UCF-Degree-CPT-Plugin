@@ -110,8 +110,6 @@ class UCF_Degree_Importer {
 			'timeout' => 15
 		);
 
-		WP_CLI::log( $url );
-
 		$response = wp_remote_get( $url, $args );
 
 		if ( is_array( $response ) ) {
@@ -201,7 +199,8 @@ class UCF_Degree_Importer {
 			'meta_query'     => array(
 				array(
 					'key'     => 'degree_import_ignore',
-					'value'   => 'on'
+					'value'   => 'on',
+					'compare' => '!='
 				)
 			)
 		);
