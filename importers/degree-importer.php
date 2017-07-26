@@ -15,7 +15,27 @@ class UCF_Degree_Importer {
 		$new_count = 0,
 		$removed_count = 0,
 		$updated_posts,
-		$duplicate_count = 0;
+		$duplicate_count = 0,
+		$program_types = array(
+			'Undergraduate Program' => array(
+				'Undergraduate Degree',
+				'Minor',
+				'Articulated Program',
+				'Accelerated Program'
+			),
+			'Graduate Program' => array(
+				'Master',
+				'Doctorate',
+				'Certificate'
+			)
+		), // Array of default program_types
+		$doctoral_mapping = array(
+			'DPT',
+			'DNP',
+			'EdD',
+			'PhD',
+			'MD'
+		);
 
 	/**
 	 * Constructor
@@ -162,7 +182,389 @@ class UCF_Degree_Importer {
 		$gather_progress = \WP_CLI\Utils\make_progress_bar( 'Processing search results...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $program ) {
+			$program->suffix = $this->get_program_suffix( $program->name, $program->type, $program->graduate );
+			$program->type = $this->get_program_type( $program->type, $program->graduate, $program->name );
+			$program->type_ucmatch = $this->get_uc_program_type( $program->type );
+			$program->college_name = $this->get_college_name( $program->college_name );
+			if ( $program->graduate === 0 ) {
+				$program->catalog_url = $this->get_catalog_url( $program );
+			}
 
+			if ( has_filter( 'ucf_degree_get_program_data' ) ) {
+				$program = apply_filters( 'ucf_degree_get_program_data', $program );
+			}
+
+			$post_array_item = $this->format_post_data( $program );
+
+			if ( has_filter( 'ucf_degree_format_post_data' ) ) {
+				$post_array_item = apply_filters( 'ucf_degree_format_post_data', $post_array_item, $program );
+			}
+
+			$post_array[] = $post_array_item;
+
+			$gather_progress->tick();
+		}
+
+		$gather_progress->finish();
+
+		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degrees...', count( $post_array ) );
+
+		foreach( $post_array as $post ) {
+			$post_data = $post['post_data'];
+			$post_meta = $post['post_meta'];
+			$post_terms = $post['post_terms'];
+
+			$degree_id = isset( $post_meta['degree_id'] ) ? $post_meta['degree_id'] : null;
+			$degree_type_id = isset( $post_meta['degree_type_id'] ) ? $post_meta['degree_type_id'] : null;
+			$program_types = isset( $post_terms['program_types'] ) ? $post_terms['program_types'] : null;
+
+			$post_id = $this->process_post( $post_data, $degree_id, $degree_type_id, $program_types );
+			$this->process_post_meta( $post_id, $post_meta );
+			$this->process_post_terms( $post_id, $post_terms );
+
+			$import_progress->tick();
+		}
+
+		$import_progress->finish();
+	}
+
+	/**
+	 * Cleans a name to make it easier to string compare
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @return string | The cleaned string
+	 **/
+	private function clean_name( $name ) {
+		$blacklist = array( 'degree', 'program' );
+		$name = strtolower( html_entity_decode( $name, ENT_NOQUOTES, 'UTF-8' ) );
+		$name = str_replace( $blacklist, '', $name );
+		$name = preg_replace( '/[^a-z0-9]/', '', $name );
+		return $name;
+	}
+
+	/**
+	 * Returns the program type
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param $type string | The type from the search service
+	 * @param $graduate int | The graduate value from the search service
+	 * @param $name string | The program name
+	 * @return string | The newly formatted type
+	 **/
+	private function get_program_type( $type, $graduate, $name ) {
+		switch( $type ) {
+			case 'major':
+				if ( $graduate === 0 ) {
+					$type = 'Undergraduate Degree';
+				} else {
+					foreach( $this->doctoral_mapping as $dm ) {
+						if ( stripos( $name, $dm ) !== false ) {
+							$type = 'Doctorate';
+							break;
+						}
+					}
+					if ( $type !== 'Doctorate' ) {
+						$type = 'Master';
+					}
+					break;
+				}
+				break;
+			case 'articulated':
+			case 'accelerated':
+				$type = ucwords( $type ) . ' Program';
+				break;
+			default:
+				$type = ucwords( $type );
+				break;
+		}
+		return $type;
+	}
+
+	/**
+	 * Returns the undergraduate catalog type
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param $type string | The search service type
+	 * @return string | The undergraduate catalog type.
+	 **/
+	private function get_uc_program_type( $type ) {
+		if ( $type === 'major' ) {
+			return 'Degree Program';
+		} else {
+			return $type;
+		}
+	}
+
+	/**
+	 * Returns the suffix for the post_name
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param $name string | The program name
+	 * @param $type string | The program type
+	 * @param $graduate int | If the program is a graduate program
+	 * @return string | The program suffix
+	 **/
+	private function get_program_suffix( $name, $type, $graduate ) {
+		$lower_name = strtolower( $name );
+		switch( $type ) {
+			case 'minor':
+				return '-minor';
+			case 'certificate':
+				if ( stripos( $lower_name, 'certificate' ) === false ) {
+					return '-certificate';
+				}
+			default:
+				return '';
+		}
+	}
+
+	/**
+	 * Handles exceptions for college names
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param $college_name string | The college name from the search service
+	 * @return string | The corrected college name
+	 **/
+	private function get_college_name( $college_name ) {
+		$replacements = array(
+			'College of Hospitality Management' => 'Rosen College of Hospitality Management',
+			'Office of Undergraduate Studies' => 'College of Undergraduate Studies',
+			'College of Nondegree' => ''
+		);
+		if ( isset( $replacements[$college_name] ) ) {
+			return $replacements[$college_name];
+		}
+		return $college_name;
+	}
+
+	/**
+	 * Generates the college slug
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param $name string | The college name
+	 * @return string | The college slug
+	 **/
+	private function get_college_slug( $name ) {
+		return sanitize_title( $this->get_college_alias( $name ) );
+	}
+
+	/**
+	 * Returns the alias of the college
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 * @param name string | The name of the college
+	 * @return string
+	 **/
+	private function get_college_alias( $name ) {
+		// Remove "College of"
+		$retval = str_replace( 'College of', '', $name );
+		// Remove "Rosen"
+		$retval = str_replace( 'Rosen', '', $retval );
+		// Remove whitespace
+		$retval = trim( $retval );
+		return $retval;
+	}
+
+	/**
+	 * Handles matching undergraduate degrees
+	 * to the undergraduate catalog data
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @param $program Object | The program object
+	 * @return (string|NULL) | The catalog url if available.
+	 **/
+	private function get_catalog_url( $program ) {
+		$clean_program_name = $this->clean_name( $program->name );
+		$clean_college_name = $this->clean_name( $program->college_name );
+		if ( $this->catalog_programs ) {
+			foreach( $this->catalog_programs as $key => $uc_program ) {
+				/**
+				 * Check if our program type string is a substring of the catalog's program type;
+				 * if both program names match, or the program is accelerated and the name is a substring of the catalog's program name or name + type;
+				 * and if the college name either matches or if one college name is a substring of the other
+				 **/
+				$uc_clean_program_name = $this->clean_name( $uc_program->name );
+				$uc_clean_type_name = $this->clean_name( $uc_program->type );
+				$uc_clean_college_name = $this->clean_name( $uc_program->college );
+				if (
+					stripos( $uc_program->type, $program->type_ucmatch ) !== false &&
+					(
+						$clean_program_name === $uc_clean_program_name ||
+						(
+							$program->type_ucmatch === 'accelerated' &&
+							(
+								stripos( $clean_program_name, $uc_clean_program_name ) !== false ||
+								stripos( $uc_clean_program_name.$uc_clean_type_name, $clean_program_name ) !== false
+							)
+						)
+					) &&
+					(
+						$clean_college_name === $uc_clean_college_name ||
+						stripos( $clean_college_name, $uc_clean_college_name ) !== false ||
+						stripos( $uc_clean_college_name, $clean_college_name ) !== false
+					)
+				) {
+					return ( ! empty( $uc_program->pdf ) ) ? $uc_program->pdf : '';
+				}
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Takes all the information we've generated
+	 * up to this point and puts into a format
+	 * WordPress can use to create a post.
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @param Object | The program object
+	 * @return Array | The post array
+	 **/
+	private function format_post_data( $program ) {
+		return array(
+			'post_data' => array(
+				'post_title'  => $program->name,
+				'post_name'   => sanitize_title( $program->name . $program->suffix ),
+				'post_status' => 'draft',
+				'post_date'   => date( 'Y-m-d H:i:s' ),
+				'post_author' => 1,
+				'post_type'   => 'degree',
+			),
+			'post_meta'  => array(
+				'degree_id'              => $program->degree_id,
+				'degree_type_id'         => $program->type_id,
+				'degree_hours'           => $program->required_hours,
+				'degree_description'     => html_entity_decode( $program->description ),
+				'degree_website'         => $program->website,
+				'degree_phone'           => $program->phone,
+				'degree_email'           => $program->email,
+				'degree_contacts'        => $program->contacts,
+				'degree_pdf'             => $program->catalog_url,
+				'degree_is_graduate'     => $program->graduate,
+				'page_header_height' => 'header-media-default'
+			),
+			'post_terms' => array(
+				'program_types' => $program->type,
+				'colleges'      => $program->college_name,
+				'departments'   => $program->department_name
+			)
+		);
+	}
+
+	/**
+	 * Creates or returns the post
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @param $post_data Array | The array of post data
+	 * @param $degree_id int | The degree id
+	 * @return int | The post id
+	 **/
+	private function process_post( $post_data, $degree_id, $degree_type_id=null, $program_types=null ) {
+		$retval = null;
+		// Attempt to fetch an existing post
+		$args = array(
+			'post_type'      => $post_data['post_type'],
+			'posts_per_page' => 1,
+			'post_status'    => array( 'publish', 'draft' ),
+			'meta_query'     => array(
+				array(
+					'key'   => 'degree_id',
+					'value' => $degree_id
+				)
+			),
+			'tax_query'      => array(
+				array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => sanitize_title( $program_types )
+				)
+			)
+		);
+		if ( $degree_type_id ) {
+			$args['meta_query'][] = array(
+				'key'   => 'degree_type_id',
+				'value' => $degree_type_id
+			);
+		}
+		$existing_post = get_posts( $args );
+		$existing_post = empty( $existing_post ) ? false : $existing_post[0];
+		if ( $existing_post !== false ) {
+			$retval = $existing_post->ID;
+			$post_data['ID'] = $retval;
+			$post_data['post_status'] = $existing_post->post_status;
+			// Remove the post name so we're not updating permalinks
+			unset( $post_data['post_name'] );
+			// Remove the post date so publish date stays the same.
+			unset( $post_data['post_date'] );
+			wp_update_post( $post_data );
+			// Remove the post from the existing array
+			unset( $this->existing_posts[$post_data['ID']] );
+			// Added to ensure we have an accurated updated count
+			if ( ! isset( $this->updated_posts[$post_data['ID']] ) ) {
+				$this->updated_posts[$post_data['ID']] = $post_data['ID'];
+				// This is a duplicate if it's in the new posts array
+				if ( isset( $this->new_posts[$retval] ) ) {
+					$this->duplicate_count++;
+				} else {
+					$this->existing_count++;
+				}
+			} else {
+				$this->duplicate_count++;
+			}
+		} else {
+			$retval = wp_insert_post( $post_data );
+			$this->new_posts[$retval] = $retval;
+			$this->new_count++;
+		}
+		return $retval;
+	}
+	/**
+	 * Creates or updates the post_meta
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @param $post_id int | The id of the post
+	 * @param $post_meta Array | An array of post meta
+	 **/
+	private function process_post_meta( $post_id, $post_meta ) {
+		if ( is_array( $post_meta ) ) {
+			foreach( $post_meta as $key => $val ) {
+				update_field( $key, $val, $post_id );
+			}
+		}
+	}
+	/**
+	 * Sets the post terms
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @param $post_id int | The id of the post
+	 * @param $post_terms Array | The array of post terms
+	 **/
+	private function process_post_terms( $post_id, $post_terms ) {
+		if ( is_array( $post_terms ) ) {
+			foreach( $post_terms as $tax => $term ) {
+				$term_id = null;
+				$existing_term = term_exists( $term, $tax );
+				if ( ! empty( $existing_term ) && is_array( $existing_term ) ) {
+					$term_id = $existing_term['term_id'];
+				} else {
+					$args = array();
+					if ( $tax === 'colleges' ) {
+						$args['slug'] = $this->get_college_slug( $term );
+					}
+					$new_term = wp_insert_term( $term, $tax, $args );
+					if ( gettype( $new_term ) === 'array' ) {
+						$term_id = $new_term['term_id'];
+					}
+				}
+				if ( $term_id ) {
+					// Set the alias
+					$alias = $this->get_college_alias( $term );
+					update_term_meta( $term_id, 'colleges_alias', $alias );
+					wp_set_post_terms( $post_id, $term_id, $tax, true );
+				} else {
+					wp_delete_object_term_relationships( $post_id, $tax );
+				}
+			}
 		}
 	}
 }
