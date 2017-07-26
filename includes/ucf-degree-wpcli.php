@@ -17,7 +17,7 @@ class Degrees extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 * # Imports degrees from the dev search service.
-	 * $ wp mainsite degrees import https://searchdev.smca.ucf.edu
+	 * $ wp degrees import https://searchdev.smca.ucf.edu/service.php http://catalog.ucf.edu/feed/
 	 *
 	 * @when after_wp_load
 	 */

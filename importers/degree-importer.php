@@ -205,7 +205,7 @@ class UCF_Degree_Importer {
 				array(
 					'key'     => 'degree_import_ignore',
 					'value'   => 'on',
-					'compare' => '='
+					'compare' => '!='
 				)
 			)
 		);
