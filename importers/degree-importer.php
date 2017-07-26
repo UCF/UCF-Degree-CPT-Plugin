@@ -197,10 +197,15 @@ class UCF_Degree_Importer {
 			'post_status'    => 'publish',
 			'fields'         => 'ids',
 			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'degree_import_ignore',
+					'compare' => 'NOT EXISTS'
+				),
 				array(
 					'key'     => 'degree_import_ignore',
 					'value'   => 'on',
-					'compare' => '!='
+					'compare' => '='
 				)
 			)
 		);
