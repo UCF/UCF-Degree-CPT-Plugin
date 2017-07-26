@@ -185,7 +185,10 @@ class UCF_Degree_Importer {
 			$program->suffix = $this->get_program_suffix( $program->name, $program->type, $program->graduate );
 			$program->type = $this->get_program_type( $program->type, $program->graduate, $program->name );
 			$program->type_ucmatch = $this->get_uc_program_type( $program->type );
-			$program->college_name = $this->get_college_name( $program->college_name );
+			if ( class_exists( 'UCF_College_Taxonomy' ) ) {
+				$program->college_name = $this->get_college_name( $program->college_name );
+			}
+
 			if ( $program->graduate === 0 ) {
 				$program->catalog_url = $this->get_catalog_url( $program );
 			}
@@ -548,7 +551,7 @@ class UCF_Degree_Importer {
 					$term_id = $existing_term['term_id'];
 				} else {
 					$args = array();
-					if ( $tax === 'colleges' ) {
+					if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
 						$args['slug'] = $this->get_college_slug( $term );
 					}
 					$new_term = wp_insert_term( $term, $tax, $args );
@@ -556,7 +559,7 @@ class UCF_Degree_Importer {
 						$term_id = $new_term['term_id'];
 					}
 				}
-				if ( $term_id ) {
+				if ( $term_id && $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
 					// Set the alias
 					$alias = $this->get_college_alias( $term );
 					update_term_meta( $term_id, 'colleges_alias', $alias );
