@@ -567,6 +567,11 @@ class UCF_Degree_Importer {
 		}
 		$existing_post = get_posts( $args );
 		$existing_post = empty( $existing_post ) ? false : $existing_post[0];
+
+		if ( has_filter( 'ucf_degree_existing_post' ) ) {
+			$existing_post = apply_filters( 'ucf_degree_existing_post', $existing_post, $post_data, $program_types );
+		}
+
 		if ( $existing_post !== false ) {
 			$retval = $existing_post->ID;
 			$post_data['ID'] = $retval;
