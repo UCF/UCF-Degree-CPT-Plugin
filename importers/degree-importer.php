@@ -139,6 +139,10 @@ class UCF_Degree_Importer {
 			'fields'         => 'ids'
 		);
 
+		if ( has_filter( 'ucf_degree_get_existing_args' ) ) {
+			$args = apply_filters( 'ucf_degree_get_existing_args', $args );
+		}
+
 		$posts = get_posts( $args );
 
 		foreach( $posts as $key => $val ) {
@@ -154,6 +158,11 @@ class UCF_Degree_Importer {
 	 * @since 1.0.3
 	 **/
 	private function process_degrees() {
+		$post_array = array();
+		$gather_progress = \WP_CLI\Utils\make_progress_bar( 'Processing search results...', count( $this->search_results ) );
 
+		foreach( $this->search_results as $program ) {
+
+		}
 	}
 }
