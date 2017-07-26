@@ -144,6 +144,45 @@ class UCF_Degree_Importer {
 	}
 
 	/**
+	 * Fetches data from the undergraduate catalog
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 * @return Array | An array of catalog data
+	 **/
+	private function fetch_catalog_data() {
+		$retval = null;
+		$args = array(
+			'timeout' => 15
+		);
+		$response = wp_remote_get( $this->catalog_api, $args );
+		if ( is_array( $response ) ) {
+			$response_body = wp_remote_retrieve_body( $response );
+			$retval = json_decode( $response_body );
+			if ( ! $retval ) {
+				throw new Degree_Importer_Exception(
+					'Failed to parse the undergraduate catalog json. ' .
+					'Please make sure your catalog url is correct.',
+					5
+				);
+			}
+		} else {
+			throw new Degree_Importer_Exception(
+				'Failed to connect to the undergraduate catalog. ' .
+				'Please make sure your catalog url is correct.',
+				4
+			);
+		}
+		if( isset( $retval->programs ) ) {
+			return $retval->programs;
+		} else {
+			throw new Degree_Importer_Exception(
+				'No programs found in the undergraduate catalog api. ',
+				6
+			);
+		}
+	}
+
+	/**
 	 * Gets all existing degree ids
 	 * @author Jim Barnes
 	 * @since 1.0.3
@@ -156,7 +195,14 @@ class UCF_Degree_Importer {
 			'post_type'      => 'degree',
 			'posts_per_page' => -1,
 			'post_status'    => 'publish',
-			'fields'         => 'ids'
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array(
+					'key'     => 'degree_import_ignore',
+					'value'   => 'on',
+					'compare' => '='
+				)
+			)
 		);
 
 		if ( has_filter( 'ucf_degree_get_existing_args' ) ) {
@@ -170,6 +216,38 @@ class UCF_Degree_Importer {
 		}
 
 		return $retval;
+	}
+
+	/**
+	 * Creates the default program types
+	 * @author Jim Barnes
+	 * @since 1.0.3
+	 **/
+	private function create_program_types() {
+		$created = False;
+		foreach( $this->program_types as $key => $val ) {
+			if ( ! term_exists( $key, 'program_types' ) ) {
+				$parent = wp_insert_term( $key, 'program_types' );
+				foreach( $val as $program ) {
+					wp_insert_term(
+						$program,
+						'program_types',
+						array(
+							'parent' => $parent['term_id']
+						)
+					);
+				}
+				$created = true;
+			}
+		}
+		if ( $created ) {
+			// Force a purge of any cached hierarchy so that parent/child relationships are
+			// properly saved: http://wordpress.stackexchange.com/a/8921
+			delete_option('program_types_children');
+			WP_CLI::log( 'Generated default program types.' );
+		} else {
+			WP_CLI::log( 'Default program types already exist.' );
+		}
 	}
 
 	/**
@@ -436,15 +514,8 @@ class UCF_Degree_Importer {
 			'post_meta'  => array(
 				'degree_id'              => $program->degree_id,
 				'degree_type_id'         => $program->type_id,
-				'degree_hours'           => $program->required_hours,
 				'degree_description'     => html_entity_decode( $program->description ),
-				'degree_website'         => $program->website,
-				'degree_phone'           => $program->phone,
-				'degree_email'           => $program->email,
-				'degree_contacts'        => $program->contacts,
 				'degree_pdf'             => $program->catalog_url,
-				'degree_is_graduate'     => $program->graduate,
-				'page_header_height' => 'header-media-default'
 			),
 			'post_terms' => array(
 				'program_types' => $program->type,
