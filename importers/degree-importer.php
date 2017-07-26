@@ -110,6 +110,8 @@ class UCF_Degree_Importer {
 			'timeout' => 15
 		);
 
+		WP_CLI::log( $url );
+
 		$response = wp_remote_get( $url, $args );
 
 		if ( is_array( $response ) ) {
@@ -199,8 +201,7 @@ class UCF_Degree_Importer {
 			'meta_query'     => array(
 				array(
 					'key'     => 'degree_import_ignore',
-					'value'   => 'on',
-					'compare' => '='
+					'value'   => 'on'
 				)
 			)
 		);
@@ -625,18 +626,23 @@ class UCF_Degree_Importer {
 					if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
 						$args['slug'] = $this->get_college_slug( $term );
 					}
+
 					$new_term = wp_insert_term( $term, $tax, $args );
 					if ( gettype( $new_term ) === 'array' ) {
 						$term_id = $new_term['term_id'];
 					}
 				}
-				if ( $term_id && $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
+
+				if ( $term_id ) {
 					// Set the alias
-					$alias = $this->get_college_alias( $term );
-					update_term_meta( $term_id, 'colleges_alias', $alias );
 					wp_set_post_terms( $post_id, $term_id, $tax, true );
 				} else {
 					wp_delete_object_term_relationships( $post_id, $tax );
+				}
+
+				if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
+					$alias = $this->get_college_alias( $term );
+					update_term_meta( $term_id, 'colleges_alias', $alias );
 				}
 			}
 		}

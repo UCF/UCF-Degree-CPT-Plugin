@@ -24,7 +24,10 @@ class Degrees extends WP_CLI_Command {
 	public function import( $args, $assoc_args ) {
 		$search_url  = $args[0];
 		$catalog_url = $args[1];
-		$import = new UCF_Degree_Importer( $search_url, $catalog_url );
+
+		$additional_args = UCF_Degree_Config::get_option_or_default( 'search_filter' );
+
+		$import = new UCF_Degree_Importer( $search_url, $catalog_url, $additional_args );
 		try {
 			$import->import();
 		}
