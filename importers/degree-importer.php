@@ -567,4 +567,27 @@ class UCF_Degree_Importer {
 			}
 		}
 	}
+
+	/**
+	 * Remove any degrees left from the existing_degree
+	 * array once all other processing is finished.
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 **/
+	private function remove_remaining_existing() {
+		foreach( $this->existing_posts as $post_id ) {
+			wp_delete_post( $post_id, true );
+			$this->removed_count++;
+		}
+	}
+	/**
+	 * Publish any new degrees we're inserting.
+	 * @author Jim Barnes
+	 * @since 1.0.0
+	 **/
+	private function publish_new_degrees() {
+		foreach( $this->new_posts as $post_id ) {
+			wp_publish_post( $post_id );
+		}
+	}
 }
