@@ -263,7 +263,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$option_name   = $args['label_for'];
 			$description   = $args['description'];
 			$field_type    = $args['type'];
-			$options       = $args['options'];
+			$options       = isset ( $args['options'] ) ? $args['options'] : null;
 			$current_value = self::get_option_or_default( $option_name );
 			$markup        = '';
 

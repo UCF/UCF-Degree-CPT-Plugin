@@ -84,7 +84,17 @@ class UCF_Degree_Importer {
 	 * @return string | The success statistics
 	 **/
 	public function get_stats() {
-
+		$degree_total = $this->new_count + $this->existing_count - $this->removed_count;
+		return
+"
+Finished importing degrees.
+Total Processed : {$this->result_count}
+New             : {$this->new_count}
+Updated         : {$this->existing_count}
+Removed         : {$this->removed_count}
+Duplicates      : {$this->duplicate_count}
+Degree Total    : {$degree_total}
+";
 	}
 
 	/**
