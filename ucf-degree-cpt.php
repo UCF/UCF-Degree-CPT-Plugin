@@ -10,6 +10,13 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	include_once 'includes/ucf-degree-wpcli.php';
+	include_once 'importers/degree-importer.php';
+
+	WP_CLI::add_command( 'degrees', 'Degrees' );
+}
+
 define( 'UCF_DEGREE__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) ) ) );
 define( 'UCF_DEGREE__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UCF_DEGREE__STATIC_URL', UCF_DEGREE__PLUGIN_URL . '/static' );
