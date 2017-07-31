@@ -8,7 +8,7 @@ if ( ! class_exists( 'UCF_Degree_Program_Types_Common' ) ) {
 		 * Returns a program type's alias, if available, or term name.
 		 *
 		 * @author Jo Dickson
-		 * @since 1.0.3
+		 * @since 1.1.0
 		 * @param $dept WP_Term | The term object
 		 * @return Mixed | alias or name string, or false
 		 **/

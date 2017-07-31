@@ -40,7 +40,7 @@ class UCF_Degree_Importer {
 	/**
 	 * Constructor
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $search_url string | The url of the UCF search service
 	 * @param $catalog_url string | The url of the undergraduate catalog service
 	 * @return UCF_Degree_Importer
@@ -59,7 +59,7 @@ class UCF_Degree_Importer {
 	/**
 	 * Imports degrees into WordPress
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 **/
 	public function import() {
 		try {
@@ -100,7 +100,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Gets degrees from the search service
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @return Array | The array of degree data
 	 **/
 	private function fetch_degrees() {
@@ -195,7 +195,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Gets all existing degree ids
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @return Array<int> | An array of existing degree ids
 	 **/
 	private function get_existing() {
@@ -236,7 +236,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Creates the default program types
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 **/
 	private function create_program_types() {
 		$created = False;
@@ -268,7 +268,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Processes the degrees
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 **/
 	private function process_degrees() {
 		$post_array = array();
@@ -327,7 +327,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Cleans a name to make it easier to string compare
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @return string | The cleaned string
 	 **/
 	private function clean_name( $name ) {
@@ -341,7 +341,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Returns the program type
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $type string | The type from the search service
 	 * @param $graduate int | The graduate value from the search service
 	 * @param $name string | The program name
@@ -379,7 +379,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Returns the undergraduate catalog type
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $type string | The search service type
 	 * @return string | The undergraduate catalog type.
 	 **/
@@ -394,7 +394,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Returns the suffix for the post_name
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $name string | The program name
 	 * @param $type string | The program type
 	 * @param $graduate int | If the program is a graduate program
@@ -417,7 +417,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Handles exceptions for college names
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $college_name string | The college name from the search service
 	 * @return string | The corrected college name
 	 **/
@@ -436,7 +436,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Generates the college slug
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param $name string | The college name
 	 * @return string | The college slug
 	 **/
@@ -447,7 +447,7 @@ Degree Total    : {$degree_total}
 	/**
 	 * Returns the alias of the college
 	 * @author Jim Barnes
-	 * @since 1.0.3
+	 * @since 1.1.0
 	 * @param name string | The name of the college
 	 * @return string
 	 **/
