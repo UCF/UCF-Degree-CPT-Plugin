@@ -20,6 +20,19 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 1.1.0 #
+Bug Fixes:
+* Fixed bug with output of `UCF_Degree_PostType::taxonomies()` still returning nonexistent taxonomies
+* Fixed calls to `$wpdb->prepare` to suppress warnings
+
+Enhancements:
+* Adds logic to import degrees from the search service
+* Adds a configuration option for filtering degrees from the search service (i.e. by college)
+* Adds an option to schedule the import via wp-cron (the actual logic for adding the wp-cron task still needs to be written)
+* Adds some hooks that should allow the import process to be extended for a specific site's needs.
+* Added the helper method `UCF_Degree_Program_Types_Common::get_name_or_alias()`, which returns a program type's alias, if available, or name.
+
+
 # 1.0.2 #
 Bug Fixes:
 * Fixed rewrite rule issues on plugin activation/deactivation.

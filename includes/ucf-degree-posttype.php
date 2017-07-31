@@ -15,7 +15,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		/**
 		 * Registers the metabox for degrees
 		 * @author Jim Barnes
-		 * @since 1.0.3
+		 * @since 1.1.0
 		 **/
 		public static function register_metabox() {
 			add_meta_box(
@@ -31,7 +31,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		/**
 		 * Adds the metafields for the import fields
 		 * @author Jim Barnes
-		 * @since 1.0.3
+		 * @since 1.1.0
 		 * @param $post WP_POST | The post object
 		 * @return string | The html markup for the metafields
 		 **/
@@ -56,7 +56,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		/**
 		 * Handles saving metafield data
 		 * @author Jim Barnes
-		 * @since 1.0.3
+		 * @since 1.1.0
 		 * @param $post_id int | The id of the post being saved
 		 **/
 		public static function save_metabox( $post_id ) {
