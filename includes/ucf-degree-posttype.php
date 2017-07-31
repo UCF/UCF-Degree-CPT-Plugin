@@ -129,18 +129,18 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		}
 
 		public static function taxonomies() {
-			$retval = array(
+			$retval = array();
+			$valid_taxonomies = array(
 				'post_tag',
 				'program_types',
 				'colleges',
 				'career_paths'
 			);
+			$valid_taxonomies = apply_filters( 'ucf_degree_taxonomies', $valid_taxonomies );
 
-			$retval = apply_filters( 'ucf_degree_taxonomies', $retval );
-
-			foreach( $retval as $taxonomy ) {
-				if ( ! taxonomy_exists( $taxonomy ) ) {
-					unset( $retval[$taxonomy] );
+			foreach( $valid_taxonomies as $taxonomy ) {
+				if ( taxonomy_exists( $taxonomy ) ) {
+					$retval[] = $taxonomy;
 				}
 			}
 
