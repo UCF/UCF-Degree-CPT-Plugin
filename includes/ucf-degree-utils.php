@@ -119,9 +119,9 @@ if ( ! function_exists( 'ucf_degree_search_where_filter' ) ) {
 		if ( isset( $wp_query->query['degree_search'] ) && $wp_query->query_vars['post_type'] === 'degree' ) {
 			$s = $wp_query->query['degree_search'];
 			$where .= " AND (";
-			$where .= $wpdb::prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
-			$where .= $wpdb::prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
-			$where .= $wpdb::prepare( " lower(wpm.meta_value) LIKE %s)", '%'. $s . '%' );
+			$where .= $wpdb->prepare( " lower($wpdb->posts.post_title) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb->prepare( " lower(wt.name) LIKE %s OR", '%' . $s . '%' );
+			$where .= $wpdb->prepare( " lower(wpm.meta_value) LIKE %s)", '%'. $s . '%' );
 		}
 
 		return $where;
@@ -183,6 +183,42 @@ if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
 	}
 
 	add_filter( 'rest_degree_query', 'ucf_degree_add_query_args', 10, 2 );
+}
+
+if ( ! function_exists( 'ucf_degree_add_recurrence_intervals' ) ) {
+	function ucf_degree_add_recurrence_intervals( $schedules ) {
+		if ( ! isset( $schedules['daily'] ) ) {
+			$schedules['daily'] = array(
+				'interval' => DAY_IN_SECONDS, // Every day
+				'display'  => __( 'Daily', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedules['weekly'] ) ) {
+			$schedules['weekly'] = array(
+				'interval' => WEEK_IN_SECONDS, // Every week
+				'display'  => __( 'Weekly', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedule['bi-weekly'] ) ) {
+			$schedules['bi-weekly'] = array(
+				'interval' => WEEK_IN_SECONDS * 2, // Every two weeks
+				'display' => __( 'Bi-Weekly', 'ucf_degree' )
+			);
+		}
+
+		if ( ! isset( $schedule['monthly'] ) ) {
+			$schedules['monthly'] = array(
+				'interval' => MONTH_IN_SECONDS, // Every month
+				'display' => __( 'Monthly', 'ucf_degree' )
+			);
+		}
+
+		return $schedules;
+	}
+
+	add_filter( 'cron_schedules', 'ucf_degree_add_recurrence_intervals' );
 }
 
 ?>
