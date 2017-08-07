@@ -47,6 +47,8 @@ if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 		UCF_Degree_Config::add_options();
 		flush_rewrite_rules();
 	}
+
+	register_activation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_activation' );
 }
 
 if ( ! function_exists( 'ucf_degree_plugin_deactivation' ) ) {
@@ -54,30 +56,32 @@ if ( ! function_exists( 'ucf_degree_plugin_deactivation' ) ) {
 		UCF_Degree_Config::delete_options();
 		flush_rewrite_rules();
 	}
+
+	register_deactivation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_deactivation' );
 }
 
-register_activation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_activation' );
-register_deactivation_hook( UCF_DEGREE__PLUGIN_FILE, 'ucf_degree_plugin_deactivation' );
+if ( ! function_exists( 'ucf_degree_init' ) ) {
+	function ucf_degree_init() {
+		add_action( 'init', array( 'UCF_Degree_ProgramType', 'register_programtype'), 10, 0 );
+		add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 10, 0 );
+		add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 10, 0 );
 
-add_action( 'plugins_loaded', function() {
+		if ( UCF_Degree_Config::rest_api_enabled() && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
+			add_action( 'ucf_degree_post_type_args', array( 'UCF_Degree_API', 'add_rest_route_to_args' ) );
+			add_action( 'rest_api_init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
+			add_action( 'rest_api_init', array( 'UCF_Degree_Search_API', 'register_rest_routes' ) );
 
-	add_action( 'init', array( 'UCF_Degree_ProgramType', 'register_programtype'), 10, 0 );
-	add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 10, 0 );
-	add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 10, 0 );
+			add_action( 'posts_orderby', array( 'UCF_Degree_Search_Custom_Filters', 'order_by_tax_orderby' ), 15, 2 );
+		}
 
-	if ( UCF_Degree_Config::rest_api_enabled() && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
-		add_action( 'ucf_degree_post_type_args', array( 'UCF_Degree_API', 'add_rest_route_to_args' ) );
-		add_action( 'rest_api_init', array( 'UCF_Degree_API', 'register_rest_routes' ) );
-		add_action( 'rest_api_init', array( 'UCF_Degree_Search_API', 'register_rest_routes' ) );
+		if ( ! shortcode_exists( 'career-paths' ) ) {
+			add_shortcode( 'career-paths', array( 'UCF_Degree_Career_Paths_List_Shortcode', 'shortcode' ) );
+		}
 
-		add_action( 'posts_orderby', array( 'UCF_Degree_Search_Custom_Filters', 'order_by_tax_orderby' ), 15, 2 );
+		add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
 	}
 
-	if ( ! shortcode_exists( 'career-paths' ) ) {
-		add_shortcode( 'career-paths', array( 'UCF_Degree_Career_Paths_List_Shortcode', 'shortcode' ) );
-	}
-
-	add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
-} );
+	add_action( 'plugins_loaded', 'ucf_degree_init' );
+}
 
 ?>
