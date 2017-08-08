@@ -55,7 +55,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 			}
 
 			ob_start();
-			echo UCF_Degree_List_Common::display_degrees( $items, $atts['layout'], $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			echo UCF_Degree_List_Common::display_degrees( $items, $atts['layout'], $atts, $grouped );
 			return ob_get_clean();
 		}
 
