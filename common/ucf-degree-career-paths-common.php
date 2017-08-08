@@ -57,7 +57,7 @@ if ( ! function_exists( 'ucf_career_paths_display_classic_title' ) ) {
 		$formatted_title = '';
 
 		if ( $title = $args['title'] ) {
-			$formatted_title = '<h2 class=ucf-career-paths-title">' . $title . '</h2>';
+			$formatted_title = '<h2 class="ucf-career-paths-title">' . $title . '</h2>';
 		}
 
 		return $formatted_title;
