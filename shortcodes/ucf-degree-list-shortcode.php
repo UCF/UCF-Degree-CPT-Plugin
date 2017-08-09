@@ -13,12 +13,13 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 		**/
 		public static function shortcode( $atts ) {
 			$atts = shortcode_atts( array(
+				'layout'        => 'classic',
 				'title'         => 'Degrees',
 				'groupby'       => null,
 				'groupby_field' => null,
 				'filter_by_tax' => null,
 				'terms'         => null
-			), $atts );
+			), $atts, 'degree-list' );
 
 			$args = array(
 				'post_type'      => 'degree',
@@ -54,7 +55,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 			}
 
 			ob_start();
-			echo UCF_Degree_List_Common::display_degrees( $items, 'classic', $atts['title'], 'default', $grouped, $atts['groupby_field'] );
+			echo UCF_Degree_List_Common::display_degrees( $items, $atts['layout'], $atts, $grouped );
 			return ob_get_clean();
 		}
 
