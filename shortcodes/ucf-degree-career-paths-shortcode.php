@@ -41,7 +41,7 @@ if ( ! class_exists( 'UCF_Degree_Career_Paths_List_Shortcode' ) ) {
 
 			if ( $_post ) {
 				$items = wp_get_post_terms( $_post->ID, 'career_paths' );
-				$retval = UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts['title'] );
+				$retval = UCF_Degree_Career_Paths_Common::display_career_paths( $items, $atts['layout'], $atts );
 			}
 
 			ob_start();
