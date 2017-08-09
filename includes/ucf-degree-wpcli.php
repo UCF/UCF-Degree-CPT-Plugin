@@ -2,7 +2,7 @@
 /**
  * Commands for creating and upgrading degrees
  **/
-class Degrees extends WP_CLI_Command {
+class UCF_Degree_Commands extends WP_CLI_Command {
 	/**
 	 * Imports degrees from the search service.
 	 *
