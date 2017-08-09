@@ -20,6 +20,13 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 2.0.0 #
+Enhancements:
+* Converts layout actions for degree lists and career path lists to filters, and consolidates arguments passed to degree list layout functions.  Please note this change is not backward-compatible with layouts registered using hooks provided by older versions of the plugin.
+* Changed the generic class name "Degrees" to "UCF_Degree_Commands"
+* Removed anonymous function calls for improved support with older versions of PHP
+* Fixed plugin activation and deactivation hooks being referenced outside of the if-statements that check whether or not the functions exist yet.
+
 # 1.1.0 #
 Bug Fixes:
 * Fixed bug with output of `UCF_Degree_PostType::taxonomies()` still returning nonexistent taxonomies
@@ -31,7 +38,6 @@ Enhancements:
 * Adds an option to schedule the import via wp-cron (the actual logic for adding the wp-cron task still needs to be written)
 * Adds some hooks that should allow the import process to be extended for a specific site's needs.
 * Added the helper method `UCF_Degree_Program_Types_Common::get_name_or_alias()`, which returns a program type's alias, if available, or name.
-
 
 # 1.0.2 #
 Bug Fixes:
