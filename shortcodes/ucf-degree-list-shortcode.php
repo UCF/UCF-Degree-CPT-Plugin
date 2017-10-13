@@ -13,13 +13,14 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 		**/
 		public static function shortcode( $atts ) {
 			$atts = shortcode_atts( array(
-				'layout'        => 'classic',
 				'title'         => 'Degrees',
+				'layout'        => 'classic',
 				'groupby'       => null,
 				'groupby_field' => null,
 				'filter_by_tax' => null,
+				'filter_by_taxonomies' => null,
 				'terms'         => null
-			), $atts, 'degree-list' );
+			), $atts );
 
 			$args = array(
 				'post_type'      => 'degree',
@@ -28,7 +29,21 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				'order'          => 'ASC'
 			);
 
-			if ( $atts['filter_by_tax'] && $atts['terms'] ) {
+			if ( $atts['filter_by_taxonomies'] && $atts['terms'] ) {
+				$taxonomies = explode( ' ', $atts['filter_by_taxonomies'] );
+				$term_groups = explode( ' ', $atts['terms'] );
+				$args['tax_query'] = array();
+
+				for ( $i = 0; $i < count($taxonomies); $i++) {
+					$term = isset( $term_groups[$i] ) !== false ? $term_groups[$i] : "";
+					$args['tax_query'][] = array(
+						'taxonomy' => $taxonomies[$i],
+						'field'    => 'slug',
+						'terms'    => explode( ',', $term_groups[$i] )
+					);
+				}
+			}
+			else if ( $atts['filter_by_tax'] && $atts['terms'] ) {
 				$args['tax_query'] = array(
 					array(
 						'taxonomy' => $atts['filter_by_tax'],
@@ -39,7 +54,6 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 			}
 
 			$items = get_posts( $args );
-
 			$grouped = ! empty( $atts['groupby'] ) ? true : false;
 
 			if ( $grouped ) {
@@ -55,7 +69,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 			}
 
 			ob_start();
-			echo UCF_Degree_List_Common::display_degrees( $items, $atts['layout'], $atts, $grouped );
+			echo UCF_Degree_List_Common::display_degrees( $items, $atts['layout'], $atts['title'], 'default', $grouped, $atts['groupby_field'] );
 			return ob_get_clean();
 		}
 
