@@ -119,3 +119,49 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_after' ) ) {
 
 	add_filter( 'ucf_degree_list_display_classic_after', 'ucf_degree_list_display_classic_after', 10, 4 );
 }
+
+if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
+	function ucf_degree_list_display_classic_title( $content, $items, $args, $grouped ) {
+		$formatted_title = '';
+
+		if ( $title = $args['title'] ) {
+			$formatted_title = '<h2 class=ucf-degree-list-title">' . $title . '</h2>';
+		}
+
+		return $formatted_title;
+	}
+
+	add_filter( 'ucf_degree_list_display_classic_title', 'ucf_degree_list_display_classic_title', 10, 4 );
+}
+
+if ( ! function_exists( 'ucf_degree_list_display_count_before' ) ) {
+	function ucf_degree_list_display_count_before( $content, $items, $args, $grouped ) {
+		return;
+	}
+
+	add_filter( 'ucf_degree_list_display_count_before', 'ucf_degree_list_display_count_before', 10, 4 );
+}
+
+if ( ! function_exists( 'ucf_degree_list_display_count_title' ) ) {
+	function ucf_degree_list_display_count_title( $content, $items, $args, $grouped ) {
+		return;
+	}
+
+	add_filter( 'ucf_degree_list_display_count_title', 'ucf_degree_list_display_count_title', 10, 4 );
+}
+
+if ( ! function_exists( 'ucf_degree_list_display_count' ) ) {
+	function ucf_degree_list_display_count( $content, $items, $args, $grouped ) {
+		echo count($items);
+	}
+
+	add_filter( 'ucf_degree_list_display_count', 'ucf_degree_list_display_count', 10, 4 );
+}
+
+if ( ! function_exists( 'ucf_degree_list_display_count_after' ) ) {
+	function ucf_degree_list_display_count_after( $content, $items, $args, $grouped ) {
+		return;
+	}
+
+	add_filter( 'ucf_degree_list_display_count_after', 'ucf_degree_list_display_count_after', 10, 4 );
+}
