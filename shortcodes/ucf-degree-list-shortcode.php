@@ -18,6 +18,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				'groupby'       => null,
 				'groupby_field' => null,
 				'filter_by_tax' => null,
+				'filter_by_taxonomies' => null,
 				'terms'         => null
 			), $atts, 'degree-list' );
 
@@ -28,7 +29,21 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				'order'          => 'ASC'
 			);
 
-			if ( $atts['filter_by_tax'] && $atts['terms'] ) {
+			if ( $atts['filter_by_taxonomies'] && $atts['terms'] ) {
+				$taxonomies = explode( ' ', $atts['filter_by_taxonomies'] );
+				$term_groups = explode( ' ', $atts['terms'] );
+				$args['tax_query'] = array();
+
+				for ( $i = 0; $i < count($taxonomies); $i++) {
+					$term = isset( $term_groups[$i] ) !== false ? $term_groups[$i] : "";
+					$args['tax_query'][] = array(
+						'taxonomy' => $taxonomies[$i],
+						'field'    => 'slug',
+						'terms'    => explode( ',', $term_groups[$i] )
+					);
+				}
+			}
+			else if ( $atts['filter_by_tax'] && $atts['terms'] ) {
 				$args['tax_query'] = array(
 					array(
 						'taxonomy' => $atts['filter_by_tax'],
