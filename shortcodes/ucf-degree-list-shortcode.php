@@ -34,7 +34,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				$term_groups = explode( ' ', $atts['terms'] );
 				$args['tax_query'] = array();
 
-				for ( $i = 0; $i < count($taxonomies); $i++) {
+				for ( $i = 0; $i < count( $taxonomies ); $i++) {
 					$term = isset( $term_groups[$i] ) !== false ? $term_groups[$i] : "";
 					$args['tax_query'][] = array(
 						'taxonomy' => $taxonomies[$i],
