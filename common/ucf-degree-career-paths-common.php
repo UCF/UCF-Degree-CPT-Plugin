@@ -4,7 +4,7 @@
  **/
 if ( ! class_exists( 'UCF_Degree_Career_Paths_Common' ) ) {
 	class UCF_Degree_Career_Paths_Common {
-		public function display_career_paths( $items, $layout, $args ) {
+		public static function display_career_paths( $items, $layout, $args ) {
 			ob_start();
 
 			// Display before
