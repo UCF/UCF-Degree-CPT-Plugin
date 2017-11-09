@@ -304,9 +304,10 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$alias = $alias ? $alias : $term->name;
 
 			$retval[] = array(
-				'name' => $alias,
-				'slug' => $term->slug,
-				'count' => $term->count
+				'name'     => $alias,
+				'plural'   => $term->name . 's',
+				'slug'     => $term->slug,
+				'count'    => $term->count
 			);
 		}
 
@@ -418,9 +419,10 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$alias = $alias ? $alias : $term->name;
 
 			$retval[] = array(
-				'name' => $alias,
-				'slug' => $term->slug,
-				'count' => $term->count
+				'name'     => $alias,
+				'fullname' => $term->name,
+				'slug'     => $term->slug,
+				'count'    => $term->count
 			);
 		}
 
