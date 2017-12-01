@@ -4,7 +4,7 @@
  **/
 if ( ! class_exists( 'UCF_Degree_List_Common' ) ) {
 	class UCF_Degree_List_Common {
-		public function display_degrees( $items, $layout, $args, $grouped=false ) {
+		public static function display_degrees( $items, $layout, $args, $grouped=false ) {
 			ob_start();
 
 			// Display before
