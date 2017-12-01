@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 4.7.3
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -26,6 +26,10 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 
 == Changelog ==
+
+=== 2.0.1 ===
+Bug Fixes:
+* Fixed notices
 
 === 2.0.0 ===
 Enhancements:

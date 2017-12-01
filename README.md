@@ -20,6 +20,10 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 2.0.1 #
+Bug Fixes:
+* Fixed notices
+
 # 2.0.0 #
 Enhancements:
 * Converts layout actions for degree lists and career path lists to filters, and consolidates arguments passed to degree list layout functions.  Please note this change is not backward-compatible with layouts registered using hooks provided by older versions of the plugin.
