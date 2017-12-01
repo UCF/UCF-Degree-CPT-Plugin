@@ -21,6 +21,9 @@ Provides a custom post type, taxonomies and help functions for describing degree
 ## Changelog ##
 
 # 2.0.1 #
+Enhancements:
+* Added fullname and plural to degree-search API colleges and program-types
+
 Bug Fixes:
 * Fixed notices
 
