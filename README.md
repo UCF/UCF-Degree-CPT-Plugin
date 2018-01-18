@@ -20,6 +20,10 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 2.0.2 #
+Bug Fixes/Enhancements:
+* Added improvements to how degrees are matched with undergraduate catalog URLs in the degree importer
+
 # 2.0.1 #
 Enhancements:
 * Added fullname and plural to degree-search API colleges and program-types
