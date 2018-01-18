@@ -278,12 +278,13 @@ Degree Total    : {$degree_total}
 			$program->suffix = $this->get_program_suffix( $program->name, $program->type, $program->graduate );
 			$program->type = $this->get_program_type( $program->type, $program->graduate, $program->name );
 			$program->type_ucmatch = $this->get_uc_program_type( $program->type );
+
 			if ( class_exists( 'UCF_College_Taxonomy' ) ) {
 				$program->college_name = $this->get_college_name( $program->college_name );
 			}
 
 			if ( $program->graduate === 0 ) {
-				$program->catalog_url = $this->get_catalog_url( $program );
+				$program->catalog_url = $this->get_uc_catalog_url( $program );
 			}
 
 			if ( has_filter( 'ucf_degree_get_program_data' ) ) {
@@ -377,18 +378,33 @@ Degree Total    : {$degree_total}
 	}
 
 	/**
-	 * Returns the undergraduate catalog type
+	 * Returns the undergraduate catalog program type
 	 * @author Jim Barnes
 	 * @since 1.1.0
-	 * @param $type string | The search service type
-	 * @return string | The undergraduate catalog type.
+	 * @param $type string | The search service program type
+	 * @return string | The undergraduate catalog program type.
 	 **/
 	private function get_uc_program_type( $type ) {
-		if ( $type === 'major' ) {
-			return 'Degree Program';
-		} else {
-			return $type;
+		$uc_type = false;
+
+		switch ( $type ) {
+			case 'Minor':
+			case 'Certificate':
+				$uc_type = $type;
+				break;
+			case 'Articulated Program':
+				$uc_type = 'Statewide Articulated A.S. To B.S. Programs';
+				break;
+			case 'Accelerated Program':
+				$uc_type = 'Accelerated Undergraduate-Graduate Programs';
+				break;
+			case 'Undergraduate Degree':
+			default:
+				$uc_type = 'Degree Program';
+				break;
 		}
+
+		return $uc_type;
 	}
 
 	/**
@@ -469,41 +485,46 @@ Degree Total    : {$degree_total}
 	 * @param $program Object | The program object
 	 * @return (string|NULL) | The catalog url if available.
 	 **/
-	private function get_catalog_url( $program ) {
+	private function get_uc_catalog_url( $program ) {
 		$clean_program_name = $this->clean_name( $program->name );
 		$clean_college_name = $this->clean_name( $program->college_name );
+
 		if ( $this->catalog_programs ) {
-			foreach( $this->catalog_programs as $key => $uc_program ) {
-				/**
-				 * Check if our program type string is a substring of the catalog's program type;
-				 * if both program names match, or the program is accelerated and the name is a substring of the catalog's program name or name + type;
-				 * and if the college name either matches or if one college name is a substring of the other
-				 **/
+
+			foreach ( $this->catalog_programs as $key => $uc_program ) {
 				$uc_clean_program_name = $this->clean_name( $uc_program->name );
-				$uc_clean_type_name = $this->clean_name( $uc_program->type );
-				$uc_clean_college_name = $this->clean_name( $uc_program->college );
+				$uc_clean_type_name    = $this->clean_name( $uc_program->type );
+
+				/**
+				 * Check if:
+				 * 1) Our program type and the catalog's program type match,
+				 * 2) AND, The program names either:
+				 *    a) match, or
+				 *    b) in cases where the program is Accelerated, either:
+				 *        i) our program name is a substring of the catalog
+				 *           program name, or
+				 *       ii) the catalog program name + type are a substring of
+				 *           our program name
+				 **/
 				if (
-					stripos( $uc_program->type, $program->type_ucmatch ) !== false &&
-					(
-						$clean_program_name === $uc_clean_program_name ||
-						(
-							$program->type_ucmatch === 'accelerated' &&
-							(
-								stripos( $clean_program_name, $uc_clean_program_name ) !== false ||
-								stripos( $uc_clean_program_name.$uc_clean_type_name, $clean_program_name ) !== false
+					$uc_program->type === $program->type_ucmatch
+					&& (
+						$clean_program_name === $uc_clean_program_name
+						|| (
+							$program->type === 'Accelerated Program'
+							&& (
+								stripos( $clean_program_name, $uc_clean_program_name ) !== false
+								|| stripos( $uc_clean_program_name.$uc_clean_type_name, $clean_program_name ) !== false
 							)
 						)
-					) &&
-					(
-						$clean_college_name === $uc_clean_college_name ||
-						stripos( $clean_college_name, $uc_clean_college_name ) !== false ||
-						stripos( $uc_clean_college_name, $clean_college_name ) !== false
 					)
 				) {
 					return ( ! empty( $uc_program->pdf ) ) ? $uc_program->pdf : '';
 				}
 			}
+
 		}
+
 		return '';
 	}
 
