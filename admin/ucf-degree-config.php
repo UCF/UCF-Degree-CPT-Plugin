@@ -20,7 +20,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		 * @return bool
 		 **/
 		public static function rest_api_enabled() {
-			return is_plugin_active( 'rest-api/plugin.php' ) || class_exists( 'WP_REST_Posts_Controller' );
+			return class_exists( 'WP_REST_Posts_Controller' );
 		}
 
 		/**
