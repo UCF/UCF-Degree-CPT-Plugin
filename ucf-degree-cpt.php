@@ -72,6 +72,8 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 			add_action( 'rest_api_init', array( 'UCF_Degree_Search_API', 'register_rest_routes' ) );
 
 			add_action( 'posts_orderby', array( 'UCF_Degree_Search_Custom_Filters', 'order_by_tax_orderby' ), 15, 2 );
+
+			add_filter( 'rest_degree_query', array( 'UCF_Degree_Search_Custom_Filters', 'filter_by_career_paths' ), 10, 2 );
 		}
 
 		if ( ! shortcode_exists( 'career-paths' ) ) {

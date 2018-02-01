@@ -92,5 +92,24 @@ if ( ! class_exists( 'UCF_Degree_Search_Custom_Filters' ) ) {
 
 			return taxonomy_exists( $taxonomy );
 		}
+
+		/**
+		 * Custom where filter for filtering by career_paths
+		 */
+		public static function filter_by_career_paths( $prepared_args, $request) {
+			if ( isset( $request['career_paths'] ) ) {
+				if ( ! isset( $prepared_args['tax_query'] ) ) {
+					$prepared_args['tax_query'] = array(
+						array(
+							'taxonomy' => 'career_paths',
+							'field'    => 'name',
+							'terms'    => esc_sql( $request['career_paths'] )
+						)
+					);
+				}
+			}
+
+			return $prepared_args;
+		}
 	}
 }
