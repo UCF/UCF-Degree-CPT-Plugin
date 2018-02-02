@@ -95,17 +95,24 @@ if ( ! class_exists( 'UCF_Degree_Search_Custom_Filters' ) ) {
 
 		/**
 		 * Custom where filter for filtering by career_paths
+		 * @author Jim Barnes
+		 * @since 2.0.2
+		 * @param array $prepared_args The prepared query args
+		 * @param WP_REST_Request $request The Rest request object
+		 * @return array The modified prepared arguments
 		 */
 		public static function filter_by_career_paths( $prepared_args, $request) {
 			if ( isset( $request['career_paths'] ) ) {
+				$tax_query = array(
+					'taxonomy' => 'career_paths',
+					'field'    => 'name',
+					'terms'    => esc_sql( $request['career_paths'] )
+				);
+
 				if ( ! isset( $prepared_args['tax_query'] ) ) {
-					$prepared_args['tax_query'] = array(
-						array(
-							'taxonomy' => 'career_paths',
-							'field'    => 'name',
-							'terms'    => esc_sql( $request['career_paths'] )
-						)
-					);
+					$prepared_args['tax_query'] = array( $tax_query );
+				} else {
+					$prepared_args['tax_query'][] = $tax_query;
 				}
 			}
 
