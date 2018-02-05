@@ -20,6 +20,10 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Changelog ##
 
+# 2.0.3 #
+Enhancements:
+* Adds an endpoint for retrieving degree specific relevanssi results.
+
 # 2.0.2 #
 Bug Fixes/Enhancements:
 * Added improvements to how degrees are matched with undergraduate catalog URLs in the degree importer
