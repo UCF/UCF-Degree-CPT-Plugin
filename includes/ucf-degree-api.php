@@ -14,6 +14,18 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @return void
 		 **/
 		public static function register_rest_routes() {
+			$root = 'wp';
+			$version = 'v2';
+
+			if ( function_exists( 'relevanssi_do_query' ) ) {
+				register_rest_route( "{$root}/{$version}", "/degrees/relevanssi", array(
+					array(
+						'method'              => WP_REST_Server::READABLE,
+						'callback'            => array( 'UCF_Degree_API', 'get_relevanssi_results' ),
+					)
+				) );
+			}
+
 			self::register_fields();
 			add_action( 'rest_prepare_degree', array( 'UCF_Degree_API', 'remove_tags' ), 10, 3 );
 		}
@@ -70,6 +82,74 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					'schema'          => null
 				)
 			);
+		}
+
+		/**
+		 * Custom endpoint for querying degrees using relevanssi
+		 * @author Jim Barnes
+		 * @since 2.0.3
+		 * @param WP_REST_Request $request The WP REST request object
+		 * @return WP_REST_Response The prepared response
+		 */
+		public static function get_relevanssi_results( $request ) {
+			$search        = isset( $request['search'] ) ? $request['search'] : null;
+			$limit         = isset( $request['limit'] ) ? $request['limit'] : 10;
+			$colleges      = isset( $request['colleges'] ) ? $request['colleges'] : null;
+			$program_types = isset( $request['program_types'] ) ? $request['program_types'] : null;
+
+			$args = array(
+				'post_type'        => 'degree',
+				'limit'            => $limit,
+				'orderby'          => 'relevance',
+				'suppress_filters' => false
+			);
+
+			if ( $search ) {
+				$args['s'] = $search;
+			}
+
+			// Add program_typesto args, if they exist.
+			if ( $program_types ) {
+				if ( ! isset( $args['tax_query'] ) ) {
+					$args['tax_query'] = array();
+				}
+
+				$args['tax_query'][] = array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => $program_types
+				);
+			}
+
+			// Add colleges to args, if they exist
+			if ( $colleges ) {
+				if ( ! isset( $args['tax_query'] ) ) {
+					$args['tax_query'] = array();
+				}
+
+				$args['tax_query'][] = array(
+					'taxonomy' => 'colleges',
+					'field'    => 'slug',
+					'terms'    => $colleges
+				);
+			}
+
+			$query = new WP_Query( $args );
+
+			// Don't call the normal query. Use relevansse query.
+			relevanssi_do_query( $query );
+
+			// Set object type to `degree` so additional meta/tax gets added
+			$controller = new WP_REST_Posts_Controller( 'degree' );
+			$retval = array();
+
+			while( $query->have_posts() ) {
+				$query->the_post(); // Set the post object
+				$data     = $controller->prepare_item_for_response( $query->post, $request );
+				$retval[] = $controller->prepare_response_for_collection( $data );
+			}
+
+			return new WP_REST_Response( $retval, 200 );
 		}
 
 		/**
