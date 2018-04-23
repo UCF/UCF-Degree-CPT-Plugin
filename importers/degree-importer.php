@@ -57,7 +57,7 @@ class UCF_Degree_Importer {
 	 **/
 	public function import() {
 		try {
-			$this->maybe_disable_search_writebacks();
+			$this->maybe_enable_search_writebacks();
 
 			$this->search_results = $this->fetch_degrees();
 			$this->existing_posts = $this->get_existing();
