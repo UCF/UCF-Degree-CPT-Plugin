@@ -192,7 +192,7 @@ Degree Total    : {$degree_total}
 			'key' => $this->api_key
 		);
 
-		$url = $this->search_api . 'api/v1/programs/?' . http_build_query( $query );
+		$url = $this->search_api . 'programs/?' . http_build_query( $query );
 
 		if ( $this->additional_params ) {
 			$url .= '&' . $this->additional_params;
