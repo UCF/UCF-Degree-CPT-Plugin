@@ -316,7 +316,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'ucf_degree_section_rest_api',
 				'Rest API',
 				array( 'UCF_Degree_Config', 'rest_api_message' ),
-				$setting_slug
+				$settings_slug
 			);
 
 			add_settings_section(
