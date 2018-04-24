@@ -386,7 +386,8 @@ class UCF_Degree_Import {
 	private
 		$plan_code,
 		$subplan_code,
-		$program_id,
+		$degree_id,
+		$api_id,
 		$name,
 		$slug,
 		$description,
@@ -416,7 +417,8 @@ class UCF_Degree_Import {
 	public function __construct( $program ) {
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
-		$this->program_id    = $program->id;
+		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
+		$this->api_id        = $program->id;
 		$this->name          = $program->name;
 		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
 		$this->description   = $this->get_catalog_description( $program->descriptions );
@@ -634,14 +636,9 @@ class UCF_Degree_Import {
 			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
 			'meta_query'     => array(
-				'relation'  => 'AND',
 				array(
-					'key'   => 'degree_plan_code',
-					'value' => $this->plan_code
-				),
-				array(
-					'key'   => 'degree_subplan_code',
-					'value' => $this->subplan_code
+					'key'   => 'degree_id',
+					'value' => $this->degree_id
 				)
 			),
 			'tax_query'      => array(
@@ -705,7 +702,8 @@ class UCF_Degree_Import {
 	 **/
 	private function get_post_metadata() {
 		return array(
-			'degree_id'           => $this->program_id,
+			'degree_id'           => $this->degree_id,
+			'degree_api_id'       => $this->api_id,
 			'degree_description'  => html_entity_decode( $this->description ),
 			'degree_pdf'          => $this->catalog_url,
 			'degree_plan_code'    => $this->plan_code,
