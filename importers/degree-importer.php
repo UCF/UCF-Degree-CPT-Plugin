@@ -714,9 +714,11 @@ class UCF_Degree_Import {
 	 **/
 	private function get_post_metadata() {
 		return array(
-			'degree_id'          => $this->degree_id,
-			'degree_description' => html_entity_decode( $this->description ),
-			'degree_catalog_url' => $this->catalog_url,
+			'degree_id'           => $this->degree_id,
+			'degree_description'  => html_entity_decode( $this->description ),
+			'degree_catalog_url'  => $this->catalog_url,
+			'degree_plan_code'    => $this->plan_code,
+			'degree_subplan_code' => $this->subplan_code
 		);
 	}
 
