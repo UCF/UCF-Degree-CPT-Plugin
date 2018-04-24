@@ -9,13 +9,13 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * ## OPTIONS
 	 *
 	 * [--api_base_url=<api_base>]
-	 * : The base URL of the search service you want to pull from. The "Search Service Base URL" plugin option is used by default.
+	 * : The base URL of the Search Service you want to pull from. The "Search Service Base URL" plugin option is used by default.
 	 *
 	 * [--api_key=<api_key>]
-	 * : The API key to query against the search service with. The "Search Service API Key" plugin option is used by default.
+	 * : The API key to query against the Search Service with. The "Search Service API Key" plugin option is used by default.
 	 *
 	 * [--enable_search_writebacks]
-     * : If enabled, data will be written back to the search service when each degree is imported if the UCF Search Service Hook plugin is activated. Disabled by default.
+     * : If enabled, data will be written back to the Search Service when each degree is imported if the UCF Search Service Hook plugin is activated. Disabled by default.
      * ---
      * default: false
      * ---
@@ -23,7 +23,7 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 * # Imports degrees from the production search service.
-	 * $ wp degrees import https://search.cm.ucf.edu/ xxxxxxxxxxxxxxxxx
+	 * $ wp degrees import --api_base_url="https://search.cm.ucf.edu/api/v1/" --api_key="xxxxxxxxxxxxxxxxx"
 	 *
 	 * @when after_wp_load
 	 */

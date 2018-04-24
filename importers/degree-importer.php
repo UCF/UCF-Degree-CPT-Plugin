@@ -136,43 +136,32 @@ Degree Total    : {$degree_total}
 	 * @return array | array containing the next page's URL, the updated result set, and, optionally, the total result count
 	 */
 	private function fetch_api_page( $url, $all_results, $return_count=false ) {
-		$response = wp_remote_get( $url, array( 'timeout' => 5 ) );
+		$response = UCF_Degree_Common::fetch_json( $url );
 
-		if ( is_array( $response ) && wp_remote_retrieve_response_code( $response ) < 400 ) {
-			$response_body = wp_remote_retrieve_body( $response );
-			$retval = json_decode( $response_body );
-
-			if ( ! $retval ) {
-				throw new Exception(
-					'Failed to parse the search service json. ' .
-					'Please make sure your search service url is correct.',
-					2
-				);
-			}
-		} else {
+		if ( ! $response || ! isset( $response->results ) ) {
 			throw new Exception(
-				'Failed to connect to the search service. ' .
-				'Please make sure your search service url is correct.',
-				1
+				'Failed to parse the Search Service JSON. ' .
+				'Please make sure your Search Service URL is correct.',
+				2
 			);
 		}
 
-		if ( count( $retval->results ) === 0 ) {
+		if ( count( $response->results ) === 0 ) {
 			throw new Exception(
-				'No results found from the search service. ' .
-				'Please make sure your search service url is correct.',
+				'No results found from the Search Service. ' .
+				'Please make sure your Search Service URL is correct.',
 				3
 			);
 		}
 
-		$new_url = isset( $retval->next ) ? $retval->next : null;
-		$all_results = array_merge( $all_results, $retval->results );
+		$next_url = isset( $response->next ) ? $response->next : null;
+		$all_results = array_merge( $all_results, $response->results );
 
 		if ( $return_count ) {
-			$count = isset( $retval->count ) ? $retval->count : 0;
-			return array( $new_url, $all_results, $count );
+			$count = isset( $response->count ) ? $response->count : 0;
+			return array( $next_url, $all_results, $count );
 		}
-		return array( $new_url, $all_results );
+		return array( $next_url, $all_results );
 	}
 
 	/**
@@ -185,18 +174,15 @@ Degree Total    : {$degree_total}
 	private function fetch_api_results() {
 		WP_CLI::log( 'Fetching API data...' );
 
-		$results = array();
+		$results = $query = array();
 		$count = 0;
 
-		$query = array(
-			'key' => $this->api_key
-		);
-
-		$url = $this->search_api . 'programs/?' . http_build_query( $query );
-
 		if ( $this->additional_params ) {
-			$url .= '&' . $this->additional_params;
+			parse_str( $this->additional_params, $query );
 		}
+		$query['key'] = $this->api_key;
+
+		$url = add_query_arg( $query, $this->search_api . 'programs/' );
 
 		// Perform an initial out-of-loop fetch and assign $count
 		list( $url, $results, $count ) = $this->fetch_api_page( $url, $results, true );
@@ -648,6 +634,7 @@ class UCF_Degree_Import {
 			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
 			'meta_query'     => array(
+				'relation'  => 'AND',
 				array(
 					'key'   => 'degree_plan_code',
 					'value' => $this->plan_code
@@ -720,7 +707,7 @@ class UCF_Degree_Import {
 		return array(
 			'degree_id'           => $this->program_id,
 			'degree_description'  => html_entity_decode( $this->description ),
-			'degree_catalog_url'  => $this->catalog_url,
+			'degree_pdf'          => $this->catalog_url,
 			'degree_plan_code'    => $this->plan_code,
 			'degree_subplan_code' => $this->subplan_code
 		);

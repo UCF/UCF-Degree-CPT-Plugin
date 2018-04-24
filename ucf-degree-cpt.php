@@ -10,13 +10,6 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	include_once 'includes/ucf-degree-wpcli.php';
-	include_once 'importers/degree-importer.php';
-
-	WP_CLI::add_command( 'degrees', 'UCF_Degree_Commands' );
-}
-
 define( 'UCF_DEGREE__PLUGIN_URL', plugins_url( basename( dirname( __FILE__ ) ) ) );
 define( 'UCF_DEGREE__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UCF_DEGREE__STATIC_URL', UCF_DEGREE__PLUGIN_URL . '/static' );
@@ -39,6 +32,14 @@ include_once 'common/ucf-degree-program-types-common.php';
 
 include_once 'shortcodes/ucf-degree-list-shortcode.php';
 include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
+
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	include_once 'includes/ucf-degree-wpcli.php';
+	include_once 'importers/degree-importer.php';
+
+	WP_CLI::add_command( 'degrees', 'UCF_Degree_Commands' );
+}
+
 
 if ( ! function_exists( 'ucf_degree_plugin_activation' ) ) {
 	function ucf_degree_plugin_activation() {

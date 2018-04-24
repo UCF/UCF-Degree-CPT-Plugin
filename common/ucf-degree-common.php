@@ -5,6 +5,31 @@
 if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 	class UCF_Degree_Common {
 		/**
+		 * Returns a JSON object from the provided URL.  Detects undesirable status
+		 * codes and returns false if the response doesn't look valid.
+		 *
+		 * @since 3.0.0
+		 * @author Jo Dickson
+		 * @param string $url URL that points to a JSON object/feed
+		 * @return mixed JSON-decoded object or false on failure
+		 */
+		public static function fetch_json( $url ) {
+			$response      = wp_remote_get( $url, array( 'timeout' => 5 ) );
+			$response_code = wp_remote_retrieve_response_code( $response );
+			$result        = false;
+
+			/**
+			 * All good responses should have a response code
+			 * that is less than 400.
+			 */
+			if ( is_array( $response ) && is_int( $response_code ) && $response_code < 400 ) {
+				$result = json_decode( wp_remote_retrieve_body( $response ) );
+			}
+
+			return $result;
+		}
+
+		/**
 		 * Retrieves a return value via an HTTP Request
 		 * @param string $url | The url of the API endpoint
 		 * @param array $args | The argument array
@@ -15,20 +40,9 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 				$params['key'] = UCF_Degree_Config::get_option_or_default( 'api_key' );
 			}
 
-			$url .= '?' . http_build_query( $params );
+			$url = add_query_arg( $params, $url );
 
-			$retval = false;
-			$response = wp_remote_get( $url, array( 'timeout' => 5 ) );
-
-			/**
-			 * All good responses should have a response code
-			 * that is less than 400.
-			 */
-			if ( is_array( $response ) && wp_remote_retrieve_response_code( $response ) < 400 ) {
-				$retval = json_decode( wp_remote_retrieve_body( $response ) );
-			}
-
-			return $retval;
+			return self::fetch_json( $url );
 		}
 
 		/**
@@ -77,7 +91,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 */
 		public static function update_service_values( $post_id, $program_id=null ) {
 			// Get plancode and subplan code
-			$plancode = get_post_meta( $post_id, 'degree_plan_code', true );
+			$plan_code = get_post_meta( $post_id, 'degree_plan_code', true );
 			$subplan_code = get_post_meta( $post_id, 'degree_subplan_code', true );
 
 			$subplan_code = empty( $subplan_code ) ? null : $subplan_code;
@@ -93,11 +107,11 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 
 			if ( ! $result ) {
 				$params = array(
-					'plan_code'    => $plancode,
+					'plan_code' => $plan_code,
 				);
 
-				if ( $subplan ) {
-					$params['subplan_code'] = $subplan;
+				if ( $subplan_code ) {
+					$params['subplan_code'] = $subplan_code;
 				} else {
 					$params['subplan_code__isnull'] = True;
 				}
@@ -128,10 +142,13 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @return object | The result
 		 */
 		private static function return_verified_result( $results, $params ) {
+			$plan_code = $params['plan_code'];
+			$subplan_code = isset( $params['plan_code'] ) ? $params['plan_code'] : null;
+
 			foreach( $results as $result ) {
 				if (
-					$result->plan_code === $params['plan_code'] &&
-					$result->subplan_code === $params['subplan_code']
+					$result->plan_code === $plan_code &&
+					$result->subplan_code === $subplan_code
 				) {
 					return $result;
 				}

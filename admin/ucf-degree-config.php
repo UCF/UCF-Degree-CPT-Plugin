@@ -404,7 +404,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'ucf_degree_section_importer',
 				array(
 					'label_for'   => self::$option_prefix . 'search_filter',
-					'description' => 'Additional filters to send to the search service when importing degrees.',
+					'description' => 'Additional query parameters to send to the Search Service when importing degrees.',
 					'type'        => 'text'
 				)
 			);
@@ -462,7 +462,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				$description_section,
 				array( // Additional arguments to pass to the display function
 					'label_for'   => self::$option_prefix . 'desc_type',
-					'description' => 'The description type to set when writing to the search service.',
+					'description' => 'The description type to set when writing to the Search Service.',
 					'type'        => 'select',
 					'options'     => self::get_description_types()
 				)
@@ -492,7 +492,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				$profile_section,
 				array( // Additional arguments to pass to the display function
 					'label_for'   => self::$option_prefix . 'prof_type',
-					'description' => 'The profile type to set when writing to the search service.',
+					'description' => 'The profile type to set when writing to the Search Service.',
 					'type'        => 'select',
 					'options'     => self::get_profile_types()
 				)
