@@ -16,9 +16,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'update_desc'        => true,
 				'update_prof'        => true,
 				'desc_type'          => null,
-				'prof_type'          => null,
-				'plan_code_field'    => 'degree_plan_code',
-				'subplan_code_field' => 'degree_subplan_code'
+				'prof_type'          => null
 			);
 
 		/**
@@ -129,8 +127,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			add_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] );
 			add_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] );
 			add_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] );
-			add_option( self::$option_prefix . 'plan_code_field', $defaults['plan_code_field'] );
-			add_option( self::$option_prefix . 'subplan_code_field', $defaults['subplan_code_field'] );
 		}
 
 		/**
@@ -151,8 +147,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			delete_option( self::$option_prefix . 'update_prof' );
 			delete_option( self::$option_prefix . 'desc_type' );
 			delete_option( self::$option_prefix . 'prof_type' );
-			delete_option( self::$option_prefix . 'plan_code_field' );
-			delete_option( self::$option_prefix . 'subplan_code_field' );
 		}
 
 		/**
@@ -175,9 +169,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'update_desc'        => get_option( self::$option_prefix . 'update_desc', $defaults['update_desc'] ),
 				'update_prof'        => get_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] ),
 				'desc_type'          => get_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] ),
-				'prof_type'          => get_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] ),
-				'plan_code_field'    => get_option( self::$option_prefix . 'plan_code_field', $defaults['plan_code_field'] ),
-				'subplan_code_field' => get_option( self::$option_prefix . 'subplan_code_field', $defaults['subplan_code_field'] )
+				'prof_type'          => get_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] )
 			);
 
 			$configurable_defaults = self::format_options( $configurable_defaults );
@@ -353,15 +345,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				$settings_slug
 			);
 
-			$mapping_section = 'ucf_degree_mapping';
-
-			add_settings_section(
-				$mapping_section,
-				'Field Mappings',
-				'',
-				$settings_slug
-			);
-
 
 			// Register API settings
 			if ( self::rest_api_enabled() ) {
@@ -512,35 +495,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					'description' => 'The profile type to set when writing to the search service.',
 					'type'        => 'select',
 					'options'     => self::get_profile_types()
-				)
-			);
-
-			/**
-			 * Register `Field Mappings` settings
-			 */
-			add_settings_field(
-				self::$option_prefix . 'plan_code_field', // Setting name
-				'Plan Code Meta Name', // Setting display name
-				$display_fn, // Display function
-				$settings_slug, // The settings page slug
-				$profile_section,
-				array( // Additional arguments to pass to the display function
-					'label_for'   => self::$option_prefix . 'plan_code_field',
-					'description' => 'The name of the custom meta field where `plan_code` is stored.',
-					'type'        => 'text'
-				)
-			);
-
-			add_settings_field(
-				self::$option_prefix . 'subplan_code_field', // Setting name
-				'SubPlan Code Meta Name', // Setting display name
-				$display_fn, // Display function
-				$settings_slug, // The settings page slug
-				$profile_section,
-				array( // Additional arguments to pass to the display function
-					'label_for'   => self::$option_prefix . 'subplan_code_field',
-					'description' => 'The name of the custom meta field where `subplan_code` is stored.',
-					'type'        => 'text'
 				)
 			);
 		}

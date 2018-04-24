@@ -76,12 +76,9 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @param int $program_id | The id of the program in the Search Service (optional)
 		 */
 		public static function update_service_values( $post_id, $program_id=null ) {
-			$plan_meta = UCF_Degree_Config::get_option_or_default( 'plan_code_field' );
-			$subplan_meta = UCF_Degree_Config::get_option_or_default( 'subplan_code_field' );
-
 			// Get plancode and subplan code
-			$plancode = get_post_meta( $post_id, $plan_meta, true );
-			$subplan_code = get_post_meta( $post_id, $subplan_meta, true );
+			$plancode = get_post_meta( $post_id, 'degree_plan_code', true );
+			$subplan_code = get_post_meta( $post_id, 'degree_subplan_code', true );
 
 			$subplan_code = empty( $subplan_code ) ? null : $subplan_code;
 			$result = null;
