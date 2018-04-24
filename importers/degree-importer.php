@@ -400,7 +400,7 @@ class UCF_Degree_Import {
 	private
 		$plan_code,
 		$subplan_code,
-		$degree_id,
+		$program_id,
 		$name,
 		$slug,
 		$description,
