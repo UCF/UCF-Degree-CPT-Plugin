@@ -32,6 +32,7 @@ include_once 'includes/ucf-degree-search-custom-filters.php';
 include_once 'admin/ucf-degree-admin.php';
 include_once 'admin/ucf-degree-config.php';
 
+include_once 'common/ucf-degree-common.php';
 include_once 'common/ucf-degree-list-common.php';
 include_once 'common/ucf-degree-career-paths-common.php';
 include_once 'common/ucf-degree-program-types-common.php';
@@ -79,6 +80,11 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 		}
 
 		add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
+
+		// Actions for search service hook
+		if ( ! defined( 'WP_CLI' ) ) {
+			add_action( 'save_post', array( 'UCF_Degree_Common', 'on_save_post' ), 99, 1 );
+		}
 	}
 
 	add_action( 'plugins_loaded', 'ucf_degree_init' );
