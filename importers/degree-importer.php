@@ -59,7 +59,7 @@ class UCF_Degree_Importer {
 		try {
 			$this->maybe_enable_search_writebacks();
 
-			$this->search_results = $this->fetch_degrees();
+			$this->search_results = $this->fetch_api_results();
 			$this->existing_posts = $this->get_existing();
 
 			$this->create_program_types();
@@ -125,32 +125,20 @@ Degree Total    : {$degree_total}
 	}
 
 	/**
-	 * Gets degrees from the search service
+	 * Generic function that appends a paginated response's result set
+	 * from the search service to an existing list.
 	 *
-	 * @author Jim Barnes
-	 * @since 1.1.0
-	 * @return Array | The array of degree data
-	 **/
-	private function fetch_degrees() {
-		$retval = null;
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 * @param string $url | the full search service URL to request
+	 * @param array $all_results | an array of results to append paginated data to
+	 * @param bool $return_count | whether or not the total number of results should be returned
+	 * @return array | array containing the next page's URL, the updated result set, and, optionally, the total result count
+	 */
+	private function fetch_api_page( $url, $all_results, $return_count=false ) {
+		$response = wp_remote_get( $url, array( 'timeout' => 5 ) );
 
-		$query = array(
-			'key' => $this->api_key
-		);
-
-		$url = $this->search_api . 'api/v1/programs/?' . http_build_query( $query );
-
-		if ( $this->additional_params ) {
-			$url .= '&' . $this->additional_params;
-		}
-
-		$args = array(
-			'timeout' => 15
-		);
-
-		$response = wp_remote_get( $url, $args );
-
-		if ( is_array( $response ) ) {
+		if ( is_array( $response ) && wp_remote_retrieve_response_code( $response ) < 400 ) {
 			$response_body = wp_remote_retrieve_body( $response );
 			$retval = json_decode( $response_body );
 
@@ -177,8 +165,52 @@ Degree Total    : {$degree_total}
 			);
 		}
 
-		$this->result_count = $retval->count;
-		return $retval->results;
+		$new_url = isset( $retval->next ) ? $retval->next : null;
+		$all_results = array_merge( $all_results, $retval->results );
+
+		if ( $return_count ) {
+			$count = isset( $retval->count ) ? $retval->count : 0;
+			return array( $new_url, $all_results, $count );
+		}
+		return array( $new_url, $all_results );
+	}
+
+	/**
+	 * Gets degrees from the search service
+	 *
+	 * @author Jim Barnes
+	 * @since 1.1.0
+	 * @return Array | The array of degree data
+	 **/
+	private function fetch_api_results() {
+		WP_CLI::log( 'Fetching API data...' );
+
+		$results = array();
+		$count = 0;
+
+		$query = array(
+			'key' => $this->api_key
+		);
+
+		$url = $this->search_api . 'api/v1/programs/?' . http_build_query( $query );
+
+		if ( $this->additional_params ) {
+			$url .= '&' . $this->additional_params;
+		}
+
+		// Perform an initial out-of-loop fetch and assign $count
+		list( $url, $results, $count ) = $this->fetch_api_page( $url, $results, true );
+
+		// Fetch remaining pages
+		while ( !empty( $url ) ) {
+			list( $url, $results ) = $this->fetch_api_page( $url, $results );
+		}
+
+		$this->result_count = $count;
+
+		WP_CLI::log( sprintf( '%s results fetched.', $count ) );
+
+		return $results;
 	}
 
 	/**
@@ -331,10 +363,15 @@ Degree Total    : {$degree_total}
 	 * @since 1.0.0
 	 **/
 	private function remove_remaining_existing() {
+		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale post data...', count( $this->existing_posts ) );
+
 		foreach( $this->existing_posts as $post_id ) {
 			wp_delete_post( $post_id, true );
 			$this->removed_count++;
+			$delete_progress->tick();
 		}
+
+		$delete_progress->finish();
 	}
 
 	/**
@@ -343,9 +380,14 @@ Degree Total    : {$degree_total}
 	 * @since 1.0.0
 	 **/
 	private function publish_new_degrees() {
+		$publish_progress = \WP_CLI\Utils\make_progress_bar( 'Publishing new posts...', count( $this->new_posts ) );
+
 		foreach( $this->new_posts as $post_id ) {
 			wp_publish_post( $post_id );
+			$publish_progress->tick();
 		}
+
+		$publish_progress->finish();
 	}
 }
 
@@ -411,9 +453,6 @@ class UCF_Degree_Import {
 	 *
 	 * @author Jim Barnes
 	 * @since 1.1.0
-	 * @param $name string | The program name
-	 * @param $type string | The program type
-	 * @param $graduate int | If the program is a graduate program
 	 * @return string | The program suffix
 	 **/
 	private function get_program_suffix() {
@@ -444,7 +483,7 @@ class UCF_Degree_Import {
 		if ( !empty( $descriptions ) ) {
 			foreach ( $descriptions as $d ) {
 				if ( $d->description_type->id === 1 ) {  // TODO make this configurable somehow
-					$desription = $d->description;
+					$description = $d->description;
 				}
 			}
 		}
@@ -454,7 +493,7 @@ class UCF_Degree_Import {
 
 	/**
 	 * Converts a search service program's 'level' and 'career' to a set
-	 * of program_type terms.
+	 * of program_type term names.
 	 *
 	 * @author Jo Dickson
 	 * @since 3.0.0
@@ -525,7 +564,7 @@ class UCF_Degree_Import {
 
 	/**
 	 * Converts a search service program's departments to an array of
-	 * department terms.
+	 * department term names.
 	 *
 	 * Will return null if the 'departments' taxonomy is not registered
 	 * (e.g. if the UCF Departments Taxonomy plugin is not activated).
