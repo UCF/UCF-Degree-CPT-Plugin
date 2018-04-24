@@ -7,11 +7,79 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		public static
 			$option_prefix = 'ucf_degree_',
 			$options_defaults = array(
-				'rest_api'          => false,
-				'schedule_importer' => false,
-				'import_schedule'   => 'weekly',
-				'search_filter'     => ''
+				'rest_api'           => false,
+				'schedule_importer'  => false,
+				'import_schedule'    => 'weekly',
+				'search_filter'      => '',
+				'api_base_url'       => 'https://search.cm.ucf.edu/api/v1/',
+				'api_key'            => null,
+				'update_desc'        => true,
+				'update_prof'        => true,
+				'desc_type'          => null,
+				'prof_type'          => null,
+				'plan_code_field'    => 'degree_plan_code',
+				'subplan_code_field' => 'degree_subplan_code'
 			);
+
+		/**
+		 * Fetches the ProgramDescriptionTypes from the
+		 * search service.
+		 * @return array The description types
+		 */
+		public static function get_description_types() {
+			$transient_name    = 'ucf_degree_description_types';
+			$transient_timeout = DAY_IN_SECONDS;
+			$retval            = get_transient( $transient_name );
+
+			if ( ! $retval ) {
+				$base_url    = self::get_option_or_default( 'api_base_url' );
+				$request_url = $base_url . 'descriptions/types/';
+
+				$items = UCF_Degree_Common::fetch_api_values( $request_url );
+
+				if ( $items ) {
+					$retval = array();
+
+					foreach( $items as $item ) {
+						$retval[$item->id] = $item->name;
+					}
+
+					set_transient( $transient_name, $retval, $transient_timeout );
+				}
+			}
+
+			return $retval;
+		}
+
+		/**
+		 * Fetches the ProgramProfileTypes from the
+		 * search service.
+		 * @return array The profile types
+		 */
+		public static function get_profile_types() {
+			$transient_name    = 'ucf_degree_profile_types';
+			$transient_timeout = DAY_IN_SECONDS;
+			$retval            = get_transient( $transient_name );
+
+			if ( ! $retval ) {
+				$base_url       = self::get_option_or_default( 'api_base_url' );
+				$request_url = $base_url . 'profiles/types/';
+
+				$items = UCF_Degree_Common::fetch_api_values( $request_url );
+
+				if ( $items ) {
+					$retval = array();
+
+					foreach( $items as $item ) {
+						$retval[$item->id] = $item->name;
+					}
+
+					set_transient( $transient_name, $retval, $transient_timeout );
+				}
+			}
+
+			return $retval;
+		}
 
 		/**
 		 * Determines if the WP Rest API is installed and activated
@@ -51,10 +119,18 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		public static function add_options() {
 			$defaults = self::$options_defaults;
 
-			add_option( self::$option_prefix . 'rest_api',          $defaults['rest_api']          );
+			add_option( self::$option_prefix . 'rest_api', $defaults['rest_api'] );
 			add_option( self::$option_prefix . 'schedule_importer', $defaults['schedule_importer'] );
-			add_option( self::$option_prefix . 'import_schedule',   $defaults['import_schedule']   );
-			add_option( self::$option_prefix . 'search_filter',     $defaults['search_filter']     );
+			add_option( self::$option_prefix . 'import_schedule', $defaults['import_schedule'] );
+			add_option( self::$option_prefix . 'search_filter', $defaults['search_filter'] );
+			add_option( self::$option_prefix . 'api_base_url', $defaults['api_base_url'] );
+			add_option( self::$option_prefix . 'api_key', $defaults['api_key'] );
+			add_option( self::$option_prefix . 'update_desc', $defaults['update_desc'] );
+			add_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] );
+			add_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] );
+			add_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] );
+			add_option( self::$option_prefix . 'plan_code_field', $defaults['plan_code_field'] );
+			add_option( self::$option_prefix . 'subplan_code_field', $defaults['subplan_code_field'] );
 		}
 
 		/**
@@ -69,6 +145,14 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			delete_option( self::$option_prefix . 'schedule_importer' );
 			delete_option( self::$option_prefix . 'import_schedule' );
 			delete_option( self::$option_prefix . 'search_filter' );
+			delete_option( self::$option_prefix . 'api_base_url' );
+			delete_option( self::$option_prefix . 'api_key' );
+			delete_option( self::$option_prefix . 'update_desc' );
+			delete_option( self::$option_prefix . 'update_prof' );
+			delete_option( self::$option_prefix . 'desc_type' );
+			delete_option( self::$option_prefix . 'prof_type' );
+			delete_option( self::$option_prefix . 'plan_code_field' );
+			delete_option( self::$option_prefix . 'subplan_code_field' );
 		}
 
 		/**
@@ -82,10 +166,18 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$defaults = self::$options_defaults;
 
 			$configurable_defaults = array(
-				'rest_api'          => get_option( self::$option_prefix . 'rest_api'          ),
-				'schedule_importer' => get_option( self::$option_prefix . 'schedule_importer' ),
-				'import_schedule'   => get_option( self::$option_prefix . 'import_schedule'   ),
-				'college_filter'    => get_option( self::$option_prefix . 'search_filter'     )
+				'rest_api'           => get_option( self::$option_prefix . 'rest_api' ),
+				'schedule_importer'  => get_option( self::$option_prefix . 'schedule_importer' ),
+				'import_schedule'    => get_option( self::$option_prefix . 'import_schedule' ),
+				'college_filter'     => get_option( self::$option_prefix . 'search_filter' ),
+				'api_base_url'       => get_option( self::$option_prefix . 'api_base_url', $defaults['api_base_url'] ),
+				'api_key'            => get_option( self::$option_prefix . 'api_key', $defaults['api_key'] ),
+				'update_desc'        => get_option( self::$option_prefix . 'update_desc', $defaults['update_desc'] ),
+				'update_prof'        => get_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] ),
+				'desc_type'          => get_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] ),
+				'prof_type'          => get_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] ),
+				'plan_code_field'    => get_option( self::$option_prefix . 'plan_code_field', $defaults['plan_code_field'] ),
+				'subplan_code_field' => get_option( self::$option_prefix . 'subplan_code_field', $defaults['subplan_code_field'] )
 			);
 
 			$configurable_defaults = self::format_options( $configurable_defaults );
@@ -133,7 +225,16 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				switch ( $key ) {
 					case 'rest_api':
 					case 'schedule_importer':
+					case 'update_desc':
+					case 'update_prof':
 						$list[$key] = filter_var( $val, FILTER_VALIDATE_BOOLEAN );
+						break;
+					case 'desc_type':
+					case 'prof_type':
+						$list[$key] = filter_var( $val, FILTER_VALIDATE_INT );
+						break;
+					case 'api_base_url':
+						$list[$key] = trailingslashit( $val );
 						break;
 					default:
 						break;
@@ -141,6 +242,34 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			}
 
 			return $list;
+		}
+
+		/**
+		 * Applies formatting to a single option. Intended to be passed to the
+		 * option_{$option} hook.
+		 * @param mixed $value | The value to be formatted
+		 * @param string $option_name | The name of the option to be formatted
+		 * @return mixed
+		 */
+		public static function format_option( $value, $option_name ) {
+			$option_name_no_prefix = str_replace( self::$option_prefix, '', $option_name );
+
+			$option_formatted = self::format_options( array( $option_name_no_prefix => $value ) );
+			return $option_formatted[$option_name_no_prefix];
+		}
+
+		/**
+		 * Adds filters for plugin options that apply
+		 * our formatting rules to option values.
+		 * @return void
+		 */
+		public static function add_option_formatting_filters() {
+			$defaults = self::$options_defaults;
+
+			foreach( $defaults as $option => $default ) {
+				$option_name = self::$option_prefix . $option;
+				add_filter( "option_{$option_name}", array( 'UCF_Degree_Config', 'format_option' ), 10, 2 );
+			}
 		}
 
 		/**
@@ -170,22 +299,77 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		 * @return void
 		 **/
 		public static function settings_init() {
-			// Register settings
+			$settings_slug = 'ucf_degree';
+			$defaults      = self::$options_defaults;
+			$display_fn    = array( 'UCF_Degree_Config', 'display_settings_field' );
+
+			foreach( $defaults as $name => $value ) {
+				register_setting(
+					$settings_slug,
+					self::$option_prefix . $name
+				);
+			}
+
+
+			// Register sections
 			add_settings_section(
 				'ucf_degree_section_rest_api',
 				'Rest API',
 				array( 'UCF_Degree_Config', 'rest_api_message' ),
-				'ucf_degree'
+				$setting_slug
 			);
 
-			if ( self::rest_api_enabled() ) {
-				register_setting( 'ucf_degree', self::$option_prefix . 'rest_api' );
+			add_settings_section(
+				'ucf_degree_section_importer',
+				'Degree Importer',
+				null,
+				$settings_slug
+			);
 
+			$service_section = 'ucf_degree_search_service';
+
+			add_settings_section(
+				$service_section,
+				'Search Service Settings',
+				'',
+				$settings_slug
+			);
+
+			$description_section = 'ucf_degree_description';
+
+			add_settings_section(
+				$description_section,
+				'Description Updates',
+				'',
+				$settings_slug
+			);
+
+			$profile_section = 'ucf_degree_profile';
+
+			add_settings_section(
+				$profile_section,
+				'Profile Updates',
+				'',
+				$settings_slug
+			);
+
+			$mapping_section = 'ucf_degree_mapping';
+
+			add_settings_section(
+				$mapping_section,
+				'Field Mappings',
+				'',
+				$settings_slug
+			);
+
+
+			// Register API settings
+			if ( self::rest_api_enabled() ) {
 				add_settings_field(
 					self::$option_prefix . 'rest_api',
 					'Use Rest API',
 					array( 'UCF_Degree_Config', 'display_settings_field' ),
-					'ucf_degree',
+					$settings_slug,
 					'ucf_degree_section_rest_api',
 					array(
 						'label_for'   => self::$option_prefix . 'rest_api',
@@ -195,22 +379,12 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				);
 			}
 
-			add_settings_section(
-				'ucf_degree_section_importer',
-				'Degree Importer',
-				null,
-				'ucf_degree'
-			);
-
-			register_setting( 'ucf_degree', self::$option_prefix . 'schedule_importer' );
-			register_setting( 'ucf_degree', self::$option_prefix . 'import_schedule' );
-			register_setting( 'ucf_degree', self::$option_prefix . 'search_filter' );
-
+			// Register Importer Settings
 			add_settings_field(
 				self::$option_prefix . 'schedule_importer',
 				'Schedule Degree Importers',
 				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				'ucf_degree',
+				$settings_slug,
 				'ucf_degree_section_importer',
 				array(
 					'label_for'   => self::$option_prefix . 'schedule_importer',
@@ -223,13 +397,13 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				self::$option_prefix . 'import_schedule',
 				'Degree Import Frequency',
 				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				'ucf_degree',
+				$settings_slug,
 				'ucf_degree_section_importer',
 				array(
 					'label_for'   => self::$option_prefix . 'import_schedule',
 					'description' => 'Determines how often the degree importer runs.',
 					'type'        => 'select',
-					'options'     => array(
+					'options'       => array(
 						''          => '-- Select Frequency --',
 						'daily'     => 'Daily',
 						'weekly'    => 'Weekly',
@@ -243,11 +417,129 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				self::$option_prefix . 'search_filter',
 				'Search Filter',
 				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				'ucf_degree',
+				$settings_slug,
 				'ucf_degree_section_importer',
 				array(
 					'label_for'   => self::$option_prefix . 'search_filter',
 					'description' => 'Additional filters to send to the search service when importing degrees.',
+					'type'        => 'text'
+				)
+			);
+
+			/**
+			 * Register `General Settings`
+			 */
+			add_settings_field(
+				self::$option_prefix . 'api_base_url', // Setting name
+				'Search Service Base URL', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$service_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'api_base_url',
+					'description' => 'The base url of the UCF Search Service API. Should end with `/api/v1/` with trailing slash.',
+					'type'        => 'text'
+				)
+			);
+
+			add_settings_field(
+				self::$option_prefix . 'api_key', // Setting name
+				'Search Service API Key', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$service_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'api_key',
+					'description' => 'The API key used to access the Search Service API. This is required for all calls.',
+					'type'        => 'text'
+				)
+			);
+
+			/**
+			 * Register `Update Descriptions` settings
+			 */
+			add_settings_field(
+				self::$option_prefix . 'update_desc', // Setting name
+				'Update Descriptions', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$description_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'update_desc',
+					'description' => 'When checked, descriptions will be written to the UCF Search Service on post save.',
+					'type'        => 'checkbox'
+				)
+			);
+
+			add_settings_field(
+				self::$option_prefix . 'desc_type', // Setting name
+				'Description Type', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$description_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'desc_type',
+					'description' => 'The description type to set when writing to the search service.',
+					'type'        => 'select',
+					'options'     => self::get_description_types()
+				)
+			);
+
+			/**
+			 * Register `Update Profiles` settings
+			 */
+			add_settings_field(
+				self::$option_prefix . 'update_prof', // Setting name
+				'Update Profile URLs', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$profile_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'update_prof',
+					'description' => 'When checked, profile URLs will be written to the UCF Search Service on post save.',
+					'type'        => 'checkbox'
+				)
+			);
+
+			add_settings_field(
+				self::$option_prefix . 'prof_type', // Setting name
+				'Profile Type', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$profile_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'prof_type',
+					'description' => 'The profile type to set when writing to the search service.',
+					'type'        => 'select',
+					'options'     => self::get_profile_types()
+				)
+			);
+
+			/**
+			 * Register `Field Mappings` settings
+			 */
+			add_settings_field(
+				self::$option_prefix . 'plan_code_field', // Setting name
+				'Plan Code Meta Name', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$profile_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'plan_code_field',
+					'description' => 'The name of the custom meta field where `plan_code` is stored.',
+					'type'        => 'text'
+				)
+			);
+
+			add_settings_field(
+				self::$option_prefix . 'subplan_code_field', // Setting name
+				'SubPlan Code Meta Name', // Setting display name
+				$display_fn, // Display function
+				$settings_slug, // The settings page slug
+				$profile_section,
+				array( // Additional arguments to pass to the display function
+					'label_for'   => self::$option_prefix . 'subplan_code_field',
+					'description' => 'The name of the custom meta field where `subplan_code` is stored.',
 					'type'        => 'text'
 				)
 			);
@@ -290,11 +582,18 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				case 'select':
 					ob_start();
 				?>
+					<?php if ( $options ) : ?>
 					<select id="<?php echo $option_name; ?>" name="<?php echo $option_name; ?>">
-					<?php foreach( $options as $key => $val ) : ?>
-						<option value="<?php echo $key; ?>"<?php echo ( $current_value === $key ) ? ' selected' : ''; ?>><?php echo $val; ?></option>
-					<?php endforeach; ?>
+						<?php foreach ( $options as $value => $text ) : ?>
+							<option value="<?php echo $value; ?>" <?php echo ( (int)$current_value === $value ) ? 'selected' : ''; ?>><?php echo $text; ?></option>
+						<?php endforeach; ?>
 					</select>
+					<?php else: ?>
+					<p style="color: #d54e21;">There was an error retrieving the choices for this field.</p>
+					<?php endif; ?>
+					<p class="description">
+						<?php echo $description; ?>
+					</p>
 				<?php
 					$markup = ob_get_clean();
 					break;
@@ -362,6 +661,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 
 	add_action( 'admin_init', array( 'UCF_Degree_Config', 'settings_init' ) );
 	add_action( 'admin_menu', array( 'UCF_Degree_Config', 'add_options_page' ) );
+	UCF_Degree_Config::add_option_formatting_filters();
 }
 
 ?>
