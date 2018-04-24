@@ -8,8 +8,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$option_prefix = 'ucf_degree_',
 			$options_defaults = array(
 				'rest_api'           => false,
-				'schedule_importer'  => false,
-				'import_schedule'    => 'weekly',
 				'search_filter'      => '',
 				'api_base_url'       => 'https://search.cm.ucf.edu/api/v1/',
 				'api_key'            => null,
@@ -118,8 +116,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$defaults = self::$options_defaults;
 
 			add_option( self::$option_prefix . 'rest_api', $defaults['rest_api'] );
-			add_option( self::$option_prefix . 'schedule_importer', $defaults['schedule_importer'] );
-			add_option( self::$option_prefix . 'import_schedule', $defaults['import_schedule'] );
 			add_option( self::$option_prefix . 'search_filter', $defaults['search_filter'] );
 			add_option( self::$option_prefix . 'api_base_url', $defaults['api_base_url'] );
 			add_option( self::$option_prefix . 'api_key', $defaults['api_key'] );
@@ -138,8 +134,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		 **/
 		public static function delete_options() {
 			delete_option( self::$option_prefix . 'rest_api' );
-			delete_option( self::$option_prefix . 'schedule_importer' );
-			delete_option( self::$option_prefix . 'import_schedule' );
 			delete_option( self::$option_prefix . 'search_filter' );
 			delete_option( self::$option_prefix . 'api_base_url' );
 			delete_option( self::$option_prefix . 'api_key' );
@@ -161,8 +155,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 
 			$configurable_defaults = array(
 				'rest_api'           => get_option( self::$option_prefix . 'rest_api' ),
-				'schedule_importer'  => get_option( self::$option_prefix . 'schedule_importer' ),
-				'import_schedule'    => get_option( self::$option_prefix . 'import_schedule' ),
 				'college_filter'     => get_option( self::$option_prefix . 'search_filter' ),
 				'api_base_url'       => get_option( self::$option_prefix . 'api_base_url', $defaults['api_base_url'] ),
 				'api_key'            => get_option( self::$option_prefix . 'api_key', $defaults['api_key'] ),
@@ -216,7 +208,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			foreach( $list as $key => $val ) {
 				switch ( $key ) {
 					case 'rest_api':
-					case 'schedule_importer':
 					case 'update_desc':
 					case 'update_prof':
 						$list[$key] = filter_var( $val, FILTER_VALIDATE_BOOLEAN );
@@ -311,19 +302,19 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				$settings_slug
 			);
 
-			add_settings_section(
-				'ucf_degree_section_importer',
-				'Degree Importer',
-				null,
-				$settings_slug
-			);
-
 			$service_section = 'ucf_degree_search_service';
 
 			add_settings_section(
 				$service_section,
 				'Search Service Settings',
 				'',
+				$settings_slug
+			);
+
+			add_settings_section(
+				'ucf_degree_section_importer',
+				'Degree Importer',
+				null,
 				$settings_slug
 			);
 
@@ -362,53 +353,6 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				);
 			}
 
-			// Register Importer Settings
-			add_settings_field(
-				self::$option_prefix . 'schedule_importer',
-				'Schedule Degree Importers',
-				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				$settings_slug,
-				'ucf_degree_section_importer',
-				array(
-					'label_for'   => self::$option_prefix . 'schedule_importer',
-					'description' => 'If checked, the degree importer will run on the specified schedule.',
-					'type'        => 'checkbox'
-				)
-			);
-
-			add_settings_field(
-				self::$option_prefix . 'import_schedule',
-				'Degree Import Frequency',
-				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				$settings_slug,
-				'ucf_degree_section_importer',
-				array(
-					'label_for'   => self::$option_prefix . 'import_schedule',
-					'description' => 'Determines how often the degree importer runs.',
-					'type'        => 'select',
-					'options'       => array(
-						''          => '-- Select Frequency --',
-						'daily'     => 'Daily',
-						'weekly'    => 'Weekly',
-						'bi-weekly' => 'Bi-weekly',
-						'monthly'   => 'Monthly'
-					)
-				)
-			);
-
-			add_settings_field(
-				self::$option_prefix . 'search_filter',
-				'Search Filter',
-				array( 'UCF_Degree_Config', 'display_settings_field' ),
-				$settings_slug,
-				'ucf_degree_section_importer',
-				array(
-					'label_for'   => self::$option_prefix . 'search_filter',
-					'description' => 'Additional query parameters to send to the Search Service when importing degrees.',
-					'type'        => 'text'
-				)
-			);
-
 			/**
 			 * Register `General Settings`
 			 */
@@ -434,6 +378,20 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				array( // Additional arguments to pass to the display function
 					'label_for'   => self::$option_prefix . 'api_key',
 					'description' => 'The API key used to access the Search Service API. This is required for all calls.',
+					'type'        => 'text'
+				)
+			);
+
+			// Register Importer Settings
+			add_settings_field(
+				self::$option_prefix . 'search_filter',
+				'Search Filter',
+				array( 'UCF_Degree_Config', 'display_settings_field' ),
+				$settings_slug,
+				'ucf_degree_section_importer',
+				array(
+					'label_for'   => self::$option_prefix . 'search_filter',
+					'description' => 'Additional query parameters to send to the Search Service when importing degrees.',
 					'type'        => 'text'
 				)
 			);
