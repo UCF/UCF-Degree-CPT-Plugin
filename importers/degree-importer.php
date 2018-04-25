@@ -397,12 +397,12 @@ class UCF_Degree_Import {
 		$program_types,
 		$colleges,
 		$departments,
-
 		$existing_post, // an existing post object that matches the provided search service program
 		$post_meta,
 		$post_terms;
 
 	public
+		$program,
 		$is_new,
 		$post_id; // ID of the new or existing post, set in $this->process_post()
 
@@ -415,19 +415,20 @@ class UCF_Degree_Import {
 	 * @return UCF_Degree_Import
 	 **/
 	public function __construct( $program ) {
+		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
 		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
 		$this->name          = $program->name;
 		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
-		$this->description   = $this->get_catalog_description( $program->descriptions );
+		$this->description   = $this->get_catalog_description();
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
 		$this->level         = $program->level;
 		$this->program_types = $this->get_program_types();
-		$this->colleges      = $this->get_colleges( $program->colleges );
-		$this->departments   = $this->get_departments( $program->departments );
+		$this->colleges      = $this->get_colleges();
+		$this->departments   = $this->get_departments();
 
 		$this->existing_post = $this->get_existing_post();
 		$this->is_new        = $this->existing_post === null ? true : false;
@@ -462,10 +463,10 @@ class UCF_Degree_Import {
 	 *
 	 * @author Jo Dickson
 	 * @since 3.0.0
-	 * @param array $descriptions | array of description search service objects
 	 * @return mixed | catalog description string, or null on failure
 	 */
-	private function get_catalog_description( $descriptions ) {
+	private function get_catalog_description() {
+		$descriptions = $this->program->descriptions;
 		$description = null;
 
 		if ( !empty( $descriptions ) ) {
@@ -533,10 +534,11 @@ class UCF_Degree_Import {
 	 *
 	 * @author Jo Dickson
 	 * @since 3.0.0
-	 * @param array $colleges | The program's 'colleges' array from the search service
 	 * @return mixed | Array of college term names, or null if the 'colleges' taxonomy does not exist
 	 **/
-	private function get_colleges( $colleges ) {
+	private function get_colleges() {
+		$colleges = $this->program->colleges;
+
 		if ( taxonomy_exists( 'colleges' ) ) {
 			$retval = array();
 
@@ -559,10 +561,11 @@ class UCF_Degree_Import {
 	 *
 	 * @author Jo Dickson
 	 * @since 3.0.0
-	 * @param array $departments | The program's 'departments' array from the search service
 	 * @return mixed | Array of department term names, or null if the 'departments' taxonomy does not exist
 	 **/
-	private function get_departments( $departments ) {
+	private function get_departments() {
+		$departments = $this->program->departments;
+
 		if ( taxonomy_exists( 'departments' ) ) {
 			$retval = array();
 
@@ -701,7 +704,7 @@ class UCF_Degree_Import {
 	 * @return array | Assoc. array of post meta keys + values
 	 **/
 	private function get_post_metadata() {
-		return array(
+		$meta = array(
 			'degree_id'           => $this->degree_id,
 			'degree_api_id'       => $this->api_id,
 			'degree_description'  => html_entity_decode( $this->description ),
@@ -709,6 +712,13 @@ class UCF_Degree_Import {
 			'degree_plan_code'    => $this->plan_code,
 			'degree_subplan_code' => $this->subplan_code
 		);
+
+		// Allow overrides by themes/other plugins
+		if ( has_filter( 'ucf_degree_get_post_metadata' ) ) {
+			$meta = apply_filters( 'ucf_degree_get_post_metadata', $meta, $this->program );
+		}
+
+		return $meta;
 	}
 
 	/**
@@ -730,6 +740,11 @@ class UCF_Degree_Import {
 
 		if ( $this->departments !== null ) {
 			$terms['departments'] = $this->departments;
+		}
+
+		// Allow overrides by themes/other plugins
+		if ( has_filter( 'ucf_degree_get_post_terms' ) ) {
+			$terms = apply_filters( 'ucf_degree_get_post_terms', $terms, $this->program );
 		}
 
 		return $terms;
