@@ -6,15 +6,21 @@ class UCF_Degree_Importer {
 	private
 		$search_api,
 		$additional_params,
-		$search_results,
+		$api_key,
+		$do_writebacks,
+
+		$search_results = array(),
 		$result_count,
-		$existing_posts = 0,
-		$new_posts,
+
+		$existing_posts = array(),
+		$new_posts = array(),
+		$updated_posts = array(),
+
 		$new_count = 0,
 		$existing_count = 0,
 		$removed_count = 0,
-		$updated_posts,
 		$duplicate_count = 0,
+
 		$program_types = array(
 			'Undergraduate Program' => array(
 				'Bachelor',
@@ -44,10 +50,6 @@ class UCF_Degree_Importer {
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
-		$this->search_results = array();
-		$this->existing_posts = array();
-		$this->updated_posts = array();
-		$this->new_posts = array();
 	}
 
 	/**
