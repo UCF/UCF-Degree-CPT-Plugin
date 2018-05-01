@@ -98,7 +98,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 			$result = null;
 
 			$base_url = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
-			$endpoint = 'programs/';
+			$endpoint = $base_url . 'programs/';
 
 			if ( $program_id ) {
 				$endpoint .= $program_id . '/';
@@ -143,7 +143,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 */
 		private static function return_verified_result( $results, $params ) {
 			$plan_code = $params['plan_code'];
-			$subplan_code = isset( $params['plan_code'] ) ? $params['plan_code'] : null;
+			$subplan_code = isset( $params['subplan_code'] ) ? $params['subplan_code'] : null;
 
 			foreach( $results as $result ) {
 				if (
