@@ -14,10 +14,13 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * [--api_key=<api_key>]
 	 * : The API key to query against the Search Service with. The "Search Service API Key" plugin option is used by default.
 	 *
-	 * [--enable_search_writebacks]
+	 * [--enable_search_writebacks=<enable_search_writebacks>]
      * : If enabled, data will be written back to the Search Service when each degree is imported if the UCF Search Service Hook plugin is activated. Disabled by default.
      * ---
      * default: false
+	 * options:
+     *   - true
+     *   - false
      * ---
 	 *
 	 * ## EXAMPLES
