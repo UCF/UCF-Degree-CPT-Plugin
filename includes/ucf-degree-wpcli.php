@@ -28,8 +28,8 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * @when after_wp_load
 	 */
 	public function import( $args, $assoc_args ) {
-		$api_base_url    = isset( $assoc_args['api_base_url'] ) ? trim( $assoc_args['api_base_url'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_base_url' ) );
-		$api_key         = isset( $assoc_args['api_key'] ) ? trim( $assoc_args['api_key'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_key' ) );
+		$api_base_url    = isset( $assoc_args['api_base_url'] ) && !empty( $assoc_args['api_base_url'] ) ? trim( $assoc_args['api_base_url'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_base_url' ) );
+		$api_key         = isset( $assoc_args['api_key'] ) && !empty( $assoc_args['api_key'] ) ? trim( $assoc_args['api_key'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_key' ) );
 		$do_writebacks   = isset( $assoc_args['enable_search_writebacks'] ) ? filter_var( $assoc_args['enable_search_writebacks'], FILTER_VALIDATE_BOOLEAN ) : false;
 		$additional_args = UCF_Degree_Config::get_option_or_default( 'search_filter' );
 
