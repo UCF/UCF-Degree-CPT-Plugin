@@ -423,11 +423,11 @@ class UCF_Degree_Import {
 		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
 		$this->name          = $program->name;
-		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
-		$this->description   = $this->get_catalog_description();
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
 		$this->level         = $program->level;
+		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
+		$this->description   = $this->get_catalog_description();
 		$this->program_types = $this->get_program_types();
 		$this->colleges      = $this->get_colleges();
 		$this->departments   = $this->get_departments();
