@@ -89,7 +89,7 @@ class UCF_Degree_Importer {
 	 */
 	private function maybe_enable_search_writebacks() {
 		if ( $this->do_writebacks ) {
-			add_action( 'save_post', array( 'UCF_Degree_Common', 'on_save_post' ), 99, 1 );
+			add_action( 'save_post_degree', array( 'UCF_Degree_Common', 'on_save_post' ), 99, 1 );
 		}
 	}
 
@@ -102,7 +102,7 @@ class UCF_Degree_Importer {
 	private function maybe_reset_search_writebacks() {
 		// Reset writeback hook updates
 		if ( $this->do_writebacks ) {
-			remove_action( 'save_post', array( 'UCF_Degree_Common', 'on_save_post' ), 99 );
+			remove_action( 'save_post_degree', array( 'UCF_Degree_Common', 'on_save_post' ), 99 );
 		}
 	}
 

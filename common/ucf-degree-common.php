@@ -322,10 +322,6 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 			if ( wp_is_post_revision( $post_id ) )
 				return;
 
-			// Ignore anything that isn't a degree
-			if ( 'degree' !== get_post_type( $post_id ) )
-				return;
-
 			self::update_service_values( $post_id );
 		}
 	}

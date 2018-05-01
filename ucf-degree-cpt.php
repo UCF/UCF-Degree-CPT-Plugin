@@ -84,7 +84,7 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 
 		// Actions for search service hook
 		if ( ! defined( 'WP_CLI' ) ) {
-			add_action( 'save_post', array( 'UCF_Degree_Common', 'on_save_post' ), 99, 1 );
+			add_action( 'save_post_degree', array( 'UCF_Degree_Common', 'on_save_post' ), 99, 1 );
 		}
 	}
 
