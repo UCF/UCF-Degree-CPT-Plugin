@@ -106,7 +106,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 				'label'                 => __( 'Degree', 'ucf_degree' ),
 				'description'           => __( 'Degree Programs', 'ucf_degree' ),
 				'labels'                => self::labels(),
-				'supports'              => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'custom-fields', ),
+				'supports'              => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'custom-fields', 'page-attributes' ),
 				'taxonomies'            => self::taxonomies(),
 				'hierarchical'          => true,
 				'public'                => true,
