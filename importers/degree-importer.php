@@ -392,7 +392,6 @@ class UCF_Degree_Import {
 		$api_id,
 		$name,
 		$slug,
-		$description,
 		$catalog_url,
 		$career,
 		$level,
@@ -427,7 +426,6 @@ class UCF_Degree_Import {
 		$this->career        = $program->career;
 		$this->level         = $program->level;
 		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
-		$this->description   = $this->get_catalog_description();
 		$this->program_types = $this->get_program_types();
 		$this->colleges      = $this->get_colleges();
 		$this->departments   = $this->get_departments();
@@ -458,28 +456,6 @@ class UCF_Degree_Import {
 			default:
 				return '';
 		}
-	}
-
-	/**
-	 * Returns the catalog description out of all available program descriptions.
-	 *
-	 * @author Jo Dickson
-	 * @since 3.0.0
-	 * @return mixed | catalog description string, or null on failure
-	 */
-	private function get_catalog_description() {
-		$descriptions = $this->program->descriptions;
-		$description = null;
-
-		if ( !empty( $descriptions ) ) {
-			foreach ( $descriptions as $d ) {
-				if ( $d->description_type->id === 1 ) {  // TODO make this configurable somehow
-					$description = $d->description;
-				}
-			}
-		}
-
-		return $description;
 	}
 
 	/**
@@ -709,7 +685,6 @@ class UCF_Degree_Import {
 		$meta = array(
 			'degree_id'           => $this->degree_id,
 			'degree_api_id'       => $this->api_id,
-			'degree_description'  => html_entity_decode( $this->description ),
 			'degree_pdf'          => $this->catalog_url,
 			'degree_plan_code'    => $this->plan_code,
 			'degree_subplan_code' => $this->subplan_code
