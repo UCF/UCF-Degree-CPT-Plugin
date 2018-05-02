@@ -108,7 +108,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 				'labels'                => self::labels(),
 				'supports'              => array( 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'custom-fields', ),
 				'taxonomies'            => self::taxonomies(),
-				'hierarchical'          => false,
+				'hierarchical'          => true,
 				'public'                => true,
 				'show_ui'               => true,
 				'show_in_menu'          => true,
