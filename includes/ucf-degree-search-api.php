@@ -73,7 +73,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * Callback for the /degrees endpoint
 	 * @author Jim Barnes
 	 * @since 1.0.2
-	 * @param $request WP_REST_Request object | Contains get params
+	 * @param WP_REST_Request $request | Contains get params
 	 * @return WP_REST_Response
 	 **/
 	public static function get_degrees( $request ) {
@@ -160,6 +160,12 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		return new WP_REST_Response( $retval, 200 );
 	}
 
+	/**
+	 * Organize results based on subplans
+	 * @param array $results | The results array.
+	 * @param WP_REST_Request $request | The request object.
+	 * @return array The reorganized results.
+	 */
 	public static function organize_results( $results, $request ) {
 		$retval = $results;
 
@@ -194,6 +200,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 					$parent = get_post( $degree->post_parent );
 					$parent_degree = self::prepare_degree_for_response( $parent, $request );
 					$parent_degree['subplans'][] = self::prepare_degree_for_response( $degree, $request );
+					$retval[$key]['degrees'][] = $parent_degree;
+					$retval['count'] += 1;
 				}
 			}
 		}
