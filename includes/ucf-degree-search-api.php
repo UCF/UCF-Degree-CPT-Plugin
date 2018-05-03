@@ -148,14 +148,57 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				);
 			}
 
-			$retval[$program_type->slug]['degrees'][] = self::prepare_degree_for_response( $post, $request );
+			$retval[$program_type->slug]['degrees'][] = $post;
 			$retval[$program_type->slug]['count']++;
 			$count++;
 		}
 
+		$retval = self::organize_results( $retval, $request );
+
 		$retval = self::prepare_response( $retval, $count, $page, $number_pages, $total_posts, $limit );
 
 		return new WP_REST_Response( $retval, 200 );
+	}
+
+	public static function organize_results( $results, $request ) {
+		$retval = $results;
+
+		$in_response = array();
+
+		foreach( $results as $key => $program_type ) {
+			$retval[$key]['degrees'] = array();
+			foreach( $program_type['degrees'] as $degree ) {
+
+				$children = get_children( array(
+					'post_parent' => $degree->ID,
+					'post_type'   => 'degree',
+					'post_status' => 'publish',
+					'numberposts' => -1
+				) );
+
+				if ( $degree->post_parent === 0 && count( $children ) === 0 ) {
+					$retval[$key]['degrees'][] = self::prepare_degree_for_response( $degree, $request );
+				}
+
+				if ( count( $children ) ) {
+					$parent_degree = self::prepare_degree_for_response( $degree, $request );
+
+					foreach( $children as $child ) {
+						$parent_degree['subplans'][] = self::prepare_degree_for_response( $child, $request );
+					}
+
+					$retval[$key]['degrees'][] = $parent_degree;
+				}
+
+				if ( $degree->post_parent !== 0 ) {
+					$parent = get_post( $degree->post_parent );
+					$parent_degree = self::prepare_degree_for_response( $parent, $request );
+					$parent_degree['subplans'][] = self::prepare_degree_for_response( $degree, $request );
+				}
+			}
+		}
+
+		return $retval;
 	}
 
 	/**
@@ -173,10 +216,11 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$term = is_array( $terms ) ? $terms[0]->slug : null;
 
 		$retval = array(
-			'title' => $post->post_title,
-			'url'   => $permalink,
-			'hours' => $hours,
-			'type'  => $term
+			'title'    => $post->post_title,
+			'url'      => $permalink,
+			'hours'    => $hours,
+			'type'     => $term,
+			'subplans' => array()
 		);
 
 		return $retval;
