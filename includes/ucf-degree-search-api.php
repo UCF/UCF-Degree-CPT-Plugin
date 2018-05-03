@@ -196,13 +196,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 					$retval[$key]['degrees'][] = $parent_degree;
 				}
 
-				if ( $degree->post_parent !== 0 ) {
-					$parent = get_post( $degree->post_parent );
-					$parent_degree = self::prepare_degree_for_response( $parent, $request );
-					$parent_degree['subplans'][] = self::prepare_degree_for_response( $degree, $request );
-					$retval[$key]['degrees'][] = $parent_degree;
-					$retval['count'] += 1;
-				}
+				# TODO: Add logic for degrees that have a parent that weren't returned in the results
 			}
 		}
 
