@@ -169,8 +169,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static function organize_results( $results, $request ) {
 		$retval = $results;
 
-		$in_response = array();
-
 		foreach( $results as $key => $program_type ) {
 			$retval[$key]['degrees'] = array();
 			foreach( $program_type['degrees'] as $degree ) {
@@ -182,25 +180,43 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 					'numberposts' => -1
 				) );
 
+				if ( isset( $retval[$key][$degree->ID] ) ) {
+					continue;
+				}
+
 				if ( $degree->post_parent === 0 && count( $children ) === 0 ) {
-					$retval[$key]['degrees'][] = self::prepare_degree_for_response( $degree, $request );
+					$retval[$key]['degrees'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
 				}
 
 				if ( count( $children ) ) {
 					$parent_degree = self::prepare_degree_for_response( $degree, $request );
 
 					foreach( $children as $child ) {
-						$parent_degree['subplans'][] = self::prepare_degree_for_response( $child, $request );
+						$parent_degree['subplans'][$child->ID] = self::prepare_degree_for_response( $child, $request );
 					}
 
-					$retval[$key]['degrees'][] = $parent_degree;
+					$retval[$key]['degrees'][$degree->ID] = $parent_degree;
 				}
 
-				# TODO: Add logic for degrees that have a parent that weren't returned in the results
+				if ( $degree->post_parent !== 0 ) {
+					if ( ! isset( $retval[$degree->post_parent] ) ) {
+						$parent = get_post( $degree->post_parent );
+						$retval[$key]['degrees'][$degree->post_parent] = self::prepare_degree_for_response( $parent, $request );
+					}
+
+					$retval[$key]['degrees'][$degree->post_parent]['subplans'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
+				}
 			}
+
+			// Remove post ids from results
+			foreach( $retval[$key]['degrees'] as $i => $degree ) {
+				$retval[$key]['degrees'][$i]['subplans'] = array_values( $degree['subplans'] );
+			}
+
+			$retval[$key]['degrees'] = array_values( $retval[$key]['degrees'] );
 		}
 
-		return $retval;
+		return array_values( $retval );
 	}
 
 	/**
