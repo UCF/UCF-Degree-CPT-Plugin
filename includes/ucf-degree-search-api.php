@@ -199,7 +199,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				}
 
 				if ( $degree->post_parent !== 0 ) {
-					if ( ! isset( $retval[$degree->post_parent] ) ) {
+					if ( ! isset( $retval[$key]['degrees'][$degree->post_parent] ) ) {
 						$parent = get_post( $degree->post_parent );
 						$retval[$key]['degrees'][$degree->post_parent] = self::prepare_degree_for_response( $parent, $request );
 					}
