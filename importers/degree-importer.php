@@ -12,9 +12,12 @@ class UCF_Degree_Importer {
 		$search_results = array(),
 		$result_count,
 
-		$existing_posts = array(),
-		$new_posts = array(),
-		$updated_posts = array(),
+		$existing_plan_posts = array(),
+		$existing_subplan_posts = array(),
+		$new_plan_posts = array(),
+		$new_subplan_posts = array(),
+		$updated_plan_posts = array(),
+		$updated_subplan_posts = array(),
 
 		$new_count = 0,
 		$existing_count = 0,
@@ -62,16 +65,23 @@ class UCF_Degree_Importer {
 			$this->maybe_enable_search_writebacks();
 
 			$this->search_results = $this->fetch_api_results();
-			$this->existing_posts = $this->get_existing();
+			$this->existing_plan_posts = $this->get_existing_plan_posts();
+			$this->existing_subplan_posts = $this->get_existing_subplan_posts();
 
 			$this->create_program_types();
-			$this->process_degrees();
-			$this->remove_remaining_existing();
 
+			// Process parent degree programs first
+			$this->process_degree_plans();
+			$this->remove_stale_degree_plans();
 			// Publish new degree posts once stale posts have been removed to
 			// ensure post slugs are generated without undesirable increments
 			// (e.g. my-degree-2)
-			$this->publish_new_degrees();
+			$this->publish_new_degree_plans();
+
+			// Process subplans after parent programs are processed
+			$this->process_degree_subplans();
+			$this->remove_stale_degree_subplans();
+			$this->publish_new_degree_subplans();
 
 			// Reset writeback hook updates
 			$this->maybe_reset_search_writebacks();
@@ -205,29 +215,32 @@ Degree Total    : {$degree_total}
 	 * Gets all existing degree ids
 	 * @author Jim Barnes
 	 * @since 1.1.0
-	 * @return Array<int> | An array of existing degree ids
+	 * @param array $custom_args | Array of custom get_posts() args
+	 * @return array<int> | An array of existing degree ids
 	 **/
-	private function get_existing() {
+	private function get_existing( $custom_args ) {
 		$retval = array();
 
-		$args = array(
+		$args = array_merge( array(
 			'post_type'      => 'degree',
 			'posts_per_page' => -1,
 			'post_status'    => 'publish',
 			'fields'         => 'ids',
 			'meta_query'     => array(
-				'relation' => 'OR',
 				array(
-					'key'     => 'degree_import_ignore',
-					'compare' => 'NOT EXISTS'
-				),
-				array(
-					'key'     => 'degree_import_ignore',
-					'value'   => 'on',
-					'compare' => '!='
+					'relation' => 'OR',
+					array(
+						'key'     => 'degree_import_ignore',
+						'compare' => 'NOT EXISTS'
+					),
+					array(
+						'key'     => 'degree_import_ignore',
+						'value'   => 'on',
+						'compare' => '!='
+					)
 				)
 			)
-		);
+		), $custom_args );
 
 		if ( has_filter( 'ucf_degree_get_existing_args' ) ) {
 			$args = apply_filters( 'ucf_degree_get_existing_args', $args );
@@ -240,6 +253,18 @@ Degree Total    : {$degree_total}
 		}
 
 		return $retval;
+	}
+
+	private function get_existing_plan_posts() {
+		return $this->get_existing( array(
+			'post_parent' => 0
+		) );
+	}
+
+	private function get_existing_subplan_posts() {
+		return $this->get_existing( array(
+			'post_parent' => null
+		) );
 	}
 
 	/**
@@ -287,20 +312,46 @@ Degree Total    : {$degree_total}
 	}
 
 	/**
-	 * Processes the degrees
-	 * @author Jim Barnes
-	 * @since 1.1.0
+	 * Processes the degree plans
+	 * @author Jo Dickson
+	 * @since 3.0.0
 	 **/
-	private function process_degrees() {
-		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree data...', count( $this->search_results ) );
+	private function process_degree_plans() {
+		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree plans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			// Import the degree as a new WP Post draft, or update existing
-			$degree = new UCF_Degree_Import( $ss_program );
-			$degree->import_post();
+			if ( $ss_program->parent_program === null ) {
+				// Import the degree as a new WP Post draft, or update existing
+				$degree = new UCF_Degree_Import( $ss_program );
+				$degree->import_post();
 
-			// Update our new/existing post lists and increment counters
-			$this->update_counters( $degree );
+				// Update our new/existing post lists and increment counters
+				$this->update_counters( $degree );
+			}
+
+			$import_progress->tick();
+		}
+
+		$import_progress->finish();
+	}
+
+	/**
+	 * Processes the degree subplans
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 **/
+	private function process_degree_subplans() {
+		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree subplans...', count( $this->search_results ) );
+
+		foreach( $this->search_results as $ss_program ) {
+			if ( $ss_program->parent_program !== null ) {
+				// Import the degree as a new WP Post draft, or update existing
+				$degree = new UCF_Degree_Import( $ss_program );
+				$degree->import_post();
+
+				// Update our new/existing post lists and increment counters
+				$this->update_counters( $degree );
+			}
 
 			$import_progress->tick();
 		}
@@ -317,26 +368,28 @@ Degree Total    : {$degree_total}
 	 * @param object $degree | UCF_Degree_Import object
 	 **/
 	private function update_counters( $degree ) {
-		$post_id = $degree->post_id;
+		$post_id        = $degree->post_id;
+		$new_posts      =& $degree->is_subplan ? $this->new_subplan_posts : $this->new_plan_posts;
+		$existing_posts =& $degree->is_subplan ? $this->existing_subplan_posts : $this->existing_plan_posts;
+		$updated_posts  =& $degree->is_subplan ? $this->updated_subplan_posts : $this->updated_plan_posts;
 
 		if ( $degree->is_new ) {
 			// Add the post to the new post list
-			$this->new_posts[$post_id] = $post_id;
+			$new_posts[$post_id] = $post_id;
 			$this->new_count++;
 		}
 		else {
 			// Remove the post from the existing post list
-			unset( $this->existing_posts[$post_id] );
+			unset( $existing_posts[$post_id] );
 
-			// Add the post to the list of updated posts
-			if ( ! isset( $this->updated_posts[$post_id] ) ) {
-				$this->updated_posts[$post_id] = $post_id;
-
+			if ( ! isset( $updated_posts[$post_id] ) ) {
 				// This is a duplicate if it's in the new posts array
-				if ( isset( $this->new_posts[$post_id] ) ) {
+				if ( isset( $new_posts[$post_id] ) ) {
 					$this->duplicate_count++;
 				} else {
 					$this->existing_count++;
+					// Add the post to the list of updated posts
+					$updated_posts[$post_id] = $post_id;
 				}
 			} else {
 				$this->duplicate_count++;
@@ -347,13 +400,31 @@ Degree Total    : {$degree_total}
 	/**
 	 * Remove any degrees left from the existing_degree
 	 * array once all other processing is finished.
-	 * @author Jim Barnes
-	 * @since 1.0.0
+	 * @author Jo Dickson
+	 * @since 3.0.0
 	 **/
-	private function remove_remaining_existing() {
-		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale post data...', count( $this->existing_posts ) );
+	private function remove_stale_degree_plans() {
+		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree plan posts...', count( $this->existing_plan_posts ) );
 
-		foreach( $this->existing_posts as $post_id ) {
+		foreach( $this->existing_plan_posts as $post_id ) {
+			wp_delete_post( $post_id, true );
+			$this->removed_count++;
+			$delete_progress->tick();
+		}
+
+		$delete_progress->finish();
+	}
+
+	/**
+	 * Remove any degrees left from the existing_degree
+	 * array once all other processing is finished.
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 **/
+	private function remove_stale_degree_subplans() {
+		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree subplan posts...', count( $this->existing_subplan_posts ) );
+
+		foreach( $this->existing_subplan_posts as $post_id ) {
 			wp_delete_post( $post_id, true );
 			$this->removed_count++;
 			$delete_progress->tick();
@@ -367,10 +438,26 @@ Degree Total    : {$degree_total}
 	 * @author Jim Barnes
 	 * @since 1.0.0
 	 **/
-	private function publish_new_degrees() {
-		$publish_progress = \WP_CLI\Utils\make_progress_bar( 'Publishing new posts...', count( $this->new_posts ) );
+	private function publish_new_degree_plans() {
+		$publish_progress = \WP_CLI\Utils\make_progress_bar( 'Publishing new degree plan posts...', count( $this->new_plan_posts ) );
 
-		foreach( $this->new_posts as $post_id ) {
+		foreach( $this->new_plan_posts as $post_id ) {
+			wp_publish_post( $post_id );
+			$publish_progress->tick();
+		}
+
+		$publish_progress->finish();
+	}
+
+	/**
+	 * Publish any new subplans we're inserting.
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 **/
+	private function publish_new_degree_subplans() {
+		$publish_progress = \WP_CLI\Utils\make_progress_bar( 'Publishing new degree subplan posts...', count( $this->new_subplan_posts ) );
+
+		foreach( $this->new_subplan_posts as $post_id ) {
 			wp_publish_post( $post_id );
 			$publish_progress->tick();
 		}
@@ -398,12 +485,14 @@ class UCF_Degree_Import {
 		$program_types,
 		$colleges,
 		$departments,
+		$parent_post_id, // if this degree is a subplan, this references the parent plan's post object
 		$existing_post, // an existing post object that matches the provided search service program
 		$post_meta,
 		$post_terms;
 
 	public
 		$program,
+		$is_subplan,
 		$is_new,
 		$post_id; // ID of the new or existing post, set in $this->process_post()
 
@@ -425,16 +514,18 @@ class UCF_Degree_Import {
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
 		$this->level         = $program->level;
+		$this->is_subplan    = $program->parent_program !== null ? true : false;
 		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
 		$this->program_types = $this->get_program_types();
 		$this->colleges      = $this->get_colleges();
 		$this->departments   = $this->get_departments();
 
-		$this->existing_post = $this->get_existing_post();
-		$this->is_new        = $this->existing_post === null ? true : false;
+		$this->parent_post_id = $this->get_parent_post_id();
+		$this->existing_post  = $this->get_existing_post();
+		$this->is_new         = $this->existing_post === null ? true : false;
 
-		$this->post_meta     = $this->get_post_metadata();
-		$this->post_terms    = $this->get_post_terms();
+		$this->post_meta  = $this->get_post_metadata();
+		$this->post_terms = $this->get_post_terms();
 	}
 
 	/**
@@ -605,6 +696,58 @@ class UCF_Degree_Import {
 	}
 
 	/**
+	 * Returns the Search Service's program ID for this program's parent plan.
+	 *
+	 * @since 3.0.0
+	 * @author Jo Dickson
+	 * @return mixed | Parent program ID integer, or null on failure
+	 */
+	private function get_parent_program_id() {
+		$id = $parent_program = null;
+
+		if ( $this->is_subplan ) {
+			$parent_program = UCF_Degree_Common::fetch_api_value( $program->parent_program->url );
+			if ( $parent_program ) {
+				$id = $parent_program->id;
+			}
+		}
+
+		return $id;
+	}
+
+	/**
+	 * Returns the WP degree post ID that corresponds to this program's
+	 * parent plan.
+	 *
+	 * @since 3.0.0
+	 * @author Jo Dickson
+	 * @return int The parent degree post's ID
+	 */
+	private function get_parent_post_id() {
+		$parent = null;
+		$parent_id = 0;
+		$parent_program_id = $this->get_parent_program_id();
+
+		if ( $parent_program_id !== null ) {
+			$parent = get_posts( array(
+				'post_type'      => 'degree',
+				'posts_per_page' => 1,
+				'post_parent'    => 0,
+				'post_status'    => array( 'publish', 'draft' ),
+				'meta_query'     => array(
+					array(
+						'key'   => 'degree_id',
+						'value' => $parent_program_id
+					)
+				)
+			) );
+			$parent_id = $parent ? $parent[0]->ID : 0;
+		}
+
+		return $parent;
+	}
+
+	/**
 	 * Returns an existing degree post or null
 	 *
 	 * @since 3.0.0
@@ -616,6 +759,9 @@ class UCF_Degree_Import {
 			'post_type'      => 'degree',
 			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
+			// post_parent will be 0 for plans (returning only degrees with
+			// no children), or a valid post ID for subplans
+			'post_parent'    => $this->parent_post_id,
 			'meta_query'     => array(
 				array(
 					'key'   => 'degree_id',
