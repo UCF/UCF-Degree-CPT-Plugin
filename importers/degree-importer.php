@@ -123,7 +123,27 @@ class UCF_Degree_Importer {
 	 * @return string | The success statistics
 	 **/
 	public function get_stats() {
-		$degree_total = wp_count_posts( 'degree' )->publish;
+		$totaled_degrees = get_posts( array(
+			'post_type'      => 'degree',
+			'posts_per_page' => -1,
+			'post_status'    => array( 'publish', 'draft' ),
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'degree_import_ignore',
+						'compare' => 'NOT EXISTS'
+					),
+					array(
+						'key'     => 'degree_import_ignore',
+						'value'   => 'on',
+						'compare' => '!='
+					)
+				)
+			)
+		) );
+		$degree_total = count( $totaled_degrees );
 		return
 "
 Finished importing degrees.
@@ -206,7 +226,7 @@ Degree Total    : {$degree_total}
 
 		$this->result_count = $count;
 
-		WP_CLI::log( sprintf( '%s results fetched.', $count ) );
+		WP_CLI::log( sprintf( '%s API results fetched.', $count ) );
 
 		return $results;
 	}
@@ -256,15 +276,23 @@ Degree Total    : {$degree_total}
 	}
 
 	private function get_existing_plan_posts() {
-		return $this->get_existing( array(
+		$existing = $this->get_existing( array(
 			'post_parent' => 0
 		) );
+
+		WP_CLI::log( sprintf( '%s existing degree plan posts were found.', count( $existing ) ) );
+
+		return $existing;
 	}
 
 	private function get_existing_subplan_posts() {
-		return $this->get_existing( array(
-			'post_parent' => null
+		$existing = $this->get_existing( array(
+			'post_parent__not_in' => array( 0 )
 		) );
+
+		WP_CLI::log( sprintf( '%s existing degree subplan posts were found.', count( $existing ) ) );
+
+		return $existing;
 	}
 
 	/**
@@ -368,10 +396,19 @@ Degree Total    : {$degree_total}
 	 * @param object $degree | UCF_Degree_Import object
 	 **/
 	private function update_counters( $degree ) {
-		$post_id        = $degree->post_id;
-		$new_posts      =& $degree->is_subplan ? $this->new_subplan_posts : $this->new_plan_posts;
-		$existing_posts =& $degree->is_subplan ? $this->existing_subplan_posts : $this->existing_plan_posts;
-		$updated_posts  =& $degree->is_subplan ? $this->updated_subplan_posts : $this->updated_plan_posts;
+		$post_id = $degree->post_id;
+		$new_posts = $existing_posts = $updated_posts = array();
+
+		if ( $degree->is_subplan ) {
+			$new_posts      = &$this->new_subplan_posts;
+			$existing_posts = &$this->existing_subplan_posts;
+			$updated_posts  = &$this->updated_subplan_posts;
+		}
+		else {
+			$new_posts      = &$this->new_plan_posts;
+			$existing_posts = &$this->existing_plan_posts;
+			$updated_posts  = &$this->updated_plan_posts;
+		}
 
 		if ( $degree->is_new ) {
 			// Add the post to the new post list
@@ -383,13 +420,13 @@ Degree Total    : {$degree_total}
 			unset( $existing_posts[$post_id] );
 
 			if ( ! isset( $updated_posts[$post_id] ) ) {
+				$updated_posts[$post_id] = $post_id;
+
 				// This is a duplicate if it's in the new posts array
 				if ( isset( $new_posts[$post_id] ) ) {
 					$this->duplicate_count++;
 				} else {
 					$this->existing_count++;
-					// Add the post to the list of updated posts
-					$updated_posts[$post_id] = $post_id;
 				}
 			} else {
 				$this->duplicate_count++;
@@ -706,7 +743,7 @@ class UCF_Degree_Import {
 		$id = $parent_program = null;
 
 		if ( $this->is_subplan ) {
-			$parent_program = UCF_Degree_Common::fetch_api_value( $program->parent_program->url );
+			$parent_program = UCF_Degree_Common::fetch_api_value( $this->program->parent_program->url );
 			if ( $parent_program ) {
 				$id = $parent_program->id;
 			}
@@ -736,7 +773,7 @@ class UCF_Degree_Import {
 				'post_status'    => array( 'publish', 'draft' ),
 				'meta_query'     => array(
 					array(
-						'key'   => 'degree_id',
+						'key'   => 'degree_api_id',
 						'value' => $parent_program_id
 					)
 				)
@@ -744,7 +781,7 @@ class UCF_Degree_Import {
 			$parent_id = $parent ? $parent[0]->ID : 0;
 		}
 
-		return $parent;
+		return $parent_id;
 	}
 
 	/**
@@ -799,6 +836,7 @@ class UCF_Degree_Import {
 		$post_data = array(
 			'post_title'  => $this->name,
 			'post_name'   => $this->slug,
+			'post_parent' => $this->parent_post_id,
 			'post_status' => 'draft',
 			'post_date'   => date( 'Y-m-d H:i:s' ),
 			'post_author' => 1,
