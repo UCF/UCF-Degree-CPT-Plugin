@@ -73,7 +73,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * Callback for the /degrees endpoint
 	 * @author Jim Barnes
 	 * @since 1.0.2
-	 * @param $request WP_REST_Request object | Contains get params
+	 * @param WP_REST_Request $request | Contains get params
 	 * @return WP_REST_Response
 	 **/
 	public static function get_degrees( $request ) {
@@ -148,14 +148,75 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				);
 			}
 
-			$retval[$program_type->slug]['degrees'][] = self::prepare_degree_for_response( $post, $request );
+			$retval[$program_type->slug]['degrees'][] = $post;
 			$retval[$program_type->slug]['count']++;
 			$count++;
 		}
 
+		$retval = self::organize_results( $retval, $request );
+
 		$retval = self::prepare_response( $retval, $count, $page, $number_pages, $total_posts, $limit );
 
 		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Organize results based on subplans
+	 * @param array $results | The results array.
+	 * @param WP_REST_Request $request | The request object.
+	 * @return array The reorganized results.
+	 */
+	public static function organize_results( $results, $request ) {
+		$retval = $results;
+
+		foreach( $results as $key => $program_type ) {
+			$retval[$key]['degrees'] = array();
+			foreach( $program_type['degrees'] as $degree ) {
+
+				$children = get_children( array(
+					'post_parent' => $degree->ID,
+					'post_type'   => 'degree',
+					'post_status' => 'publish',
+					'numberposts' => -1
+				) );
+
+				if ( isset( $retval[$key][$degree->ID] ) ) {
+					continue;
+				}
+
+				if ( $degree->post_parent === 0 && count( $children ) === 0 ) {
+					$retval[$key]['degrees'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
+				}
+
+				if ( count( $children ) ) {
+					$parent_degree = self::prepare_degree_for_response( $degree, $request );
+
+					foreach( $children as $child ) {
+						$parent_degree['subplans'][$child->ID] = self::prepare_degree_for_response( $child, $request );
+					}
+
+					$retval[$key]['degrees'][$degree->ID] = $parent_degree;
+				}
+
+				if ( $degree->post_parent !== 0 ) {
+					if ( ! isset( $retval[$key]['degrees'][$degree->post_parent] ) ) {
+						$parent = get_post( $degree->post_parent );
+						$retval[$key]['degrees'][$degree->post_parent] = self::prepare_degree_for_response( $parent, $request );
+					}
+
+					$retval[$key]['degrees'][$degree->post_parent]['subplans'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
+				}
+			}
+
+			// Remove post ids from results
+			foreach( $retval[$key]['degrees'] as $i => $degree ) {
+				$retval[$key]['degrees'][$i]['subplans'] = array_values( $degree['subplans'] );
+			}
+
+			$retval[$key]['degrees'] = array_values( $retval[$key]['degrees'] );
+		}
+
+		return array_values( $retval );
 	}
 
 	/**
@@ -173,10 +234,11 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$term = is_array( $terms ) ? $terms[0]->slug : null;
 
 		$retval = array(
-			'title' => $post->post_title,
-			'url'   => $permalink,
-			'hours' => $hours,
-			'type'  => $term
+			'title'    => $post->post_title,
+			'url'      => $permalink,
+			'hours'    => $hours,
+			'type'     => $term,
+			'subplans' => array()
 		);
 
 		return $retval;

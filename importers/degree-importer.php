@@ -123,7 +123,7 @@ class UCF_Degree_Importer {
 	 * @return string | The success statistics
 	 **/
 	public function get_stats() {
-		$degree_total = $this->new_count + $this->existing_count - $this->removed_count;
+		$degree_total = wp_count_posts( 'degree' )->publish;
 		return
 "
 Finished importing degrees.
@@ -153,7 +153,7 @@ Degree Total    : {$degree_total}
 		if ( ! $response || ! isset( $response->results ) ) {
 			throw new Exception(
 				'Failed to parse the Search Service JSON. ' .
-				'Please make sure your Search Service URL is correct.',
+				'Please make sure your Search Service Base URL and API Key are correct.',
 				2
 			);
 		}
@@ -161,7 +161,7 @@ Degree Total    : {$degree_total}
 		if ( count( $response->results ) === 0 ) {
 			throw new Exception(
 				'No results found from the Search Service. ' .
-				'Please make sure your Search Service URL is correct.',
+				'Please make sure your Search Service Base URL and API Key are correct.',
 				3
 			);
 		}
