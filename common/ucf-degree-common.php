@@ -90,46 +90,54 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @param int $program_id | The id of the program in the Search Service (optional)
 		 */
 		public static function update_service_values( $post_id, $program_id=null ) {
-			// Get plancode and subplan code
-			$plan_code = get_post_meta( $post_id, 'degree_plan_code', true );
-			$subplan_code = get_post_meta( $post_id, 'degree_subplan_code', true );
-
-			$subplan_code = empty( $subplan_code ) ? null : $subplan_code;
+			$update_desc = UCF_Degree_Config::get_option_or_default( 'update_desc' );
+			$update_profile = UCF_Degree_Config::get_option_or_default( 'update_prof' );
 			$result = null;
 
-			$base_url = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
-			$endpoint = $base_url . 'programs/';
+			if ( $update_desc || $update_profile ) {
 
-			if ( $program_id ) {
-				$endpoint .= $program_id . '/';
-				$result = self::fetch_api_value( $endpoint );
-			}
-
-			if ( ! $result ) {
-				$params = array(
-					'plan_code' => $plan_code,
-				);
-
-				if ( $subplan_code ) {
-					$params['subplan_code'] = $subplan_code;
-				} else {
-					$params['subplan_code__isnull'] = True;
-				}
+				// Get plancode and subplan code
+				$plan_code = get_post_meta( $post_id, 'degree_plan_code', true );
+				$subplan_code = get_post_meta( $post_id, 'degree_subplan_code', true );
+				$subplan_code = empty( $subplan_code ) ? null : $subplan_code;
 
 				$base_url = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
-				$endpoint = $base_url . 'programs/search/';
+				$endpoint = $base_url . 'programs/';
 
-				$results = self::fetch_api_values( $endpoint, $params );
-				$result = self::return_verified_result( $results, $params );
+				if ( $program_id ) {
+					$endpoint .= $program_id . '/';
+					$result = self::fetch_api_value( $endpoint );
+				}
+
+				if ( ! $result ) {
+					$params = array(
+						'plan_code' => $plan_code,
+					);
+
+					if ( $subplan_code ) {
+						$params['subplan_code'] = $subplan_code;
+					} else {
+						$params['subplan_code__isnull'] = True;
+					}
+
+					$base_url = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
+					$endpoint = $base_url . 'programs/search/';
+
+					$results = self::fetch_api_values( $endpoint, $params );
+					if ( $results ) {
+						$result = self::return_verified_result( $results, $params );
+					}
+				}
+
 			}
 
 			if ( $result ) {
 
-				if ( UCF_Degree_Config::get_option_or_default( 'update_desc' ) ) {
+				if ( $update_desc ) {
 					self::update_description( $post_id, $result );
 				}
 
-				if ( UCF_Degree_Config::get_option_or_default( 'update_prof' ) ) {
+				if ( $update_profile ) {
 					self::update_profile( $post_id, $result );
 				}
 			}
