@@ -124,7 +124,9 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 					$endpoint = $base_url . 'programs/search/';
 
 					$results = self::fetch_api_values( $endpoint, $params );
-					$result = self::return_verified_result( $results, $params );
+					if ( $results ) {
+						$result = self::return_verified_result( $results, $params );
+					}
 				}
 
 			}
