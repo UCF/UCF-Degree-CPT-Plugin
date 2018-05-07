@@ -517,7 +517,6 @@ class UCF_Degree_Import {
 		$degree_id,
 		$api_id,
 		$name,
-		$slug,
 		$catalog_url,
 		$career,
 		$level,
@@ -526,6 +525,8 @@ class UCF_Degree_Import {
 		$departments,
 		$parent_post_id, // if this degree is a subplan, this references the parent plan's post object
 		$existing_post, // an existing post object that matches the provided search service program
+		$name_short,
+		$slug,
 		$post_meta,
 		$post_terms;
 
@@ -554,7 +555,6 @@ class UCF_Degree_Import {
 		$this->career        = $program->career;
 		$this->level         = $program->level;
 		$this->is_subplan    = $program->parent_program !== null ? true : false;
-		$this->slug          = sanitize_title( $this->name . $this->get_program_suffix() );
 		$this->program_types = $this->get_program_types();
 		$this->colleges      = $this->get_colleges();
 		$this->departments   = $this->get_departments();
@@ -563,8 +563,44 @@ class UCF_Degree_Import {
 		$this->existing_post  = $this->get_existing_post();
 		$this->is_new         = $this->existing_post === null ? true : false;
 
+		$this->name_short = $this->get_name_short();
+		$this->slug       = $this->get_slug();
+
 		$this->post_meta  = $this->get_post_metadata();
 		$this->post_terms = $this->get_post_terms();
+	}
+
+	/**
+	 * Returns a shortened degree name.  For subplans, this will be the name
+	 * of the track specifically (with the parent program's name omitted).
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 * @return string
+	 */
+	private function get_name_short() {
+		$name_short = $this->name;
+
+		// If this degree is a subplan, determine the parent degree's name
+		// and remove it from the beginning of the subplan's name, if present
+		if ( $this->is_subplan ) {
+			$parent_post = get_post( $this->parent_post_id );
+			$parent_name = '';
+
+			if ( $parent_post ) {
+				$parent_name = $parent_post->post_title;
+			}
+
+			if ( $parent_name && substr( $this->name, 0, strlen( $parent_name ) ) === $parent_name ) {
+				$name_short = substr_replace( $this->name, '', 0, strlen( $parent_name ) );
+				$name_short = trim( $name_short );
+				if ( substr( $name_short, 0, 2 ) === '- ' ) {
+					$name_short = substr_replace( $name_short, '', 0, 2 );
+				}
+			}
+		}
+
+		return $name_short;
 	}
 
 	/**
@@ -586,6 +622,20 @@ class UCF_Degree_Import {
 			default:
 				return '';
 		}
+	}
+
+	/**
+	 * Returns the degree's slug (post_name)
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 * @return string
+	 */
+	private function get_slug() {
+		if ( $this->is_subplan ) {
+			var_dump(sanitize_title( $this->name_short . $this->get_program_suffix() ));
+		}
+		return sanitize_title( $this->name_short . $this->get_program_suffix() );
 	}
 
 	/**
@@ -873,7 +923,8 @@ class UCF_Degree_Import {
 			'degree_api_id'       => $this->api_id,
 			'degree_pdf'          => $this->catalog_url,
 			'degree_plan_code'    => $this->plan_code,
-			'degree_subplan_code' => $this->subplan_code
+			'degree_subplan_code' => $this->subplan_code,
+			'degree_name_short'   => $this->name_short
 		);
 
 		// Allow overrides by themes/other plugins
