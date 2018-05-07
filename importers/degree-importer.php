@@ -85,6 +85,8 @@ class UCF_Degree_Importer {
 
 			// Reset writeback hook updates
 			$this->maybe_reset_search_writebacks();
+
+			flush_rewrite_rules();
 		}
 		catch ( Exception $e ) {
 			throw $e;
