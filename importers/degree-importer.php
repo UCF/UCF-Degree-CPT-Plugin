@@ -277,6 +277,13 @@ Degree Total    : {$degree_total}
 		return $retval;
 	}
 
+	/**
+	 * Returns all existing degree plan posts
+	 *
+	 * @since 3.0.0
+	 * @author Jo Dickson
+	 * @return array<int> | An array of existing degree plan post ids
+	 */
 	private function get_existing_plan_posts() {
 		$existing = $this->get_existing( array(
 			'post_parent' => 0
@@ -287,6 +294,13 @@ Degree Total    : {$degree_total}
 		return $existing;
 	}
 
+	/**
+	 * Returns all existing degree subplan posts
+	 *
+	 * @since 3.0.0
+	 * @author Jo Dickson
+	 * @return array<int> | An array of existing degree subplan post ids
+	 */
 	private function get_existing_subplan_posts() {
 		$existing = $this->get_existing( array(
 			'post_parent__not_in' => array( 0 )
