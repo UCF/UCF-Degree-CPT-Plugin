@@ -48,6 +48,8 @@ if ( ! class_exists( 'UCF_Degree_Search_Custom_Filters' ) ) {
 				WHERE
 					$wpdb->term_taxonomy.taxonomy = '{$taxonomy}'
 				AND
+					$wpdb->term_taxonomy.parent > 0
+				AND
 					$wpdb->term_relationships.object_id = $wpdb->posts.ID
 				LIMIT
 					0,1)";
