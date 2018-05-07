@@ -5,13 +5,13 @@
 class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static
 		$order = array(
-			'Undergraduate Degree',
+			'Bachelor',
 			'Minor',
 			'Master',
+			'Specialist',
 			'Doctorate',
-			'Certificate',
-			'Articulated Program',
-			'Accelerated Program'
+			'Graduate Certificate',
+			'Undergraduate Certificate'
 		);
 
 	/**
