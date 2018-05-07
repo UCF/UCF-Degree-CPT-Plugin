@@ -488,8 +488,8 @@ Degree Total    : {$degree_total}
 
 	/**
 	 * Publish any new degrees we're inserting.
-	 * @author Jim Barnes
-	 * @since 1.0.0
+	 * @author Jo Dickson
+	 * @since 3.0.0
 	 **/
 	private function publish_new_degree_plans() {
 		$publish_progress = \WP_CLI\Utils\make_progress_bar( 'Publishing new degree plan posts...', count( $this->new_plan_posts ) );
@@ -537,7 +537,7 @@ class UCF_Degree_Import {
 		$program_types,
 		$colleges,
 		$departments,
-		$parent_post_id, // if this degree is a subplan, this references the parent plan's post object
+		$parent_post_id, // if this degree is a subplan, this references the parent plan's post ID
 		$existing_post, // an existing post object that matches the provided search service program
 		$name_short,
 		$slug,
