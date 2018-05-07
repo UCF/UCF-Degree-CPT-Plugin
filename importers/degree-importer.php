@@ -632,9 +632,6 @@ class UCF_Degree_Import {
 	 * @return string
 	 */
 	private function get_slug() {
-		if ( $this->is_subplan ) {
-			var_dump(sanitize_title( $this->name_short . $this->get_program_suffix() ));
-		}
 		return sanitize_title( $this->name_short . $this->get_program_suffix() );
 	}
 
