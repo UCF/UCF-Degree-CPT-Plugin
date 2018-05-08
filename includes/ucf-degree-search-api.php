@@ -356,22 +356,58 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 		$terms = get_terms( $args );
 
-		// Sort our program types by our custom order.
-		usort( $terms, array( 'UCF_Degree_Search_API', 'custom_program_types_order' ) );
-
 		foreach( $terms as $term ) {
+			if ( isset( $retval[$term->term_id] ) ) continue;
+
 			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
 
 			$alias = get_term_meta( $term->term_id, 'program_types_alias', true );
 			$alias = $alias ? $alias : $term->name;
 
-			$retval[] = array(
-				'name'     => $alias,
-				'plural'   => $term->name . 's',
-				'slug'     => $term->slug,
-				'count'    => $term->count
-			);
+			if ( $term->parent === 0 ) {
+				$retval[$term->term_id] = array(
+					'name'     => $alias,
+					'plural'   => $term->name . 's',
+					'slug'     => $term->slug,
+					'count'    => $term->count,
+					'children' => array()
+				);
+			} else {
+				if ( ! isset( $retval[$term->parent] ) ) {
+					$parent = get_term( $term->parent );
+
+					$parent_alias = get_term_meta( $parent->term_id, 'program_types_alias', true );
+					$parent_alias = $parent_alias ? $parent_alias : $parent->name;
+
+					$retval[$parent->term_id] = array(
+						'name'     => $parent_alias,
+						'plural'   => $parent->name . 's',
+						'slug'     => $parent->slug,
+						'count'    => $parent->count,
+						'children' => array(
+							$term->term_id => array(
+								'name'     => $alias,
+								'plural'   => $term->name . 's',
+								'slug'     => $term->slug,
+								'count'    => $term->count,
+								'children' => array()
+							)
+						)
+					);
+				} else {
+					$retval[$term->parent]['children'][$term->term_id] = array(
+						'name'     => $alias,
+						'plural'   => $term->name . 's',
+						'slug'     => $term->slug,
+						'count'    => $term->count,
+						'children' => array()
+					);
+				}
+			}
 		}
+
+		// Sort our program types by our custom order.
+		// usort( $retval, array( 'UCF_Degree_Search_API', 'custom_program_types_order' ) );
 
 		return new WP_REST_Response( $retval, 200 );
 	}
