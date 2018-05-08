@@ -7,6 +7,8 @@ Provides a custom post type, taxonomies and other utilities for describing UCF d
 
 Provides a custom post type, taxonomies and other utilities for describing UCF degree programs. Designed to leverage default WordPress templates and be overridden by post type specific templates.
 
+For more information on what's included in this plugin and how to use it, please see the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki).
+
 
 ## Installation ##
 
@@ -17,16 +19,27 @@ Provides a custom post type, taxonomies and other utilities for describing UCF d
 ### WP CLI Installation ###
 1. `$ wp plugin install --activate https://github.com/UCF/UCF-Degree-CPT-Plugin/archive/master.zip`.  See [WP-CLI Docs](http://wp-cli.org/commands/plugin/install/) for more command options.
 
-
-## Setup & Usage ##
+### Setup & Usage ###
 See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for setup and usage instructions.
 
 
 ## Changelog ##
 
+### 3.0.0 ###
+Enhancements:
+* Refactored the degree import script for compatibility with the new UCF Search Service.  Note that the updated Search Service requires an API key for any access; you will not be able to import fresh degree data until obtaining an API key.
+* The default set of Program Type terms has been updated.  Degrees are now explicitly assigned both a parent and child Program Type term, e.g. "Undergraduate Program" AND "Bachelor" (previously, only the child term was explicitly assigned).
+* Degree subplans are now saved as separate degree posts.  Subplans are saved as direct children of their parent degree program (are hierarchical).
+* Removed the following degree meta data: `degree_type_id`, `degree_description`
+* Added the following degree meta data: `degree_api_id`, `degree_plan_code`, `degree_subplan_code`, `degree_name_short`
+* Updated the Degree Search API REST controller to organize results with plan/subplan hierarchy, and to add support for the updated Program Type default terms + their expected sort order.
+* Unique site-specific degree profile URLs and descriptions (degree `post_content` values) can now be written back up to the UCF Search Service whenever a degree is modified.
+
+**Please note that this version of the plugin is not compatible with previous plugin versions' imported degree data.**  If you require use of the degree import script, we recommend deleting all existing Program Type and Department terms (if applicable) before running a fresh degree import to ensure that all stale degrees are removed and new degrees are imported successfully.
+
 ### 2.0.3 ###
 Enhancements:
-* Adds an endpoint for retrieving degree specific relevanssi results.
+* Adds an endpoint for retrieving degree-specific Relevanssi results.
 
 ### 2.0.2 ###
 Bug Fixes/Enhancements:
