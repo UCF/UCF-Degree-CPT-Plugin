@@ -229,16 +229,18 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 **/
 	public static function prepare_degree_for_response( $post, $request ) {
 		$permalink = get_permalink( $post );
+		$name_short = get_post_meta( $post->ID, 'degree_name_short', true );
 		$hours = get_post_meta( $post->ID, 'degree_hours', true );
 		$terms = wp_get_post_terms( $post->ID, 'program_types' );
 		$term = is_array( $terms ) ? $terms[0]->slug : null;
 
 		$retval = array(
-			'title'    => $post->post_title,
-			'url'      => $permalink,
-			'hours'    => $hours,
-			'type'     => $term,
-			'subplans' => array()
+			'title'     => $post->post_title,
+			'nameShort' => $name_short,
+			'url'       => $permalink,
+			'hours'     => $hours,
+			'type'      => $term,
+			'subplans'  => array()
 		);
 
 		return $retval;
