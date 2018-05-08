@@ -218,8 +218,6 @@ Degree Total    : {$degree_total}
 
 		$url = add_query_arg( $query, $this->search_api . 'programs/' );
 
-		var_dump( $url );
-
 		// Perform an initial out-of-loop fetch and assign $count
 		list( $url, $results, $count ) = $this->fetch_api_page( $url, $results, true );
 
