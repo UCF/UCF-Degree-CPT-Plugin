@@ -218,6 +218,8 @@ Degree Total    : {$degree_total}
 
 		$url = add_query_arg( $query, $this->search_api . 'programs/' );
 
+		var_dump( $url );
+
 		// Perform an initial out-of-loop fetch and assign $count
 		list( $url, $results, $count ) = $this->fetch_api_page( $url, $results, true );
 
@@ -366,7 +368,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program === null ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program );
+				$degree = new UCF_Degree_Import( $ss_program , $this->api_key );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -390,7 +392,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program !== null ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program );
+				$degree = new UCF_Degree_Import( $ss_program, $this->api_key );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -542,7 +544,8 @@ class UCF_Degree_Import {
 		$name_short,
 		$slug,
 		$post_meta,
-		$post_terms;
+		$post_terms,
+		$api_key;
 
 	public
 		$program,
@@ -558,7 +561,7 @@ class UCF_Degree_Import {
 	 * @param object $program | Imported program object from the search service
 	 * @return UCF_Degree_Import
 	 **/
-	public function __construct( $program ) {
+	public function __construct( $program, $api_key=null ) {
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
@@ -572,6 +575,7 @@ class UCF_Degree_Import {
 		$this->program_types = $this->get_program_types();
 		$this->colleges      = $this->get_colleges();
 		$this->departments   = $this->get_departments();
+		$this->api_key       = $api_key;
 
 		$this->parent_post_id = $this->get_parent_post_id();
 		$this->existing_post  = $this->get_existing_post();
@@ -806,7 +810,11 @@ class UCF_Degree_Import {
 		$id = $parent_program = null;
 
 		if ( $this->is_subplan ) {
-			$parent_program = UCF_Degree_Common::fetch_api_value( $this->program->parent_program->url );
+			$params = array();
+
+			if ( $this->api_key ) $params['key'] = $this->api_key;
+
+			$parent_program = UCF_Degree_Common::fetch_api_value( $this->program->parent_program->url, $params );
 			if ( $parent_program ) {
 				$id = $parent_program->id;
 			}
