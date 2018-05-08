@@ -1,6 +1,6 @@
 # UCF Degree Custom Post Type Plugin #
 
-Provides a custom post type, taxonomies and help functions for describing degree programs.
+Provides a custom post type, taxonomies and other utilities for describing UCF degree programs.
 
 
 ## Description ##

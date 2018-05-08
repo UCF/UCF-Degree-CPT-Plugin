@@ -7,7 +7,7 @@ Stable tag: 3.0.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
-Provides a custom post type, taxonomies and help functions for describing degree programs.
+Provides a custom post type, taxonomies and other utilities for describing UCF degree programs.
 
 
 == Description ==
