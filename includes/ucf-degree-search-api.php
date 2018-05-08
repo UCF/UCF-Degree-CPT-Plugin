@@ -406,9 +406,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			}
 		}
 
-		// Sort our program types by our custom order.
-		// usort( $retval, array( 'UCF_Degree_Search_API', 'custom_program_types_order' ) );
-
 		return new WP_REST_Response( $retval, 200 );
 	}
 
