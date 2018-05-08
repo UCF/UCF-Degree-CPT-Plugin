@@ -5,7 +5,7 @@ Provides a custom post type, taxonomies and help functions for describing degree
 
 ## Description ##
 
-Provides a custom post type, taxonomies and help functions for describing degree programs. Designed to leverage default WordPress templates and be overridden by post type specific templates.
+Provides a custom post type, taxonomies and other utilities for describing UCF degree programs. Designed to leverage default WordPress templates and be overridden by post type specific templates.
 
 
 ## Installation ##
@@ -18,31 +18,35 @@ Provides a custom post type, taxonomies and help functions for describing degree
 1. `$ wp plugin install --activate https://github.com/UCF/UCF-Degree-CPT-Plugin/archive/master.zip`.  See [WP-CLI Docs](http://wp-cli.org/commands/plugin/install/) for more command options.
 
 
+## Setup & Usage ##
+See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for setup and usage instructions.
+
+
 ## Changelog ##
 
-# 2.0.3 #
+### 2.0.3 ###
 Enhancements:
 * Adds an endpoint for retrieving degree specific relevanssi results.
 
-# 2.0.2 #
+### 2.0.2 ###
 Bug Fixes/Enhancements:
 * Added improvements to how degrees are matched with undergraduate catalog URLs in the degree importer
 
-# 2.0.1 #
+### 2.0.1 ###
 Enhancements:
 * Added fullname and plural to degree-search API colleges and program-types
 
 Bug Fixes:
 * Fixed notices
 
-# 2.0.0 #
+### 2.0.0 ###
 Enhancements:
 * Converts layout actions for degree lists and career path lists to filters, and consolidates arguments passed to degree list layout functions.  Please note this change is not backward-compatible with layouts registered using hooks provided by older versions of the plugin.
 * Changed the generic class name "Degrees" to "UCF_Degree_Commands"
 * Removed anonymous function calls for improved support with older versions of PHP
 * Fixed plugin activation and deactivation hooks being referenced outside of the if-statements that check whether or not the functions exist yet.
 
-# 1.1.0 #
+### 1.1.0 ###
 Bug Fixes:
 * Fixed bug with output of `UCF_Degree_PostType::taxonomies()` still returning nonexistent taxonomies
 * Fixed calls to `$wpdb->prepare` to suppress warnings
@@ -54,7 +58,7 @@ Enhancements:
 * Adds some hooks that should allow the import process to be extended for a specific site's needs.
 * Added the helper method `UCF_Degree_Program_Types_Common::get_name_or_alias()`, which returns a program type's alias, if available, or name.
 
-# 1.0.2 #
+### 1.0.2 ###
 Bug Fixes:
 * Fixed rewrite rule issues on plugin activation/deactivation.
 
@@ -62,12 +66,13 @@ Enhancements:
 * Added a custom REST route for the Angular degree search.
 * The degree-search api now orders the results by program_types using the new `order_by-taxonomy`, `order_by_taxonomy_field` and `order_by_taxonomy_order` fields.
 
-# 1.0.1 #
+### 1.0.1 ###
 Bug Fixes:
 * Updated to detect if the now built-in REST API is available.
 
 Enhancements:
 * Added postmeta to the meta field of the api.
+
 
 ## Upgrade Notice ##
 
