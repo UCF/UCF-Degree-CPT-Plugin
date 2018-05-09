@@ -373,6 +373,12 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			);
 		}
 
+		$retval = array_values( $retval );
+
+		foreach( $retval as $i => $child ) {
+			$retval[$i]['children'] = array_values( $retval[$i]['children'] );
+		}
+
 		return new WP_REST_Response( $retval, 200 );
 	}
 
