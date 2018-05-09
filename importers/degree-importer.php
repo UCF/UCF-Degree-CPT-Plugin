@@ -531,6 +531,7 @@ class UCF_Degree_Import {
 		$degree_id,
 		$api_id,
 		$name,
+		$online,
 		$catalog_url,
 		$career,
 		$level,
@@ -566,6 +567,7 @@ class UCF_Degree_Import {
 		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
 		$this->name          = $program->name;
+		$this->online        = $program->online;
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
 		$this->level         = $program->level;
@@ -938,6 +940,7 @@ class UCF_Degree_Import {
 		$meta = array(
 			'degree_id'           => $this->degree_id,
 			'degree_api_id'       => $this->api_id,
+			'degree_online'       => $this->online,
 			'degree_pdf'          => $this->catalog_url,
 			'degree_plan_code'    => $this->plan_code,
 			'degree_subplan_code' => $this->subplan_code,
