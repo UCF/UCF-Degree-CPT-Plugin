@@ -134,8 +134,21 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$posts = $query->posts;
 
 		foreach( $posts as $post ) {
-			$program_type = wp_get_post_terms( $post->ID, 'program_types' );
-			$program_type = is_array( $program_type ) ? $program_type[0] : null;
+			$program_types = wp_get_post_terms( $post->ID, 'program_types' );
+			$program_types = ( is_array( $program_types ) ) ? $program_types : null;
+
+			$program_type = null;
+
+			if ( count( $program_types ) > 1 ) {
+				foreach( $program_types as $pt ) {
+					if ( $pt->parent !== 0 ) {
+						$program_type = $pt;
+						break;
+					}
+				}
+			} else if ( count( $program_types ) > 0 ) {
+				$program_type = $program_types[0];
+			}
 
 			if ( ! isset( $retval[$program_type->slug] ) ) {
 				$alias = get_term_meta( $program_type->term_id, 'program_types_alias', true );
