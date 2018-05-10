@@ -139,13 +139,15 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 			$program_type = null;
 
-			if ( $program_types ) {
+			if ( count( $program_types ) > 1 ) {
 				foreach( $program_types as $pt ) {
 					if ( $pt->parent !== 0 ) {
 						$program_type = $pt;
 						break;
 					}
 				}
+			} else if ( count( $program_types ) > 0 ) {
+				$program_type = $program_types[0];
 			}
 
 			if ( ! isset( $retval[$program_type->slug] ) ) {
