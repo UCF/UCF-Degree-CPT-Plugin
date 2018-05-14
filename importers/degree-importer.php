@@ -216,7 +216,7 @@ Degree Total    : {$degree_total}
 		}
 		$query['key'] = $this->api_key;
 
-		$url = add_query_arg( $query, $this->search_api . 'programs/' );
+		$url = add_query_arg( $query, $this->search_api . 'programs/search/' );
 
 		// Perform an initial out-of-loop fetch and assign $count
 		list( $url, $results, $count ) = $this->fetch_api_page( $url, $results, true );
