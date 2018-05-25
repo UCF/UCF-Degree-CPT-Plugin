@@ -522,7 +522,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					<?php if ( $options ) : ?>
 					<select id="<?php echo $option_name; ?>" name="<?php echo $option_name; ?>">
 						<?php foreach ( $options as $value => $text ) : ?>
-							<option value="<?php echo $value; ?>" <?php echo ( (int)$current_value === $value ) ? 'selected' : ''; ?>><?php echo $text; ?></option>
+							<option value="<?php echo $value; ?>" <?php echo ( ( $current_value === false && $value === '' ) || ( $current_value === $value ) ) ? 'selected' : ''; ?>><?php echo $text; ?></option>
 						<?php endforeach; ?>
 					</select>
 					<?php else: ?>
