@@ -27,21 +27,23 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$transient_timeout = DAY_IN_SECONDS;
 			$retval            = get_transient( $transient_name );
 
-			if ( ! $retval ) {
+			if ( $retval === false ) {
 				$base_url    = self::get_option_or_default( 'api_base_url' );
 				$request_url = $base_url . 'descriptions/types/';
 
-				$items = UCF_Degree_Common::fetch_api_values( $request_url );
+				$items  = UCF_Degree_Common::fetch_api_values( $request_url );
+				$retval = array();
 
 				if ( $items ) {
-					$retval = array();
-
-					foreach( $items as $item ) {
+					foreach ( $items as $item ) {
 						$retval[$item->id] = $item->name;
 					}
-
-					set_transient( $transient_name, $retval, $transient_timeout );
 				}
+				else {
+					$transient_timeout = MINUTE_IN_SECONDS * 2;
+				}
+
+				set_transient( $transient_name, $retval, $transient_timeout );
 			}
 
 			return $retval;
@@ -57,21 +59,44 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			$transient_timeout = DAY_IN_SECONDS;
 			$retval            = get_transient( $transient_name );
 
-			if ( ! $retval ) {
-				$base_url       = self::get_option_or_default( 'api_base_url' );
+			if ( $retval === false ) {
+				$base_url    = self::get_option_or_default( 'api_base_url' );
 				$request_url = $base_url . 'profiles/types/';
 
-				$items = UCF_Degree_Common::fetch_api_values( $request_url );
+				$items  = UCF_Degree_Common::fetch_api_values( $request_url );
+				$retval = array();
 
 				if ( $items ) {
-					$retval = array();
-
-					foreach( $items as $item ) {
+					foreach ( $items as $item ) {
 						$retval[$item->id] = $item->name;
 					}
-
-					set_transient( $transient_name, $retval, $transient_timeout );
 				}
+				else {
+					$transient_timeout = MINUTE_IN_SECONDS * 2;
+				}
+
+				set_transient( $transient_name, $retval, $transient_timeout );
+			}
+
+			return $retval;
+		}
+
+		/**
+		 * Returns an array suitable for passing to
+		 * self::display_settings_field() for <select> options. Applies a
+		 * default, unselected option for when no choice has been selected.
+		 *
+		 * @author Jo Dickson
+		 * @since 3.0.1
+		 * @param array $values | select option key+value pairs
+		 * @param string $empty_val | string to display for a default/unselected empty value
+		 * @return array
+		 */
+		private static function get_api_select_options( $values, $empty_val='-----------' ) {
+			$retval = array( '' => $empty_val );
+
+			if ( $values ) {
+				$retval = array_merge( $retval, $values );
 			}
 
 			return $retval;
@@ -422,7 +447,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					'label_for'   => self::$option_prefix . 'desc_type',
 					'description' => 'The description type to set when writing to the Search Service.',
 					'type'        => 'select',
-					'options'     => self::get_description_types()
+					'options'     => self::get_api_select_options( self::get_description_types() )
 				)
 			);
 
@@ -452,7 +477,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					'label_for'   => self::$option_prefix . 'prof_type',
 					'description' => 'The profile type to set when writing to the Search Service.',
 					'type'        => 'select',
-					'options'     => self::get_profile_types()
+					'options'     => self::get_api_select_options( self::get_profile_types() )
 				)
 			);
 		}
