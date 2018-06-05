@@ -25,6 +25,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.0.1 ###
+Enhancements:
+- Updated profile and description type fetches to cache failed responses for 2 minutes, to avoid subsequent external requests to the API on every admin page load
+- Added default empty option to profile and description type dropdowns on the plugin options page for improved clarity when an option hasn't been selected
+
 ### 3.0.0 ###
 Enhancements:
 * Refactored the degree import script for compatibility with the new UCF Search Service.  Note that the updated Search Service requires an API key for any access; you will not be able to import fresh degree data until obtaining an API key.

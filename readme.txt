@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 4.9.2
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +31,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.0.1 =
+Enhancements:
+- Updated profile and description type fetches to cache failed responses for 2 minutes, to avoid subsequent external requests to the API on every admin page load
+- Added default empty option to profile and description type dropdowns on the plugin options page for improved clarity when an option hasn't been selected
 
 = 3.0.0 =
 Enhancements:
