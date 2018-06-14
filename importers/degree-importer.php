@@ -368,7 +368,7 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree plans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program === null ) {
+			if ( $ss_program->parent_program === null || ! $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
@@ -392,7 +392,7 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree subplans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program !== null ) {
+			if ( $ss_program->parent_program !== null && $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
@@ -419,7 +419,7 @@ Degree Total    : {$degree_total}
 		$post_id = $degree->post_id;
 		$new_posts = $existing_posts = $updated_posts = array();
 
-		if ( $degree->is_subplan ) {
+		if ( $degree->is_subplan && $this->preserve_hierarchy ) {
 			$new_posts      = &$this->new_subplan_posts;
 			$existing_posts = &$this->existing_subplan_posts;
 			$updated_posts  = &$this->updated_subplan_posts;
