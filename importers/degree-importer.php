@@ -8,6 +8,7 @@ class UCF_Degree_Importer {
 		$additional_params,
 		$api_key,
 		$do_writebacks,
+		$preserve_hierarchy,
 
 		$search_results = array(),
 		$result_count,
@@ -49,11 +50,12 @@ class UCF_Degree_Importer {
 	 * @param bool $do_writebacks | Whether or not writebacks to the search service should be enabled during the import process
 	 * @return UCF_Degree_Importer
 	 **/
-	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='' ) {
+	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true ) {
 		$this->search_api = substr( $search_url, -1 ) === '/' ? $search_url : $search_url . '/';
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
+		$this->preserve_hierarchy = $preserve_hierarchy;
 		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $default_program_types );
 	}
 
@@ -368,7 +370,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program === null ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program , $this->api_key );
+				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -392,7 +394,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program !== null ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program, $this->api_key );
+				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -546,7 +548,8 @@ class UCF_Degree_Import {
 		$slug,
 		$post_meta,
 		$post_terms,
-		$api_key;
+		$api_key,
+		$preserve_hierarchy;
 
 	public
 		$program,
@@ -562,7 +565,7 @@ class UCF_Degree_Import {
 	 * @param object $program | Imported program object from the search service
 	 * @return UCF_Degree_Import
 	 **/
-	public function __construct( $program, $api_key=null ) {
+	public function __construct( $program, $api_key=null, $preserve_hierarchy=true ) {
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
@@ -588,6 +591,7 @@ class UCF_Degree_Import {
 
 		$this->post_meta  = $this->get_post_metadata();
 		$this->post_terms = $this->get_post_terms();
+		$this->hierarchy  = $preserve_hierarchy;
 	}
 
 	/**
@@ -603,7 +607,7 @@ class UCF_Degree_Import {
 
 		// If this degree is a subplan, determine the parent degree's name
 		// and remove it from the beginning of the subplan's name, if present
-		if ( $this->is_subplan ) {
+		if ( $this->is_subplan && $this->preserve_hierarchy ) {
 			$parent_post = get_post( $this->parent_post_id );
 			$parent_name = '';
 
@@ -816,7 +820,7 @@ class UCF_Degree_Import {
 	private function get_parent_program_id() {
 		$id = $parent_program = null;
 
-		if ( $this->is_subplan ) {
+		if ( $this->is_subplan && $this->preserve_hierarchy ) {
 			$params = array();
 
 			if ( $this->api_key ) $params['key'] = $this->api_key;
@@ -839,6 +843,10 @@ class UCF_Degree_Import {
 	 * @return int The parent degree post's ID
 	 */
 	private function get_parent_post_id() {
+		if ( ! $this->preserve_hierarchy ) {
+			return 0;
+		}
+
 		$parent = null;
 		$parent_id = 0;
 		$parent_program_id = $this->get_parent_program_id();

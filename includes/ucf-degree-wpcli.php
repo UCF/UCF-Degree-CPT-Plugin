@@ -23,6 +23,15 @@ class UCF_Degree_Commands extends WP_CLI_Command {
      *   - false
      * ---
 	 *
+	 * [--preserve_hierarchy=<preserve_hierarchy>]
+	 * : If enabled, will preserve parent/child relationship in degree data.
+	 * ---
+	 * default: true
+	 * options:
+	 * 	- true
+	 * 	- false
+	 * ---
+	 *
 	 * ## EXAMPLES
 	 *
 	 * # Imports degrees from the production search service.
@@ -34,6 +43,7 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		$api_base_url    = isset( $assoc_args['api_base_url'] ) && !empty( $assoc_args['api_base_url'] ) ? trim( $assoc_args['api_base_url'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_base_url' ) );
 		$api_key         = isset( $assoc_args['api_key'] ) && !empty( $assoc_args['api_key'] ) ? trim( $assoc_args['api_key'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_key' ) );
 		$do_writebacks   = isset( $assoc_args['enable_search_writebacks'] ) ? filter_var( $assoc_args['enable_search_writebacks'], FILTER_VALIDATE_BOOLEAN ) : false;
+		$preserve_hierarchy = isset( $assoc_args['preserve_hierarchy'] ) ? filter_var( $assoc_args['preserve_hierarchy'], FILTER_VALIDATE_BOOLEAN ) : true;
 		$additional_args = UCF_Degree_Config::get_option_or_default( 'search_filter' );
 
 		if ( empty( $api_base_url ) ) {
@@ -45,7 +55,7 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		}
 
 		// Do import
-		$import = new UCF_Degree_Importer( $api_base_url, $api_key, $do_writebacks, $additional_args );
+		$import = new UCF_Degree_Importer( $api_base_url, $api_key, $do_writebacks, $additional_args, $preserve_hierarchy );
 		try {
 			$import->import();
 		}
