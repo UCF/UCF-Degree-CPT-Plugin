@@ -703,7 +703,7 @@ class UCF_Degree_Import {
 
 		// Allow overrides by themes/other plugins
 		if ( has_filter( 'ucf_degree_get_program_types' ) ) {
-			$program_types = apply_filters( 'ucf_degree_get_program_types', $program_types, $this );
+			$program_types = apply_filters( 'ucf_degree_get_program_types', $program_types, $this->program );
 		}
 
 		return $program_types;
