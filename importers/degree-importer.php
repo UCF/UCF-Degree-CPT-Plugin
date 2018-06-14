@@ -24,7 +24,8 @@ class UCF_Degree_Importer {
 		$removed_count = 0,
 		$duplicate_count = 0,
 
-		$program_types = array(
+		$program_types = array(),
+		$default_program_types = array(
 			'Undergraduate Program' => array(
 				'Bachelor',
 				'Minor',
@@ -37,7 +38,7 @@ class UCF_Degree_Importer {
 				'Graduate Certificate'
 			),
 			'Professional Program'
-		); // Array of default program_types
+		);
 
 	/**
 	 * Constructor
@@ -53,6 +54,7 @@ class UCF_Degree_Importer {
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
+		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $default_program_types );
 	}
 
 	/**
@@ -693,6 +695,11 @@ class UCF_Degree_Import {
 			case 'Minor':
 				$program_types[] = $this->level;
 				break;
+		}
+
+		// Allow overrides by themes/other plugins
+		if ( has_filter( 'ucf_degree_get_program_types' ) ) {
+			$program_types = apply_filters( 'ucf_degree_get_program_types', $program_types, $this );
 		}
 
 		return $program_types;
