@@ -56,7 +56,7 @@ class UCF_Degree_Importer {
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
 		$this->preserve_hierarchy = $preserve_hierarchy;
-		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $default_program_types );
+		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $this->default_program_types );
 	}
 
 	/**
