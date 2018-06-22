@@ -28,8 +28,8 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * ---
 	 * default: true
 	 * options:
-	 * 	- true
-	 * 	- false
+	 *   - true
+	 *   - false
 	 * ---
 	 *
 	 * ## EXAMPLES

@@ -230,6 +230,12 @@ Degree Total    : {$degree_total}
 			list( $url, $results ) = $this->fetch_api_page( $url, $results );
 		}
 
+		// Allow returned results and result count to be overridden by
+		// other themes/plugins.
+		// Functions passed to this filter MUST return both $results AND $count
+		// as a two-value array.
+		list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+
 		$this->result_count = $count;
 
 		WP_CLI::log( sprintf( '%s API results fetched.', $count ) );
@@ -566,6 +572,8 @@ class UCF_Degree_Import {
 	 * @return UCF_Degree_Import
 	 **/
 	public function __construct( $program, $api_key=null, $preserve_hierarchy=true ) {
+		$this->preserve_hierarchy = $preserve_hierarchy;
+
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
@@ -591,7 +599,6 @@ class UCF_Degree_Import {
 
 		$this->post_meta  = $this->get_post_metadata();
 		$this->post_terms = $this->get_post_terms();
-		$this->hierarchy  = $preserve_hierarchy;
 	}
 
 	/**
