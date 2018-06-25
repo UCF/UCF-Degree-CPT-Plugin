@@ -930,6 +930,15 @@ class UCF_Degree_Import {
 		$post_data['post_status'] = $configurable_data['post_status'];
 		$post_data['post_author'] = $configurable_data['post_author'];
 
+		// Ensure post_status is any allowable value, other than publish
+		$allowable_statuses = get_post_stati( null, 'names' );
+
+		unset( $allowable_statuses['publish'] );
+
+		if ( ! in_array( $post_data['post_status'], $allowable_statuses ) || $post_data['post_status'] === 'publish' ) {
+			$post_data['post_status'] = 'draft';
+		}
+
 		if ( ! $this->is_new ) {
 			$post_data['ID'] = $this->existing_post->ID;
 			$post_data['post_status'] = $this->existing_post->post_status;
