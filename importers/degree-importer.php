@@ -926,7 +926,7 @@ class UCF_Degree_Import {
 		}
 
 		if ( has_filter( 'ucf_degree_set_post_data' ) ) {
-			$post_data = apply_filters( 'ucf_degree_set_post_data', $post_data, $this->existing_post );
+			$post_data = apply_filters( 'ucf_degree_set_post_data', $post_data, $this->is_new, $this->existing_post );
 		}
 
 		return $post_data;
