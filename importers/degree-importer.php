@@ -951,6 +951,31 @@ class UCF_Degree_Import {
 			'post_type'   => 'degree',
 		);
 
+		$configurable_data = array(
+			'post_title'  => $this->name,
+			'post_name'   => $this->slug,
+			'post_status' => 'draft',
+			'post_author' => 1
+		);
+
+		if ( has_filter( 'ucf_degree_set_post_data' ) ) {
+			$configurable_data = apply_filters( 'ucf_degree_set_post_data', $configurable_data, $this->is_new, $this->existing_post );
+		}
+
+		$post_data['post_title']  = $configurable_data['post_title'];
+		$post_data['post_name']   = $configurable_data['post_name'];
+		$post_data['post_status'] = $configurable_data['post_status'];
+		$post_data['post_author'] = $configurable_data['post_author'];
+
+		// Ensure post_status is any allowable value, other than publish
+		$allowable_statuses = get_post_stati( null, 'names' );
+
+		unset( $allowable_statuses['publish'] );
+
+		if ( ! in_array( $post_data['post_status'], $allowable_statuses ) || $post_data['post_status'] === 'publish' ) {
+			$post_data['post_status'] = 'draft';
+		}
+
 		if ( ! $this->is_new ) {
 			$post_data['ID'] = $this->existing_post->ID;
 			$post_data['post_status'] = $this->existing_post->post_status;
