@@ -32,6 +32,15 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 *   - false
 	 * ---
 	 *
+	 * [--force_delete_stale=<force_delete_stale>]
+	 * : If enabled, stale degrees will bypass trash status and be permanently deleted.
+	 * ---
+	 * default: true
+	 * options:
+	 *   - true
+	 *   - false
+	 * ---
+	 *
 	 * ## EXAMPLES
 	 *
 	 * # Imports degrees from the production search service.
@@ -44,6 +53,7 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		$api_key         = isset( $assoc_args['api_key'] ) && !empty( $assoc_args['api_key'] ) ? trim( $assoc_args['api_key'] ) : trim( UCF_Degree_Config::get_option_or_default( 'ucf_degree_api_key' ) );
 		$do_writebacks   = isset( $assoc_args['enable_search_writebacks'] ) ? filter_var( $assoc_args['enable_search_writebacks'], FILTER_VALIDATE_BOOLEAN ) : false;
 		$preserve_hierarchy = isset( $assoc_args['preserve_hierarchy'] ) ? filter_var( $assoc_args['preserve_hierarchy'], FILTER_VALIDATE_BOOLEAN ) : true;
+		$force_delete_stale = isset( $assoc_args['force_delete_stale'] ) ? filter_var( $assoc_args['force_delete_stale'], FILTER_VALIDATE_BOOLEAN ) : true;
 		$additional_args = UCF_Degree_Config::get_option_or_default( 'search_filter' );
 
 		if ( empty( $api_base_url ) ) {
@@ -55,7 +65,7 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		}
 
 		// Do import
-		$import = new UCF_Degree_Importer( $api_base_url, $api_key, $do_writebacks, $additional_args, $preserve_hierarchy );
+		$import = new UCF_Degree_Importer( $api_base_url, $api_key, $do_writebacks, $additional_args, $preserve_hierarchy, $force_delete_stale );
 		try {
 			$import->import();
 		}

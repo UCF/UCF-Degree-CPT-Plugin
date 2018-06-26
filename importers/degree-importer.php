@@ -9,6 +9,7 @@ class UCF_Degree_Importer {
 		$api_key,
 		$do_writebacks,
 		$preserve_hierarchy,
+		$force_delete_stale,
 
 		$search_results = array(),
 		$result_count,
@@ -48,14 +49,18 @@ class UCF_Degree_Importer {
 	 * @param string $search_url | The url of the UCF search service
 	 * @param string $api_key | The API key to query against the search service with
 	 * @param bool $do_writebacks | Whether or not writebacks to the search service should be enabled during the import process
+	 * @param string $addition_params | Additional query params to pass to the search service when querying degrees to import
+	 * @param bool $preserve_hierarchy | Whether or not plan/subplan hierarchies should be preserved in generated degree posts
+	 * @param bool $force_delete_stale | Whether or not stale degrees should bypass trash when removed
 	 * @return UCF_Degree_Importer
 	 **/
-	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true ) {
+	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true, $force_delete_stale=true ) {
 		$this->search_api = substr( $search_url, -1 ) === '/' ? $search_url : $search_url . '/';
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
 		$this->preserve_hierarchy = $preserve_hierarchy;
+		$this->force_delete_stale = $force_delete_stale;
 		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $this->default_program_types );
 	}
 
@@ -470,7 +475,12 @@ Degree Total    : {$degree_total}
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree plan posts...', count( $this->existing_plan_posts ) );
 
 		foreach( $this->existing_plan_posts as $post_id ) {
-			wp_delete_post( $post_id, true );
+			if ( $this->force_delete_stale ) {
+				wp_delete_post( $post_id, true );
+			}
+			else {
+				wp_trash_post( $post_id );
+			}
 			$this->removed_count++;
 			$delete_progress->tick();
 		}
@@ -488,7 +498,12 @@ Degree Total    : {$degree_total}
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree subplan posts...', count( $this->existing_subplan_posts ) );
 
 		foreach( $this->existing_subplan_posts as $post_id ) {
-			wp_delete_post( $post_id, true );
+			if ( $this->force_delete_stale ) {
+				wp_delete_post( $post_id, true );
+			}
+			else {
+				wp_trash_post( $post_id );
+			}
 			$this->removed_count++;
 			$delete_progress->tick();
 		}
