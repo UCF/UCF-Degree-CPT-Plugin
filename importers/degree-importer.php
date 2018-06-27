@@ -10,6 +10,7 @@ class UCF_Degree_Importer {
 		$do_writebacks,
 		$preserve_hierarchy,
 		$force_delete_stale,
+		$verbose,
 
 		$search_results = array(),
 		$result_count,
@@ -52,9 +53,10 @@ class UCF_Degree_Importer {
 	 * @param string $addition_params | Additional query params to pass to the search service when querying degrees to import
 	 * @param bool $preserve_hierarchy | Whether or not plan/subplan hierarchies should be preserved in generated degree posts
 	 * @param bool $force_delete_stale | Whether or not stale degrees should bypass trash when removed
+	 * @param bool $verbose | Whether or not additional reporting should be outputted
 	 * @return UCF_Degree_Importer
 	 **/
-	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true, $force_delete_stale=true ) {
+	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true, $force_delete_stale=true, $verbose=false ) {
 		$this->search_api = substr( $search_url, -1 ) === '/' ? $search_url : $search_url . '/';
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
@@ -62,6 +64,7 @@ class UCF_Degree_Importer {
 		$this->preserve_hierarchy = $preserve_hierarchy;
 		$this->force_delete_stale = $force_delete_stale;
 		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $this->default_program_types );
+		$this->verbose = $verbose;
 	}
 
 	/**
@@ -381,7 +384,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program === null || ! $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy );
+				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy, $this->verbose );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -405,7 +408,7 @@ Degree Total    : {$degree_total}
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program !== null && $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy );
+				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy, $this->verbose );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -565,12 +568,16 @@ class UCF_Degree_Import {
 		$departments,
 		$parent_post_id, // if this degree is a subplan, this references the parent plan's post ID
 		$existing_post, // an existing post object that matches the provided search service program
+		$existing_meta,
+		$existing_terms,
 		$name_short,
 		$slug,
 		$post_meta,
 		$post_terms,
 		$api_key,
-		$preserve_hierarchy;
+		$preserve_hierarchy,
+		$verbose_logging,
+		$changelog;
 
 	public
 		$program,
@@ -586,8 +593,9 @@ class UCF_Degree_Import {
 	 * @param object $program | Imported program object from the search service
 	 * @return UCF_Degree_Import
 	 **/
-	public function __construct( $program, $api_key=null, $preserve_hierarchy=true ) {
+	public function __construct( $program, $api_key=null, $preserve_hierarchy=true, $verbose_logging=false ) {
 		$this->preserve_hierarchy = $preserve_hierarchy;
+		$this->verbose_logging    = $verbose_logging;
 
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
@@ -608,6 +616,8 @@ class UCF_Degree_Import {
 		$this->parent_post_id = $this->get_parent_post_id();
 		$this->existing_post  = $this->get_existing_post();
 		$this->is_new         = $this->existing_post === null ? true : false;
+		$this->existing_meta  = $this->get_existing_meta();
+		$this->existing_terms = $this->get_existing_terms();
 
 		$this->name_short = $this->get_name_short();
 		$this->slug       = $this->get_slug();
@@ -1121,6 +1131,26 @@ class UCF_Degree_Import {
 	}
 
 	/**
+	 *
+	 */
+	private function create_changelog() {
+		$changelog = null;
+
+		if ( $this->verbose_logging && ! $this->is_new ) {
+			$changelog = array();
+			$post_old = $this->existing_post();
+			$meta_old = '';
+			$terms_old = '';
+
+			$post_new = get_post( $this->post_id );
+			$meta_new = '';
+			$terms_new = '';
+		}
+
+		return $changelog;
+	}
+
+	/**
 	 * Handles all new/existing post processing.
 	 *
 	 * @author Jo Dickson
@@ -1131,6 +1161,7 @@ class UCF_Degree_Import {
 			$this->post_id = $this->process_post();
 			$this->process_post_terms();
 			$this->process_post_meta();
+			$this->changelog = $this->create_changelog();
 		}
 		catch ( Exception $e ) {
 			throw $e;
