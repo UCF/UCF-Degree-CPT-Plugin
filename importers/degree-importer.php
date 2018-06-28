@@ -174,9 +174,43 @@ Degree Total    : {$degree_total}
 
 
 	public function get_stats_verbose() {
-		$output = $this->get_stats() . '\n-----------------------\n';
+		$output = $this->get_stats() . "\n-----------------------\n";
 
-		$output .= json_encode( $this->changelog );
+		ob_start();
+
+		if ( ! empty( $this->changelog ) ) {
+			$degree_logs = $this->changelog['degrees'];
+			foreach ( $degree_logs as $post_id => $degree_log ) {
+				if ( ! empty( $degree_log['added'] ) && ! empty( $degree_log['deleted'] ) && ! empty( $degree_log['updated'] ) ) {
+					$degree = get_post( $post_id );
+					echo "\nUpdates to degree #{$post_id} (\"{$degree->post_title}\"):\n";
+
+					foreach ( $degree_log['added'] as $added_meta_key => $added_meta ) {
+						if ( is_string( $added_meta ) ) {
+							$added_meta = wp_trim_excerpt( $added_meta );
+						}
+						echo "+ Added meta | \"{$added_meta_key}\": \"{$added_meta}\"\n";
+					}
+
+					foreach ( $degree_log['deleted'] as $deleted_meta_key => $deleted_meta ) {
+						echo "- Deleted meta | \"{$deleted_meta_key}\"\n";
+					}
+
+					foreach ( $degree_log['updated'] as $updated_meta_key => $updated_meta ) {
+						if ( is_string( $updated_meta['old'] ) ) {
+							$updated_meta['old'] = wp_trim_excerpt( $updated_meta['old'] );
+						}
+						if ( is_string( $updated_meta['new'] ) ) {
+							$updated_meta['new'] = wp_trim_excerpt( $updated_meta['new'] );
+						}
+						echo "> Updated meta | \"{$updated_meta_key}\": \"{$updated_meta['old']}\" -> \"{$updated_meta['new']}\"\n";
+					}
+				}
+			}
+		}
+
+		$output .= ob_get_clean();
+		// $output .= json_encode( $this->changelog );
 
 		return $output;
 	}
@@ -1244,20 +1278,20 @@ class UCF_Degree_Import {
 			$terms_old = $this->existing_terms;
 
 			// $post_new  = get_post( $this->post_id );
-			$meta_new  = $this->post_meta;
-			$terms_new = $this->post_terms;
+			$meta_new  = array_map( 'esc_sql', $this->post_meta );
+			$terms_new = array_map( 'esc_sql', $this->post_terms );
 
 			// if ( $post_old !== $post_new ) {
 			// 	TODO
 			// }
 
 			if ( $meta_old !== $meta_new ) {
-				$meta_insertions   = array_diff_assoc( $meta_old, $meta_new );
-				$meta_deletions    = array_diff_assoc( $meta_new, $meta_old );
-				$meta_updates      = array( 'added' => $meta_insertions, 'deleted' => $meta_deletions, 'updated' => array() );
+				$meta_insertions = array_diff_assoc( $meta_old, $meta_new );
+				$meta_deletions  = array_diff_assoc( $meta_new, $meta_old );
+				$meta_updates = array( 'added' => $meta_insertions, 'deleted' => $meta_deletions, 'updated' => array() );
 				foreach ( $meta_new as $key=>$val ) {
 					if (
-						$meta_old[$key] != $meta_new[$key] // NOTE: we cannot use strict type comparisons here due to how WP formats non-string values when saved to the db
+						$meta_old[$key] !== $meta_new[$key]
 						&& ! isset( $meta_insertions[$key] )
 						&& ! isset( $meta_deletions[$key] )
 					) {
@@ -1273,7 +1307,7 @@ class UCF_Degree_Import {
 				$term_updates      = array( 'added' => $term_insertions, 'deleted' => $term_deletions, 'updated' => array() );
 				foreach ( $terms_new as $key=>$val ) {
 					if (
-						$terms_old[$key] != $terms_new[$key] // NOTE: we cannot use strict type comparisons here due to how WP formats non-string values when saved to the db
+						$terms_old[$key] !== $terms_new[$key]
 						&& ! isset( $term_insertions[$key] )
 						&& ! isset( $term_deletions[$key] )
 					) {
