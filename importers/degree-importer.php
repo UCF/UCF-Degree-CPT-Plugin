@@ -41,7 +41,9 @@ class UCF_Degree_Importer {
 				'Graduate Certificate'
 			),
 			'Professional Program'
-		);
+		),
+
+		$changelog = array();
 
 	/**
 	 * Constructor
@@ -169,6 +171,16 @@ Duplicates      : {$this->duplicate_count}
 Degree Total    : {$degree_total}
 ";
 	}
+
+
+	public function get_stats_verbose() {
+		$output = $this->get_stats() . '\n-----------------------\n';
+
+		$output .= json_encode( $this->changelog );
+
+		return $output;
+	}
+
 
 	/**
 	 * Generic function that appends a paginated response's result set
@@ -374,6 +386,24 @@ Degree Total    : {$degree_total}
 	}
 
 	/**
+	 * Helper function for processing a single degree
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param object $program | Search Service program object
+	 */
+	private function process_degree( $program ) {
+		// Import the degree as a new WP Post draft, or update existing
+		$degree = new UCF_Degree_Import( $program , $this->api_key, $this->preserve_hierarchy, $this->verbose );
+		$degree->import_post();
+
+		// Update our new/existing post lists and increment counters
+		$this->update_counters( $degree );
+
+		// Update changelog if we're returning verbose reporting
+		$this->update_changelog( $degree );
+	}
+
+	/**
 	 * Processes the degree plans
 	 * @author Jo Dickson
 	 * @since 3.0.0
@@ -383,12 +413,7 @@ Degree Total    : {$degree_total}
 
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program === null || ! $this->preserve_hierarchy ) {
-				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy, $this->verbose );
-				$degree->import_post();
-
-				// Update our new/existing post lists and increment counters
-				$this->update_counters( $degree );
+				$this->process_degree( $ss_program );
 			}
 
 			$import_progress->tick();
@@ -407,12 +432,7 @@ Degree Total    : {$degree_total}
 
 		foreach( $this->search_results as $ss_program ) {
 			if ( $ss_program->parent_program !== null && $this->preserve_hierarchy ) {
-				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy, $this->verbose );
-				$degree->import_post();
-
-				// Update our new/existing post lists and increment counters
-				$this->update_counters( $degree );
+				$this->process_degree( $ss_program );
 			}
 
 			$import_progress->tick();
@@ -545,6 +565,18 @@ Degree Total    : {$degree_total}
 
 		$publish_progress->finish();
 	}
+
+	/**
+	 * Updates the importer's combined changelog
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param object $degree | UCF_Degree_Import object
+	 */
+	private function update_changelog( $degree ) {
+		if ( $this->verbose ) {
+			$this->changelog['degrees'][$degree->post_id] = $degree->changelog;
+		}
+	}
 }
 
 
@@ -576,14 +608,14 @@ class UCF_Degree_Import {
 		$post_terms,
 		$api_key,
 		$preserve_hierarchy,
-		$verbose_logging,
-		$changelog;
+		$verbose_logging;
 
 	public
 		$program,
 		$is_subplan,
 		$is_new,
-		$post_id; // ID of the new or existing post, set in $this->process_post()
+		$post_id, // ID of the new or existing post, set in $this->process_post()
+		$changelog;
 
 	/**
 	 * Constructor
@@ -943,6 +975,72 @@ class UCF_Degree_Import {
 	}
 
 	/**
+	 * Returns an associative array of degree post meta data assigned to the
+	 * existing degree post (if available)
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return mixed | Assoc. array of post meta keys + values, or null if this degree is new
+	 **/
+	private function get_existing_meta() {
+		$meta = null;
+		$existing_post = $this->existing_post;
+
+		if ( ! $this->is_new ) {
+			$meta = array(
+				'degree_id'           => get_post_meta( $existing_post->ID, 'degree_id', true ),
+				'degree_api_id'       => get_post_meta( $existing_post->ID, 'degree_api_id', true ),
+				'degree_online'       => get_post_meta( $existing_post->ID, 'degree_online', true ),
+				'degree_pdf'          => get_post_meta( $existing_post->ID, 'degree_pdf', true ),
+				'degree_plan_code'    => get_post_meta( $existing_post->ID, 'degree_plan_code', true ),
+				'degree_subplan_code' => get_post_meta( $existing_post->ID, 'degree_subplan_code', true ),
+				'degree_name_short'   => get_post_meta( $existing_post->ID, 'degree_name_short', true )
+			);
+
+			// Allow overrides by themes/other plugins
+			if ( has_filter( 'ucf_degree_get_existing_metadata' ) ) {
+				$meta = apply_filters( 'ucf_degree_get_existing_metadata', $meta, $existing_post, $this->program );
+			}
+		}
+
+		return $meta;
+	}
+
+	/**
+	 * Returns an associative array of degree taxonomy term data assigned
+	 * to the existing post (if available).
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return mixed | Assoc. array of taxonomy slugs + term names, or null if this degree is new
+	 **/
+	private function get_existing_terms() {
+		$terms = null;
+		$existing_post = $this->existing_post;
+
+		if ( ! $this->is_new ) {
+			$terms = array(
+				'program_types' => wp_get_post_terms( $existing_post->ID, 'program_types', array( 'fields' => 'names' ) )
+			);
+
+			if ( taxonomy_exists( 'colleges' ) ) {
+				$terms['colleges'] = wp_get_post_terms( $existing_post->ID, 'colleges', array( 'fields' => 'names' ) );
+			}
+
+			if ( taxonomy_exists( 'departments' ) ) {
+				$terms['departments'] = wp_get_post_terms( $existing_post->ID, 'departments', array( 'fields' => 'names' ) );
+			}
+		}
+
+		// Allow overrides by themes/other plugins
+		if ( has_filter( 'ucf_degree_get_existing_terms' ) ) {
+			$terms = apply_filters( 'ucf_degree_get_existing_terms', $terms, $existing_post, $this->program );
+		}
+
+		return $terms;
+	}
+
+	/**
 	 * Returns an array of degree post data suitable for passing to
 	 * wp_insert_post() or wp_update_post().
 	 *
@@ -1131,20 +1229,59 @@ class UCF_Degree_Import {
 	}
 
 	/**
-	 *
+	 * Generates a verbose import changelog for the degree.
+	 * @author Jo Dickson
+	 * @since 3.0.2
 	 */
 	private function create_changelog() {
 		$changelog = null;
 
 		if ( $this->verbose_logging && ! $this->is_new ) {
 			$changelog = array();
-			$post_old = $this->existing_post();
-			$meta_old = '';
-			$terms_old = '';
 
-			$post_new = get_post( $this->post_id );
-			$meta_new = '';
-			$terms_new = '';
+			// $post_old  = $this->existing_post;
+			$meta_old  = $this->existing_meta;
+			$terms_old = $this->existing_terms;
+
+			// $post_new  = get_post( $this->post_id );
+			$meta_new  = $this->post_meta;
+			$terms_new = $this->post_terms;
+
+			// if ( $post_old !== $post_new ) {
+			// 	TODO
+			// }
+
+			if ( $meta_old !== $meta_new ) {
+				$meta_insertions   = array_diff_assoc( $meta_old, $meta_new );
+				$meta_deletions    = array_diff_assoc( $meta_new, $meta_old );
+				$meta_updates      = array( 'added' => $meta_insertions, 'deleted' => $meta_deletions, 'updated' => array() );
+				foreach ( $meta_new as $key=>$val ) {
+					if (
+						$meta_old[$key] != $meta_new[$key] // NOTE: we cannot use strict type comparisons here due to how WP formats non-string values when saved to the db
+						&& ! isset( $meta_insertions[$key] )
+						&& ! isset( $meta_deletions[$key] )
+					) {
+						$meta_updates['updated'][$key] = array( 'old' => $meta_old[$key], 'new' => $meta_new[$key] );
+					}
+				}
+				$changelog['meta'] = $meta_updates;
+			}
+
+			if ( $terms_old !== $terms_new ) {
+				$term_insertions   = array_diff_assoc( $terms_old, $terms_new );
+				$term_deletions    = array_diff_assoc( $terms_new, $terms_old );
+				$term_updates      = array( 'added' => $term_insertions, 'deleted' => $term_deletions, 'updated' => array() );
+				foreach ( $terms_new as $key=>$val ) {
+					if (
+						$terms_old[$key] != $terms_new[$key] // NOTE: we cannot use strict type comparisons here due to how WP formats non-string values when saved to the db
+						&& ! isset( $term_insertions[$key] )
+						&& ! isset( $term_deletions[$key] )
+					) {
+						$term_updates['updated'][$key] = array( 'old' => $terms_old[$key], 'new' => $terms_new[$key] );
+					}
+				}
+				$changelog['term'] = $term_updates;
+			}
 		}
 
 		return $changelog;

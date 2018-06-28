@@ -82,6 +82,12 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		catch( Exception $e ) {
 			WP_CLI::error( $e->getMessage(), $e->getCode() );
 		}
-		WP_CLI::success( $import->get_stats() );
+
+		if ( $verbose ) {
+			WP_CLI::success( $import->get_stats_verbose() );
+		}
+		else {
+			WP_CLI::success( $import->get_stats() );
+		}
 	}
 }
