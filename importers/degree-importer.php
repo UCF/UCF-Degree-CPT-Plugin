@@ -8,6 +8,8 @@ class UCF_Degree_Importer {
 		$additional_params,
 		$api_key,
 		$do_writebacks,
+		$preserve_hierarchy,
+		$force_delete_stale,
 
 		$search_results = array(),
 		$result_count,
@@ -24,7 +26,8 @@ class UCF_Degree_Importer {
 		$removed_count = 0,
 		$duplicate_count = 0,
 
-		$program_types = array(
+		$program_types = array(),
+		$default_program_types = array(
 			'Undergraduate Program' => array(
 				'Bachelor',
 				'Minor',
@@ -37,7 +40,7 @@ class UCF_Degree_Importer {
 				'Graduate Certificate'
 			),
 			'Professional Program'
-		); // Array of default program_types
+		);
 
 	/**
 	 * Constructor
@@ -46,13 +49,19 @@ class UCF_Degree_Importer {
 	 * @param string $search_url | The url of the UCF search service
 	 * @param string $api_key | The API key to query against the search service with
 	 * @param bool $do_writebacks | Whether or not writebacks to the search service should be enabled during the import process
+	 * @param string $addition_params | Additional query params to pass to the search service when querying degrees to import
+	 * @param bool $preserve_hierarchy | Whether or not plan/subplan hierarchies should be preserved in generated degree posts
+	 * @param bool $force_delete_stale | Whether or not stale degrees should bypass trash when removed
 	 * @return UCF_Degree_Importer
 	 **/
-	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='' ) {
+	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='', $preserve_hierarchy=true, $force_delete_stale=true ) {
 		$this->search_api = substr( $search_url, -1 ) === '/' ? $search_url : $search_url . '/';
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
 		$this->do_writebacks = $do_writebacks;
+		$this->preserve_hierarchy = $preserve_hierarchy;
+		$this->force_delete_stale = $force_delete_stale;
+		$this->program_types = apply_filters( 'ucf_degree_imported_program_types', $this->default_program_types );
 	}
 
 	/**
@@ -226,6 +235,12 @@ Degree Total    : {$degree_total}
 			list( $url, $results ) = $this->fetch_api_page( $url, $results );
 		}
 
+		// Allow returned results and result count to be overridden by
+		// other themes/plugins.
+		// Functions passed to this filter MUST return both $results AND $count
+		// as a two-value array.
+		list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+
 		$this->result_count = $count;
 
 		WP_CLI::log( sprintf( '%s API results fetched.', $count ) );
@@ -364,9 +379,9 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree plans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program === null ) {
+			if ( $ss_program->parent_program === null || ! $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program , $this->api_key );
+				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -388,9 +403,9 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree subplans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program !== null ) {
+			if ( $ss_program->parent_program !== null && $this->preserve_hierarchy ) {
 				// Import the degree as a new WP Post draft, or update existing
-				$degree = new UCF_Degree_Import( $ss_program, $this->api_key );
+				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
 
 				// Update our new/existing post lists and increment counters
@@ -415,7 +430,7 @@ Degree Total    : {$degree_total}
 		$post_id = $degree->post_id;
 		$new_posts = $existing_posts = $updated_posts = array();
 
-		if ( $degree->is_subplan ) {
+		if ( $degree->is_subplan && $this->preserve_hierarchy ) {
 			$new_posts      = &$this->new_subplan_posts;
 			$existing_posts = &$this->existing_subplan_posts;
 			$updated_posts  = &$this->updated_subplan_posts;
@@ -460,7 +475,12 @@ Degree Total    : {$degree_total}
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree plan posts...', count( $this->existing_plan_posts ) );
 
 		foreach( $this->existing_plan_posts as $post_id ) {
-			wp_delete_post( $post_id, true );
+			if ( $this->force_delete_stale ) {
+				wp_delete_post( $post_id, true );
+			}
+			else {
+				wp_trash_post( $post_id );
+			}
 			$this->removed_count++;
 			$delete_progress->tick();
 		}
@@ -478,7 +498,12 @@ Degree Total    : {$degree_total}
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree subplan posts...', count( $this->existing_subplan_posts ) );
 
 		foreach( $this->existing_subplan_posts as $post_id ) {
-			wp_delete_post( $post_id, true );
+			if ( $this->force_delete_stale ) {
+				wp_delete_post( $post_id, true );
+			}
+			else {
+				wp_trash_post( $post_id );
+			}
 			$this->removed_count++;
 			$delete_progress->tick();
 		}
@@ -544,7 +569,8 @@ class UCF_Degree_Import {
 		$slug,
 		$post_meta,
 		$post_terms,
-		$api_key;
+		$api_key,
+		$preserve_hierarchy;
 
 	public
 		$program,
@@ -560,7 +586,9 @@ class UCF_Degree_Import {
 	 * @param object $program | Imported program object from the search service
 	 * @return UCF_Degree_Import
 	 **/
-	public function __construct( $program, $api_key=null ) {
+	public function __construct( $program, $api_key=null, $preserve_hierarchy=true ) {
+		$this->preserve_hierarchy = $preserve_hierarchy;
+
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
@@ -601,7 +629,7 @@ class UCF_Degree_Import {
 
 		// If this degree is a subplan, determine the parent degree's name
 		// and remove it from the beginning of the subplan's name, if present
-		if ( $this->is_subplan ) {
+		if ( $this->is_subplan && $this->preserve_hierarchy ) {
 			$parent_post = get_post( $this->parent_post_id );
 			$parent_name = '';
 
@@ -693,6 +721,11 @@ class UCF_Degree_Import {
 			case 'Minor':
 				$program_types[] = $this->level;
 				break;
+		}
+
+		// Allow overrides by themes/other plugins
+		if ( has_filter( 'ucf_degree_get_program_types' ) ) {
+			$program_types = apply_filters( 'ucf_degree_get_program_types', $program_types, $this->program );
 		}
 
 		return $program_types;
@@ -809,7 +842,7 @@ class UCF_Degree_Import {
 	private function get_parent_program_id() {
 		$id = $parent_program = null;
 
-		if ( $this->is_subplan ) {
+		if ( $this->is_subplan && $this->preserve_hierarchy ) {
 			$params = array();
 
 			if ( $this->api_key ) $params['key'] = $this->api_key;
@@ -832,6 +865,10 @@ class UCF_Degree_Import {
 	 * @return int The parent degree post's ID
 	 */
 	private function get_parent_post_id() {
+		if ( ! $this->preserve_hierarchy ) {
+			return 0;
+		}
+
 		$parent = null;
 		$parent_id = 0;
 		$parent_program_id = $this->get_parent_program_id();
@@ -913,6 +950,31 @@ class UCF_Degree_Import {
 			'post_author' => 1,
 			'post_type'   => 'degree',
 		);
+
+		$configurable_data = array(
+			'post_title'  => $this->name,
+			'post_name'   => $this->slug,
+			'post_status' => 'draft',
+			'post_author' => 1
+		);
+
+		if ( has_filter( 'ucf_degree_set_post_data' ) ) {
+			$configurable_data = apply_filters( 'ucf_degree_set_post_data', $configurable_data, $this->is_new, $this->existing_post );
+		}
+
+		$post_data['post_title']  = $configurable_data['post_title'];
+		$post_data['post_name']   = $configurable_data['post_name'];
+		$post_data['post_status'] = $configurable_data['post_status'];
+		$post_data['post_author'] = $configurable_data['post_author'];
+
+		// Ensure post_status is any allowable value, other than publish
+		$allowable_statuses = get_post_stati( null, 'names' );
+
+		unset( $allowable_statuses['publish'] );
+
+		if ( ! in_array( $post_data['post_status'], $allowable_statuses ) || $post_data['post_status'] === 'publish' ) {
+			$post_data['post_status'] = 'draft';
+		}
 
 		if ( ! $this->is_new ) {
 			$post_data['ID'] = $this->existing_post->ID;
