@@ -634,7 +634,7 @@ class UCF_Degree_Import {
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
 		$this->subplan_code  = $program->subplan_code;
-		$this->degree_id     = $program->plan_code. ' ' . $program->subplan_code;
+		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
 		$this->name          = $program->name;
 		$this->online        = $program->online;
