@@ -904,20 +904,10 @@ class UCF_Degree_Import {
 			'post_type'      => 'degree',
 			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
-			// post_parent will be 0 for plans (returning only degrees with
-			// no children), or a valid post ID for subplans
-			'post_parent'    => $this->parent_post_id,
 			'meta_query'     => array(
 				array(
 					'key'   => 'degree_id',
 					'value' => $this->degree_id
-				)
-			),
-			'tax_query'      => array(
-				array(
-					'taxonomy' => 'program_types',
-					'field'    => 'name',
-					'terms'    => $this->program_types
 				)
 			)
 		);
