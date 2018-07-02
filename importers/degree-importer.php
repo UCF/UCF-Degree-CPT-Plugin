@@ -239,7 +239,9 @@ Degree Total    : {$degree_total}
 		// other themes/plugins.
 		// Functions passed to this filter MUST return both $results AND $count
 		// as a two-value array.
-		list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+		if ( has_filter( 'ucf_degree_import_results' ) ) {
+			list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+		}
 
 		$this->result_count = $count;
 
