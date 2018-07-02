@@ -946,7 +946,7 @@ class UCF_Degree_Import {
 	private function get_existing_post() {
 		$args = array(
 			'post_type'      => 'degree',
-			'posts_per_page' => -1,
+			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
 			'meta_query'     => array(
 				array(
