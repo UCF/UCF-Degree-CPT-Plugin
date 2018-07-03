@@ -239,7 +239,9 @@ Degree Total    : {$degree_total}
 		// other themes/plugins.
 		// Functions passed to this filter MUST return both $results AND $count
 		// as a two-value array.
-		list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+		if ( has_filter( 'ucf_degree_import_results' ) ) {
+			list( $results, $count ) = apply_filters( 'ucf_degree_import_results', $results, $count, $this->api_key );
+		}
 
 		$this->result_count = $count;
 
@@ -262,21 +264,7 @@ Degree Total    : {$degree_total}
 			'post_type'      => 'degree',
 			'posts_per_page' => -1,
 			'post_status'    => 'publish',
-			'fields'         => 'ids',
-			'meta_query'     => array(
-				array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'degree_import_ignore',
-						'compare' => 'NOT EXISTS'
-					),
-					array(
-						'key'     => 'degree_import_ignore',
-						'value'   => 'on',
-						'compare' => '!='
-					)
-				)
-			)
+			'fields'         => 'ids'
 		), $custom_args );
 
 		if ( has_filter( 'ucf_degree_get_existing_args' ) ) {
@@ -286,7 +274,7 @@ Degree Total    : {$degree_total}
 		$posts = get_posts( $args );
 
 		foreach( $posts as $key => $val ) {
-			$retval[intval($val)] = intval( $val );
+			$retval[intval( $val )] = intval( $val );
 		}
 
 		return $retval;
@@ -301,7 +289,33 @@ Degree Total    : {$degree_total}
 	 */
 	private function get_existing_plan_posts() {
 		$existing = $this->get_existing( array(
-			'post_parent' => 0
+			'meta_query' => array(
+				'relation' => 'AND',
+				array(
+					'relation' => 'AND',
+					array(
+						'key'      => 'degree_plan_code',
+						'value'    => '',
+						'compare'  => '!='
+					),
+					array(
+						'key'      => 'degree_subplan_code',
+						'compare'  => 'NOT EXISTS'
+					)
+				),
+				array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'degree_import_ignore',
+						'compare' => 'NOT EXISTS'
+					),
+					array(
+						'key'     => 'degree_import_ignore',
+						'value'   => 'on',
+						'compare' => '!='
+					)
+				)
+			)
 		) );
 
 		WP_CLI::log( sprintf( '%s existing degree plan posts were found.', count( $existing ) ) );
@@ -318,7 +332,34 @@ Degree Total    : {$degree_total}
 	 */
 	private function get_existing_subplan_posts() {
 		$existing = $this->get_existing( array(
-			'post_parent__not_in' => array( 0 )
+			'meta_query' => array(
+				'relation' => 'AND',
+				array(
+					'relation' => 'AND',
+					array(
+						'key' => 'degree_plan_code',
+						'value'    => '',
+						'compare'  => '!='
+					),
+					array(
+						'key' => 'degree_subplan_code',
+						'value'    => '',
+						'compare'  => '!='
+					)
+				),
+				array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'degree_import_ignore',
+						'compare' => 'NOT EXISTS'
+					),
+					array(
+						'key'     => 'degree_import_ignore',
+						'value'   => 'on',
+						'compare' => '!='
+					)
+				)
+			)
 		) );
 
 		WP_CLI::log( sprintf( '%s existing degree subplan posts were found.', count( $existing ) ) );
@@ -379,7 +420,7 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree plans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program === null || ! $this->preserve_hierarchy ) {
+			if ( $ss_program->parent_program === null ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program , $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
@@ -403,7 +444,7 @@ Degree Total    : {$degree_total}
 		$import_progress = \WP_CLI\Utils\make_progress_bar( 'Importing degree subplans...', count( $this->search_results ) );
 
 		foreach( $this->search_results as $ss_program ) {
-			if ( $ss_program->parent_program !== null && $this->preserve_hierarchy ) {
+			if ( $ss_program->parent_program !== null ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program, $this->api_key, $this->preserve_hierarchy );
 				$degree->import_post();
@@ -430,7 +471,7 @@ Degree Total    : {$degree_total}
 		$post_id = $degree->post_id;
 		$new_posts = $existing_posts = $updated_posts = array();
 
-		if ( $degree->is_subplan && $this->preserve_hierarchy ) {
+		if ( $degree->is_subplan ) {
 			$new_posts      = &$this->new_subplan_posts;
 			$existing_posts = &$this->existing_subplan_posts;
 			$updated_posts  = &$this->updated_subplan_posts;
@@ -594,7 +635,7 @@ class UCF_Degree_Import {
 		$this->subplan_code  = $program->subplan_code;
 		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
-		$this->name          = $program->name;
+		$this->name          = $this->get_name();
 		$this->online        = $program->online;
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
@@ -617,6 +658,17 @@ class UCF_Degree_Import {
 	}
 
 	/**
+	 * Returns the degree's name.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return string
+	 */
+	private function get_name() {
+		return apply_filters( 'ucf_degree_get_imported_name', $this->program->name, $this->program );
+	}
+
+	/**
 	 * Returns a shortened degree name.  For subplans, this will be the name
 	 * of the track specifically (with the parent program's name omitted).
 	 *
@@ -629,7 +681,7 @@ class UCF_Degree_Import {
 
 		// If this degree is a subplan, determine the parent degree's name
 		// and remove it from the beginning of the subplan's name, if present
-		if ( $this->is_subplan && $this->preserve_hierarchy ) {
+		if ( $this->is_subplan ) {
 			$parent_post = get_post( $this->parent_post_id );
 			$parent_name = '';
 
@@ -842,6 +894,8 @@ class UCF_Degree_Import {
 	private function get_parent_program_id() {
 		$id = $parent_program = null;
 
+		// Check $this->preserve_hierarchy here to prevent
+		// unneeded API calls
 		if ( $this->is_subplan && $this->preserve_hierarchy ) {
 			$params = array();
 
@@ -904,20 +958,10 @@ class UCF_Degree_Import {
 			'post_type'      => 'degree',
 			'posts_per_page' => 1,
 			'post_status'    => array( 'publish', 'draft' ),
-			// post_parent will be 0 for plans (returning only degrees with
-			// no children), or a valid post ID for subplans
-			'post_parent'    => $this->parent_post_id,
 			'meta_query'     => array(
 				array(
 					'key'   => 'degree_id',
 					'value' => $this->degree_id
-				)
-			),
-			'tax_query'      => array(
-				array(
-					'taxonomy' => 'program_types',
-					'field'    => 'name',
-					'terms'    => $this->program_types
 				)
 			)
 		);
