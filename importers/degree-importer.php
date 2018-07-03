@@ -300,8 +300,7 @@ Degree Total    : {$degree_total}
 					),
 					array(
 						'key'      => 'degree_subplan_code',
-						'value'    => '',
-						'compare'  => '='
+						'compare'  => 'NOT EXISTS'
 					)
 				),
 				array(
