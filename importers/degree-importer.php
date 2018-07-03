@@ -636,7 +636,7 @@ class UCF_Degree_Import {
 		$this->subplan_code  = $program->subplan_code;
 		$this->degree_id     = $program->plan_code . ' ' . $program->subplan_code;
 		$this->api_id        = $program->id;
-		$this->name          = $program->name;
+		$this->name          = $this->get_name();
 		$this->online        = $program->online;
 		$this->catalog_url   = $program->catalog_url;
 		$this->career        = $program->career;
@@ -656,6 +656,17 @@ class UCF_Degree_Import {
 
 		$this->post_meta  = $this->get_post_metadata();
 		$this->post_terms = $this->get_post_terms();
+	}
+
+	/**
+	 * Returns the degree's name.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return string
+	 */
+	private function get_name() {
+		return apply_filters( 'ucf_degree_get_imported_name', $this->program->name, $this->program );
 	}
 
 	/**
