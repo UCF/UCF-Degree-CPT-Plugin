@@ -39,8 +39,8 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				);
 			}
 
-			if ( $atts['post_parent'] && is_int( $atts['post_parent'] ) ) {
-				$args['post_parent'] = $atts['post_parent'];
+			if ( isset( $atts['post_parent'] ) && is_numeric( $atts['post_parent'] ) ) {
+				$args['post_parent'] = intval( $atts['post_parent'] );
 			}
 
 			$items = get_posts( $args );
