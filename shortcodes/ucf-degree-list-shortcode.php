@@ -18,7 +18,8 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				'groupby'       => null,
 				'groupby_field' => null,
 				'filter_by_tax' => null,
-				'terms'         => null
+				'terms'         => null,
+				'post_parent'   => null,
 			), $atts, 'degree-list' );
 
 			$args = array(
@@ -36,6 +37,10 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 						'terms'    => explode( ',', $atts['terms'] )
 					)
 				);
+			}
+
+			if ( $atts['post_parent'] && is_int( $atts['post_parent'] ) ) {
+				$args['post_parent'] = $atts['post_parent'];
 			}
 
 			$items = get_posts( $args );
