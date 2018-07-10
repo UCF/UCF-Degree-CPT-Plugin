@@ -1335,7 +1335,8 @@ class UCF_Degree_Import {
 				$meta_updates = array( 'added' => $meta_insertions, 'deleted' => $meta_deletions, 'updated' => array() );
 				foreach ( $meta_new as $key=>$val ) {
 					if (
-						$meta_old[$key] !== $meta_new[$key]
+						isset( $meta_old[$key] )
+						&& $meta_old[$key] !== $meta_new[$key]
 						&& ! isset( $meta_insertions[$key] )
 						&& ! isset( $meta_deletions[$key] )
 					) {
@@ -1345,21 +1346,23 @@ class UCF_Degree_Import {
 				$changelog['meta'] = $meta_updates;
 			}
 
-			if ( $terms_old !== $terms_new ) {
-				$term_insertions   = array_diff_assoc( $terms_old, $terms_new );
-				$term_deletions    = array_diff_assoc( $terms_new, $terms_old );
-				$term_updates      = array( 'added' => $term_insertions, 'deleted' => $term_deletions, 'updated' => array() );
-				foreach ( $terms_new as $key=>$val ) {
-					if (
-						$terms_old[$key] !== $terms_new[$key]
-						&& ! isset( $term_insertions[$key] )
-						&& ! isset( $term_deletions[$key] )
-					) {
-						$term_updates['updated'][$key] = array( 'old' => $terms_old[$key], 'new' => $terms_new[$key] );
-					}
-				}
-				$changelog['term'] = $term_updates;
-			}
+			// if ( $terms_old !== $terms_new ) {
+			// 	$term_insertions = $term_deletions = array();
+			// 	// TODO can't use array_diff_assoc on multi-level term arrays
+			// 	$term_insertions   = array_diff_assoc( $terms_old, $terms_new );
+			// 	$term_deletions    = array_diff_assoc( $terms_new, $terms_old );
+			// 	$term_updates      = array( 'added' => $term_insertions, 'deleted' => $term_deletions, 'updated' => array() );
+			// 	foreach ( $terms_new as $key=>$val ) {
+			// 		if (
+			// 			$terms_old[$key] !== $terms_new[$key]
+			// 			&& ! isset( $term_insertions[$key] )
+			// 			&& ! isset( $term_deletions[$key] )
+			// 		) {
+			// 			$term_updates['updated'][$key] = array( 'old' => $terms_old[$key], 'new' => $terms_new[$key] );
+			// 		}
+			// 	}
+			// 	$changelog['term'] = $term_updates;
+			// }
 		}
 
 		return $changelog;
