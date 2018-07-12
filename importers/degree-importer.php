@@ -178,39 +178,25 @@ Degree Total    : {$degree_total}
 
 		ob_start();
 
-		if ( ! empty( $this->changelog ) ) {
-			$degree_logs = $this->changelog['degrees'];
-			foreach ( $degree_logs as $post_id => $degree_log ) {
-				if ( ! empty( $degree_log['added'] ) && ! empty( $degree_log['deleted'] ) && ! empty( $degree_log['updated'] ) ) {
-					$degree = get_post( $post_id );
-					echo "\nUpdates to degree #{$post_id} (\"{$degree->post_title}\"):\n";
+		echo sprintf( "\n%d existing plan posts were modified during this import.\n\n", count( $this->updated_plan_posts ) );
+		if ( $this->updated_plan_posts ) {
+			foreach ( $this->updated_plan_posts as $post_id => $changeset ) {
+				echo $changeset->get_changelog();
+				echo "\n\n";
+			}
+		}
 
-					foreach ( $degree_log['added'] as $added_meta_key => $added_meta ) {
-						if ( is_string( $added_meta ) ) {
-							$added_meta = wp_trim_excerpt( $added_meta );
-						}
-						echo "+ Added meta | \"{$added_meta_key}\": \"{$added_meta}\"\n";
-					}
+		echo "\n\n";
 
-					foreach ( $degree_log['deleted'] as $deleted_meta_key => $deleted_meta ) {
-						echo "- Deleted meta | \"{$deleted_meta_key}\"\n";
-					}
-
-					foreach ( $degree_log['updated'] as $updated_meta_key => $updated_meta ) {
-						if ( is_string( $updated_meta['old'] ) ) {
-							$updated_meta['old'] = wp_trim_excerpt( $updated_meta['old'] );
-						}
-						if ( is_string( $updated_meta['new'] ) ) {
-							$updated_meta['new'] = wp_trim_excerpt( $updated_meta['new'] );
-						}
-						echo "> Updated meta | \"{$updated_meta_key}\": \"{$updated_meta['old']}\" -> \"{$updated_meta['new']}\"\n";
-					}
-				}
+		echo sprintf( "%d existing subplan posts were modified during this import.\n\n", count( $this->updated_subplan_posts ) );
+		if ( $this->updated_subplan_posts ) {
+			foreach ( $this->updated_subplan_posts as $post_id => $changeset ) {
+				echo $changeset->get_changelog();
+				echo "\n\n";
 			}
 		}
 
 		$output .= ob_get_clean();
-		// $output .= json_encode( $this->changelog );
 
 		return $output;
 	}
@@ -323,7 +309,7 @@ Degree Total    : {$degree_total}
 		$posts = get_posts( $args );
 
 		foreach( $posts as $key => $val ) {
-			$retval[intval( $val )] = intval( $val );
+			$retval[intval( $val )] = new UCF_Degree_Changeset( intval( $val ) );
 		}
 
 		return $retval;
@@ -468,14 +454,11 @@ Degree Total    : {$degree_total}
 	 */
 	private function process_degree( $program ) {
 		// Import the degree as a new WP Post draft, or update existing
-		$degree = new UCF_Degree_Import( $program , $this->api_key, $this->preserve_hierarchy, $this->verbose );
+		$degree = new UCF_Degree_Import( $program , $this->api_key, $this->preserve_hierarchy );
 		$degree->import_post();
 
 		// Update our new/existing post lists and increment counters
 		$this->update_counters( $degree );
-
-		// Update changelog if we're returning verbose reporting
-		$this->update_changelog( $degree );
 	}
 
 	/**
@@ -545,11 +528,16 @@ Degree Total    : {$degree_total}
 			$this->new_count++;
 		}
 		else {
-			// Remove the post from the existing post list
+			// Store the existing post's changeset, and remove the
+			// post from the existing post list
+			$existing_post_changeset = $existing_posts[$post_id];
 			unset( $existing_posts[$post_id] );
 
 			if ( ! isset( $updated_posts[$post_id] ) ) {
-				$updated_posts[$post_id] = $post_id;
+				// Set the changes to the updated post's changeset
+				$existing_post_changeset->set_new( $post_id );
+				// Move the existing post to $updated_posts
+				$updated_posts[$post_id] = $existing_post_changeset;
 
 				// This is a duplicate if it's in the new posts array
 				if ( isset( $new_posts[$post_id] ) ) {
@@ -572,7 +560,7 @@ Degree Total    : {$degree_total}
 	private function remove_stale_degree_plans() {
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree plan posts...', count( $this->existing_plan_posts ) );
 
-		foreach( $this->existing_plan_posts as $post_id ) {
+		foreach( $this->existing_plan_posts as $post_id => $changeset ) {
 			if ( $this->force_delete_stale ) {
 				wp_delete_post( $post_id, true );
 			}
@@ -595,7 +583,7 @@ Degree Total    : {$degree_total}
 	private function remove_stale_degree_subplans() {
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree subplan posts...', count( $this->existing_subplan_posts ) );
 
-		foreach( $this->existing_subplan_posts as $post_id ) {
+		foreach( $this->existing_subplan_posts as $post_id => $changeset ) {
 			if ( $this->force_delete_stale ) {
 				wp_delete_post( $post_id, true );
 			}
@@ -675,22 +663,18 @@ class UCF_Degree_Import {
 		$departments,
 		$parent_post_id, // if this degree is a subplan, this references the parent plan's post ID
 		$existing_post, // an existing post object that matches the provided search service program
-		$existing_meta,
-		$existing_terms,
 		$name_short,
 		$slug,
 		$post_meta,
 		$post_terms,
 		$api_key,
-		$preserve_hierarchy,
-		$verbose_logging;
+		$preserve_hierarchy;
 
 	public
 		$program,
 		$is_subplan,
 		$is_new,
-		$post_id, // ID of the new or existing post, set in $this->process_post()
-		$changelog;
+		$post_id; // ID of the new or existing post, set in $this->process_post()
 
 	/**
 	 * Constructor
@@ -700,9 +684,8 @@ class UCF_Degree_Import {
 	 * @param object $program | Imported program object from the search service
 	 * @return UCF_Degree_Import
 	 **/
-	public function __construct( $program, $api_key=null, $preserve_hierarchy=true, $verbose_logging=false ) {
+	public function __construct( $program, $api_key=null, $preserve_hierarchy=true ) {
 		$this->preserve_hierarchy = $preserve_hierarchy;
-		$this->verbose_logging    = $verbose_logging;
 
 		$this->program       = $program;
 		$this->plan_code     = $program->plan_code;
@@ -723,8 +706,6 @@ class UCF_Degree_Import {
 		$this->parent_post_id = $this->get_parent_post_id();
 		$this->existing_post  = $this->get_existing_post();
 		$this->is_new         = $this->existing_post === null ? true : false;
-		$this->existing_meta  = $this->get_existing_meta();
-		$this->existing_terms = $this->get_existing_terms();
 
 		$this->name_short = $this->get_name_short();
 		$this->slug       = $this->get_slug();
@@ -1053,72 +1034,6 @@ class UCF_Degree_Import {
 	}
 
 	/**
-	 * Returns an associative array of degree post meta data assigned to the
-	 * existing degree post (if available)
-	 *
-	 * @author Jo Dickson
-	 * @since 3.0.2
-	 * @return mixed | Assoc. array of post meta keys + values, or null if this degree is new
-	 **/
-	private function get_existing_meta() {
-		$meta = null;
-		$existing_post = $this->existing_post;
-
-		if ( ! $this->is_new ) {
-			$meta = array(
-				'degree_id'           => get_post_meta( $existing_post->ID, 'degree_id', true ),
-				'degree_api_id'       => get_post_meta( $existing_post->ID, 'degree_api_id', true ),
-				'degree_online'       => get_post_meta( $existing_post->ID, 'degree_online', true ),
-				'degree_pdf'          => get_post_meta( $existing_post->ID, 'degree_pdf', true ),
-				'degree_plan_code'    => get_post_meta( $existing_post->ID, 'degree_plan_code', true ),
-				'degree_subplan_code' => get_post_meta( $existing_post->ID, 'degree_subplan_code', true ),
-				'degree_name_short'   => get_post_meta( $existing_post->ID, 'degree_name_short', true )
-			);
-
-			// Allow overrides by themes/other plugins
-			if ( has_filter( 'ucf_degree_get_existing_metadata' ) ) {
-				$meta = apply_filters( 'ucf_degree_get_existing_metadata', $meta, $existing_post, $this->program );
-			}
-		}
-
-		return $meta;
-	}
-
-	/**
-	 * Returns an associative array of degree taxonomy term data assigned
-	 * to the existing post (if available).
-	 *
-	 * @author Jo Dickson
-	 * @since 3.0.2
-	 * @return mixed | Assoc. array of taxonomy slugs + term names, or null if this degree is new
-	 **/
-	private function get_existing_terms() {
-		$terms = null;
-		$existing_post = $this->existing_post;
-
-		if ( ! $this->is_new ) {
-			$terms = array(
-				'program_types' => wp_get_post_terms( $existing_post->ID, 'program_types', array( 'fields' => 'names' ) )
-			);
-
-			if ( taxonomy_exists( 'colleges' ) ) {
-				$terms['colleges'] = wp_get_post_terms( $existing_post->ID, 'colleges', array( 'fields' => 'names' ) );
-			}
-
-			if ( taxonomy_exists( 'departments' ) ) {
-				$terms['departments'] = wp_get_post_terms( $existing_post->ID, 'departments', array( 'fields' => 'names' ) );
-			}
-		}
-
-		// Allow overrides by themes/other plugins
-		if ( has_filter( 'ucf_degree_get_existing_terms' ) ) {
-			$terms = apply_filters( 'ucf_degree_get_existing_terms', $terms, $existing_post, $this->program );
-		}
-
-		return $terms;
-	}
-
-	/**
 	 * Returns an array of degree post data suitable for passing to
 	 * wp_insert_post() or wp_update_post().
 	 *
@@ -1307,68 +1222,6 @@ class UCF_Degree_Import {
 	}
 
 	/**
-	 * Generates a verbose import changelog for the degree.
-	 * @author Jo Dickson
-	 * @since 3.0.2
-	 */
-	private function create_changelog() {
-		$changelog = null;
-
-		if ( $this->verbose_logging && ! $this->is_new ) {
-			$changelog = array();
-
-			// $post_old  = $this->existing_post;
-			$meta_old  = $this->existing_meta;
-			$terms_old = $this->existing_terms;
-
-			// $post_new  = get_post( $this->post_id );
-			$meta_new  = array_map( 'esc_sql', $this->post_meta );
-			$terms_new = array_map( 'esc_sql', $this->post_terms );
-
-			// if ( $post_old !== $post_new ) {
-			// 	TODO
-			// }
-
-			if ( $meta_old !== $meta_new ) {
-				$meta_insertions = array_diff_assoc( $meta_old, $meta_new );
-				$meta_deletions  = array_diff_assoc( $meta_new, $meta_old );
-				$meta_updates = array( 'added' => $meta_insertions, 'deleted' => $meta_deletions, 'updated' => array() );
-				foreach ( $meta_new as $key=>$val ) {
-					if (
-						isset( $meta_old[$key] )
-						&& $meta_old[$key] !== $meta_new[$key]
-						&& ! isset( $meta_insertions[$key] )
-						&& ! isset( $meta_deletions[$key] )
-					) {
-						$meta_updates['updated'][$key] = array( 'old' => $meta_old[$key], 'new' => $meta_new[$key] );
-					}
-				}
-				$changelog['meta'] = $meta_updates;
-			}
-
-			// if ( $terms_old !== $terms_new ) {
-			// 	$term_insertions = $term_deletions = array();
-			// 	// TODO can't use array_diff_assoc on multi-level term arrays
-			// 	$term_insertions   = array_diff_assoc( $terms_old, $terms_new );
-			// 	$term_deletions    = array_diff_assoc( $terms_new, $terms_old );
-			// 	$term_updates      = array( 'added' => $term_insertions, 'deleted' => $term_deletions, 'updated' => array() );
-			// 	foreach ( $terms_new as $key=>$val ) {
-			// 		if (
-			// 			$terms_old[$key] !== $terms_new[$key]
-			// 			&& ! isset( $term_insertions[$key] )
-			// 			&& ! isset( $term_deletions[$key] )
-			// 		) {
-			// 			$term_updates['updated'][$key] = array( 'old' => $terms_old[$key], 'new' => $terms_new[$key] );
-			// 		}
-			// 	}
-			// 	$changelog['term'] = $term_updates;
-			// }
-		}
-
-		return $changelog;
-	}
-
-	/**
 	 * Handles all new/existing post processing.
 	 *
 	 * @author Jo Dickson
@@ -1379,10 +1232,306 @@ class UCF_Degree_Import {
 			$this->post_id = $this->process_post();
 			$this->process_post_terms();
 			$this->process_post_meta();
-			$this->changelog = $this->create_changelog();
 		}
 		catch ( Exception $e ) {
 			throw $e;
 		}
+	}
+}
+
+
+class UCF_Degree_Changeset {
+	private
+		$post_old,
+		$post_new,
+		$terms_old,
+		$terms_new,
+		$meta_old,
+		$meta_new,
+		$post_id,
+		$degree_id;
+
+	/**
+	 * Constructor
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.0
+	 * @param object $post_id | ID of the degree post object
+	 * @param bool $is_old | Whether or not $post_id corresponds to an existing degree
+	 * @return UCF_Degree_Changeset
+	 **/
+	public function __construct( $post_id, $is_old=true ) {
+		$this->post_id = $post_id;
+
+		if ( $is_old ) {
+			$this->set_old( $post_id );
+		}
+		else {
+			$this->set_new( $post_id );
+		}
+	}
+
+	private function get_post_data( $post_id ) {
+		$data = get_post( $post_id, 'ARRAY_A' ) ?: array();
+
+		if ( has_filter( 'ucf_degree_changeset_post_data' ) ) {
+			$data = apply_filters( 'ucf_degree_changeset_post_data', $data, $post_id );
+		}
+
+		return $data;
+	}
+
+	private function get_term_data( $post_id ) {
+		$taxonomies = get_post_taxonomies( $post_id );
+		$term_data = array();
+		foreach ( $taxonomies as $tax ) {
+			$term_data[$tax] = wp_get_object_terms( $post_id, $tax, array( 'fields' => 'names' ) ) ?: array();
+		}
+
+		if ( has_filter( 'ucf_degree_changeset_term_data' ) ) {
+			$term_data = apply_filters( 'ucf_degree_changeset_term_data', $term_data, $post_id );
+		}
+
+		return $term_data;
+	}
+
+	private function get_meta_data( $post_id ) {
+		$meta = get_post_meta( $post_id, '' );
+		if ( $meta ) {
+			$meta = ucf_degree_reduce_meta_values( $meta );
+		}
+		else {
+			$meta = array();
+		}
+
+		// Remove 'private' metadata (meta whose keys begin with an underscore)
+		foreach ( $meta as $key => $val ) {
+			if ( substr( $key, 0, 1 ) === '_' ) {
+				unset( $meta[$key] );
+			}
+		}
+
+		if ( has_filter( 'ucf_degree_changeset_meta_data' ) ) {
+			$meta = apply_filters( 'ucf_degree_changeset_meta_data', $meta, $post_id );
+		}
+
+		return $meta;
+	}
+
+	public function set_old( $post_id ) {
+		$this->post_old  = $this->get_post_data( $post_id );
+		$this->terms_old = $this->get_term_data( $post_id );
+		$this->meta_old  = $this->get_meta_data( $post_id );
+
+		if ( ! isset( $this->degree_id ) ) {
+			$this->degree_id = $this->meta_old['degree_id'];
+		}
+	}
+
+	public function set_new( $post_id ) {
+		$this->post_new  = $this->get_post_data( $post_id );
+		$this->terms_new = $this->get_term_data( $post_id );
+		$this->meta_new  = $this->get_meta_data( $post_id );
+
+		if ( ! isset( $this->degree_id ) ) {
+			$this->degree_id = $this->meta_new['degree_id'];
+		}
+	}
+
+	public function has_changes() {
+		$post_changes = $this->get_post_changes();
+		$term_changes = $this->get_term_changes();
+		$meta_changes = $this->get_meta_changes();
+
+		return ( empty( $post_changes ) && empty( $term_changes ) && empty( $meta_changes ) ) ? false : true;
+	}
+
+	public function get_post_changes() {
+		if ( ! isset( $this->post_old ) ) {
+			// No old post data is set; assume this changeset represents a
+			// new post
+			return $this->post_new;
+		}
+		elseif ( ! isset( $this->post_new ) ) {
+			// No new post data is set; assume this changeset represents a
+			// deleted post
+			return false;
+		}
+
+		$post_keys = array_merge( array_keys( $this->post_old ), array_keys( $this->post_new ) );
+		$updated = $changes = array();
+
+		foreach ( $post_keys as $key ) {
+			if (
+				isset( $this->post_old[$key] )
+				&& isset( $this->post_new[$key] )
+				&& $this->post_old[$key] !== $this->post_new[$key]
+			) {
+				$updated[$key] = array( 'old' => $this->post_old[$key], 'new' => $this->post_new[$key] );
+			}
+		}
+
+		if ( !empty ( $updated ) ) {
+			$changes['updated'] = $updated;
+		}
+
+		return $changes;
+	}
+
+	public function get_term_changes() {
+		if ( ! isset( $this->terms_old ) ) {
+			// No old term data is set; assume this changeset represents a
+			// new post
+			return $this->terms_new;
+		}
+		elseif ( ! isset( $this->terms_new ) ) {
+			// No new term data is set; assume this changeset represents a
+			// deleted post
+			return false;
+		}
+
+		$taxonomies = array_merge( array_keys( $this->terms_old ), array_keys( $this->terms_new ) );
+		$added = $removed = $changes = array();
+
+		foreach ( $taxonomies as $tax ) {
+			$old = isset( $this->terms_old[$tax] ) ? $this->terms_old[$tax] : array();
+			$new = isset( $this->terms_new[$tax] ) ? $this->terms_new[$tax] : array();
+			$tax_added = array_diff_assoc( $new, $old );
+			$tax_removed = array_diff_assoc( $old, $new );
+			if ( ! empty( $tax_added ) ) {
+				$added[$tax] = $tax_added;
+			}
+			if ( ! empty( $tax_removed ) ) {
+				$removed[$tax] = $tax_removed;
+			}
+		}
+
+		if ( ! empty( $added ) ) {
+			$changes['added'] = $added;
+		}
+		if ( ! empty( $removed ) ) {
+			$changes['removed'] = $removed;
+		}
+
+		return $changes;
+	}
+
+	public function get_meta_changes() {
+		if ( ! isset( $this->meta_old ) ) {
+			// No old meta data is set; assume this changeset represents a
+			// new post
+			return $this->meta_new;
+		}
+		elseif ( ! isset( $this->meta_new ) ) {
+			// No new meta data is set; assume this changeset represents a
+			// deleted post
+			return false;
+		}
+
+		$meta_keys = array_merge( array_keys( $this->meta_old ), array_keys( $this->meta_new ) );
+		$added     = array_diff_assoc( $this->meta_new, $this->meta_old );
+		$removed   = array_diff_assoc( $this->meta_old, $this->meta_new );
+		$updated = $changes = array();
+
+		foreach ( $meta_keys as $key ) {
+			if (
+				isset( $this->meta_old[$key] )
+				&& isset( $this->meta_new[$key] )
+				&& $this->meta_old[$key] !== $this->meta_new[$key]
+				&& ! isset( $added[$key] )
+				&& ! isset( $removed[$key] )
+			) {
+				$updated[$key] = array( 'old' => $this->meta_old[$key], 'new' => $this->meta_new[$key] );
+			}
+		}
+
+		if ( ! empty( $added ) ) {
+			$changes['added'] = $added;
+		}
+		if ( ! empty( $updated ) ) {
+			$changes['updated'] = $updated;
+		}
+
+		return $changes;
+	}
+
+	private function get_changelog_value_truncated( $val ) {
+		if ( is_string( $val ) || is_numeric( $val ) || is_bool( $val ) ) {
+			$val = (string) $val;
+		}
+		else if ( is_array( $val ) ) {
+			$val = implode( ',', $val );
+		}
+		else {
+			$val = '[TRUNCATED]';
+		}
+
+		if ( strlen( $val ) > 60 ) {
+			$val = substr( $val, 0, 60 ) . '[...]';
+		}
+
+		return $val;
+	}
+
+	public function get_changelog() {
+		ob_start();
+
+		if ( $this->has_changes() ) {
+			$degree_name_old = isset( $this->post_old['post_title'] ) ? $this->post_old['post_title'] : '';
+			$degree_name_new = isset( $this->post_new['post_title'] ) ? $this->post_new['post_title'] : '';
+			$degree_name = $degree_name_new ?: $degree_name_old;
+			echo sprintf( "`%s` (ID `%s` | Post ID %d):\n", $degree_name, $this->degree_id, $this->post_id );
+
+			$post_changes = $this->get_post_changes();
+			$term_changes = $this->get_term_changes();
+			$meta_changes = $this->get_meta_changes();
+
+			if ( ! empty( $post_changes ) ) {
+				if ( isset( $post_changes['updated'] ) ) {
+					echo "\nPOST DATA - UPDATES:\n\n";
+					foreach ( $post_changes['updated'] as $key => $update ) {
+						$old = $this->get_changelog_value_truncated( $update['old'] );
+						$new = $this->get_changelog_value_truncated( $update['new'] );
+						echo sprintf( "`%s`\nOLD: `%s`\nNEW: `%s`\n\n", $key, $old, $new );
+					}
+				}
+			}
+
+			if ( ! empty( $term_changes ) ) {
+				if ( isset( $term_changes['added'] ) ) {
+					echo "\nTERMS - ADDITIONS:\n\n";
+					foreach ( $term_changes['added'] as $term => $additions ) {
+						$additions = trim( implode( ', ',  $additions ), " ," );
+						echo sprintf( "`%s`: %s\n\n", $term, $additions );
+					}
+				}
+				if ( isset( $term_changes['removed'] ) ) {
+					echo "\nTERMS - REMOVALS:\n\n";
+					foreach ( $term_changes['removed'] as $term => $removals ) {
+						$removals = trim( implode( ', ',  $removals ), " ," );
+						echo sprintf( "`%s`: %s\n\n", $term, $removals );
+					}
+				}
+			}
+
+			if ( ! empty( $meta_changes ) ) {
+				if ( isset( $meta_changes['added'] ) ) {
+					echo "\nPOST META - ADDITIONS:\n\n";
+					foreach ( $meta_changes['added'] as $key => $addition ) {
+						echo sprintf( "`%s`: `%s`\n", $key, $this->get_changelog_value_truncated( $addition ) );
+					}
+				}
+				if ( isset( $meta_changes['updated'] ) ) {
+					echo "\nPOST META - UPDATES:\n\n";
+					foreach ( $meta_changes['updated'] as $key => $update ) {
+						$old = $this->get_changelog_value_truncated( $update['old'] );
+						$new = $this->get_changelog_value_truncated( $update['new'] );
+						echo sprintf( "`%s`\nOLD: `%s`\nNEW: `%s`\n\n", $key, $old, $new );
+					}
+				}
+			}
+		}
+
+		return ob_get_clean();
 	}
 }
