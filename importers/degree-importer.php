@@ -597,7 +597,7 @@ Degree Total    : {$degree_total}
 	private function remove_stale_degree_plans() {
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree plan posts...', count( $this->existing_plan_posts ) );
 
-		foreach( $this->existing_plan_posts as $post_id => $changeset ) {
+		foreach( $this->existing_plan_posts as $post_id => $id_or_changeset ) {
 			if ( $this->force_delete_stale ) {
 				wp_delete_post( $post_id, true );
 			}
@@ -620,7 +620,7 @@ Degree Total    : {$degree_total}
 	private function remove_stale_degree_subplans() {
 		$delete_progress = \WP_CLI\Utils\make_progress_bar( 'Deleting stale degree subplan posts...', count( $this->existing_subplan_posts ) );
 
-		foreach( $this->existing_subplan_posts as $post_id => $changeset ) {
+		foreach( $this->existing_subplan_posts as $post_id => $id_or_changeset ) {
 			if ( $this->force_delete_stale ) {
 				wp_delete_post( $post_id, true );
 			}
