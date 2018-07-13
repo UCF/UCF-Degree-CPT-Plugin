@@ -131,12 +131,23 @@ class UCF_Degree_Importer {
 	}
 
 	/**
-	 * Returns a message with the current counts.
-	 * @author Jim Barnes
+	 * Returns a message with the current counts.  Will return extra per-degree
+	 * change details if verbose logging is enabled.
+	 * @author Jim Barnes, Jo Dickson
 	 * @since 1.0.0
 	 * @return string | The success statistics
 	 **/
 	public function get_stats() {
+		return ( $this->verbose ) ? $this->get_stats_verbose() : $this->get_stats_basic();
+	}
+
+	/**
+	 * Returns a basic set of import stats.
+	 * @author Jim Barnes
+	 * @since 3.0.2
+	 * @return string | The success statistics
+	 */
+	private function get_stats_basic() {
 		$totaled_degrees = get_posts( array(
 			'post_type'      => 'degree',
 			'posts_per_page' => -1,
@@ -170,39 +181,45 @@ Degree Total    : {$degree_total}
 ";
 	}
 
-
-	public function get_stats_verbose() {
+	/**
+	 * Returns a detailed set of import stats.
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return string | The success statistics
+	 */
+	private function get_stats_verbose() {
 		$output = "\n-----------------------\n";
-		$output .= $this->get_stats() . "\n";
+		$output .= $this->get_stats_basic() . "\n";
 
-		if ( $this->verbose ) {
-			$modified_plans = array_filter( $this->updated_plan_posts, function( $val ) {
-				return $val->has_changes();
-			} );
-			$modified_subplans = array_filter( $this->updated_subplan_posts, function( $val ) {
-				return $val->has_changes();
-			} );
+		// Back out here to avoid errors in case this function is called incorrectly
+		if ( ! $this->verbose ) { return $output; }
 
-			ob_start();
+		$modified_plans = array_filter( $this->updated_plan_posts, function( $val ) {
+			return $val->has_changes();
+		} );
+		$modified_subplans = array_filter( $this->updated_subplan_posts, function( $val ) {
+			return $val->has_changes();
+		} );
 
-			echo sprintf( "%d existing plan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_plans ) );
-			if ( $modified_plans ) {
-				foreach ( $modified_plans as $post_id => $changeset ) {
-					echo $changeset->get_changelog();
-				}
+		ob_start();
+
+		echo sprintf( "%d existing plan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_plans ) );
+		if ( $modified_plans ) {
+			foreach ( $modified_plans as $post_id => $changeset ) {
+				echo $changeset->get_changelog();
 			}
-
-			echo sprintf( "%d existing subplan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_subplans ) );
-			if ( $modified_subplans ) {
-				foreach ( $modified_subplans as $post_id => $changeset ) {
-					echo $changeset->get_changelog();
-				}
-			}
-
-			echo "That's it!";
-
-			$output .= ob_get_clean();
 		}
+
+		echo sprintf( "%d existing subplan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_subplans ) );
+		if ( $modified_subplans ) {
+			foreach ( $modified_subplans as $post_id => $changeset ) {
+				echo $changeset->get_changelog();
+			}
+		}
+
+		echo "That's it!";
+
+		$output .= ob_get_clean();
 
 		return $output;
 	}
