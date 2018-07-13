@@ -41,9 +41,7 @@ class UCF_Degree_Importer {
 				'Graduate Certificate'
 			),
 			'Professional Program'
-		),
-
-		$changelog = array();
+		);
 
 	/**
 	 * Constructor
