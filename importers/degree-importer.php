@@ -174,27 +174,33 @@ Degree Total    : {$degree_total}
 
 
 	public function get_stats_verbose() {
-		$output = $this->get_stats() . "\n-----------------------\n";
+		$output = "\n-----------------------\n";
+		$output .= $this->get_stats() . "\n";
+
+		$modified_plans = array_filter( $this->updated_plan_posts, function( $val ) {
+			return $val->has_changes();
+		} );
+		$modified_subplans = array_filter( $this->updated_subplan_posts, function( $val ) {
+			return $val->has_changes();
+		} );
 
 		ob_start();
 
-		echo sprintf( "\n%d existing plan posts were modified during this import.\n\n", count( $this->updated_plan_posts ) );
-		if ( $this->updated_plan_posts ) {
-			foreach ( $this->updated_plan_posts as $post_id => $changeset ) {
+		echo sprintf( "%d existing plan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_plans ) );
+		if ( $modified_plans ) {
+			foreach ( $modified_plans as $post_id => $changeset ) {
 				echo $changeset->get_changelog();
-				echo "\n\n";
 			}
 		}
 
-		echo "\n\n";
-
-		echo sprintf( "%d existing subplan posts were modified during this import.\n\n", count( $this->updated_subplan_posts ) );
-		if ( $this->updated_subplan_posts ) {
-			foreach ( $this->updated_subplan_posts as $post_id => $changeset ) {
+		echo sprintf( "%d existing subplan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_subplans ) );
+		if ( $modified_subplans ) {
+			foreach ( $modified_subplans as $post_id => $changeset ) {
 				echo $changeset->get_changelog();
-				echo "\n\n";
 			}
 		}
+
+		echo "That's it!";
 
 		$output .= ob_get_clean();
 
@@ -1240,6 +1246,9 @@ class UCF_Degree_Import {
 }
 
 
+/**
+ * Tracks changes between existing degree post data and imported updates.
+ */
 class UCF_Degree_Changeset {
 	private
 		$post_old,
@@ -1255,7 +1264,7 @@ class UCF_Degree_Changeset {
 	 * Constructor
 	 *
 	 * @author Jo Dickson
-	 * @since 3.0.0
+	 * @since 3.0.2
 	 * @param object $post_id | ID of the degree post object
 	 * @param bool $is_old | Whether or not $post_id corresponds to an existing degree
 	 * @return UCF_Degree_Changeset
@@ -1271,9 +1280,34 @@ class UCF_Degree_Changeset {
 		}
 	}
 
+	/**
+	 * Returns post data to be compared.
+	 * Filters out repetitive/unnecessary data by default, such as
+	 * post_modified.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param int $post_id | ID of the degree post object
+	 * @return array | Assoc. array of post data
+	 */
 	private function get_post_data( $post_id ) {
 		$data = get_post( $post_id, 'ARRAY_A' ) ?: array();
 
+		// Unset data we don't really need to log changes of
+		if ( isset( $data['post_date_gmt'] ) ) {
+			unset( $data['post_date_gmt'] );
+		}
+		if ( isset( $data['post_modified'] ) ) {
+			unset( $data['post_modified'] );
+		}
+		if ( isset( $data['post_modified_gmt'] ) ) {
+			unset( $data['post_modified_gmt'] );
+		}
+		if ( isset( $data['guid'] ) ) {
+			unset( $data['guid'] );
+		}
+
+		// Allow data to be further filtered by other plugins/themes
 		if ( has_filter( 'ucf_degree_changeset_post_data' ) ) {
 			$data = apply_filters( 'ucf_degree_changeset_post_data', $data, $post_id );
 		}
@@ -1281,6 +1315,14 @@ class UCF_Degree_Changeset {
 		return $data;
 	}
 
+	/**
+	 * Returns post terms to be compared.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param int $post_id | ID of the degree post object
+	 * @return array | Assoc. array of post terms, grouped by taxonomy
+	 */
 	private function get_term_data( $post_id ) {
 		$taxonomies = get_post_taxonomies( $post_id );
 		$term_data = array();
@@ -1288,6 +1330,7 @@ class UCF_Degree_Changeset {
 			$term_data[$tax] = wp_get_object_terms( $post_id, $tax, array( 'fields' => 'names' ) ) ?: array();
 		}
 
+		// Allow data to be further filtered by other plugins/themes
 		if ( has_filter( 'ucf_degree_changeset_term_data' ) ) {
 			$term_data = apply_filters( 'ucf_degree_changeset_term_data', $term_data, $post_id );
 		}
@@ -1295,6 +1338,14 @@ class UCF_Degree_Changeset {
 		return $term_data;
 	}
 
+	/**
+	 * Returns post metadata to be compared.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param int $post_id | ID of the degree post object
+	 * @return array | Assoc. array of post meta
+	 */
 	private function get_meta_data( $post_id ) {
 		$meta = get_post_meta( $post_id, '' );
 		if ( $meta ) {
@@ -1311,6 +1362,7 @@ class UCF_Degree_Changeset {
 			}
 		}
 
+		// Allow data to be further filtered by other plugins/themes
 		if ( has_filter( 'ucf_degree_changeset_meta_data' ) ) {
 			$meta = apply_filters( 'ucf_degree_changeset_meta_data', $meta, $post_id );
 		}
@@ -1318,6 +1370,13 @@ class UCF_Degree_Changeset {
 		return $meta;
 	}
 
+	/**
+	 * Sets this object's old post data, term data, and metadata.
+	 * Also sets $this->degree_id if it isn't already set.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 */
 	public function set_old( $post_id ) {
 		$this->post_old  = $this->get_post_data( $post_id );
 		$this->terms_old = $this->get_term_data( $post_id );
@@ -1328,6 +1387,13 @@ class UCF_Degree_Changeset {
 		}
 	}
 
+	/**
+	 * Sets this object's new post data, term data, and metadata.
+	 * Also sets $this->degree_id if it isn't already set.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 */
 	public function set_new( $post_id ) {
 		$this->post_new  = $this->get_post_data( $post_id );
 		$this->terms_new = $this->get_term_data( $post_id );
@@ -1338,6 +1404,14 @@ class UCF_Degree_Changeset {
 		}
 	}
 
+	/**
+	 * Whether or not there are actually changes between the post's
+	 * data, terms, or meta between the old and new versions.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return bool
+	 */
 	public function has_changes() {
 		$post_changes = $this->get_post_changes();
 		$term_changes = $this->get_term_changes();
@@ -1346,16 +1420,16 @@ class UCF_Degree_Changeset {
 		return ( empty( $post_changes ) && empty( $term_changes ) && empty( $meta_changes ) ) ? false : true;
 	}
 
+	/**
+	 * Returns all updates between the post's old and new post data.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return mixed | Array of updated post data, or null if either old or new post data is not set
+	 */
 	public function get_post_changes() {
-		if ( ! isset( $this->post_old ) ) {
-			// No old post data is set; assume this changeset represents a
-			// new post
-			return $this->post_new;
-		}
-		elseif ( ! isset( $this->post_new ) ) {
-			// No new post data is set; assume this changeset represents a
-			// deleted post
-			return false;
+		if ( ! isset( $this->post_old ) || ! isset( $this->post_new ) ) {
+			return null;
 		}
 
 		$post_keys = array_merge( array_keys( $this->post_old ), array_keys( $this->post_new ) );
@@ -1378,16 +1452,17 @@ class UCF_Degree_Changeset {
 		return $changes;
 	}
 
+	/**
+	 * Returns all term additions and removals for the post, grouped by
+	 * 'added'/'removed' and by taxonomy.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return mixed | Array of updated terms, grouped; or null if either old or new term data is not set
+	 */
 	public function get_term_changes() {
-		if ( ! isset( $this->terms_old ) ) {
-			// No old term data is set; assume this changeset represents a
-			// new post
-			return $this->terms_new;
-		}
-		elseif ( ! isset( $this->terms_new ) ) {
-			// No new term data is set; assume this changeset represents a
-			// deleted post
-			return false;
+		if ( ! isset( $this->terms_old ) || ! isset( $this->terms_new ) ) {
+			return null;
 		}
 
 		$taxonomies = array_merge( array_keys( $this->terms_old ), array_keys( $this->terms_new ) );
@@ -1396,8 +1471,8 @@ class UCF_Degree_Changeset {
 		foreach ( $taxonomies as $tax ) {
 			$old = isset( $this->terms_old[$tax] ) ? $this->terms_old[$tax] : array();
 			$new = isset( $this->terms_new[$tax] ) ? $this->terms_new[$tax] : array();
-			$tax_added = array_diff_assoc( $new, $old );
-			$tax_removed = array_diff_assoc( $old, $new );
+			$tax_added = array_diff( $new, $old );
+			$tax_removed = array_diff( $old, $new );
 			if ( ! empty( $tax_added ) ) {
 				$added[$tax] = $tax_added;
 			}
@@ -1416,16 +1491,17 @@ class UCF_Degree_Changeset {
 		return $changes;
 	}
 
+	/**
+	 * Returns all meta additions and updates for the post, grouped by
+	 * 'added'/'updated'.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return mixed | Array of updated meta, grouped; or null if either old or new meta data is not set
+	 */
 	public function get_meta_changes() {
-		if ( ! isset( $this->meta_old ) ) {
-			// No old meta data is set; assume this changeset represents a
-			// new post
-			return $this->meta_new;
-		}
-		elseif ( ! isset( $this->meta_new ) ) {
-			// No new meta data is set; assume this changeset represents a
-			// deleted post
-			return false;
+		if ( ! isset( $this->meta_old ) || ! isset( $this->meta_new ) ) {
+			return null;
 		}
 
 		$meta_keys = array_merge( array_keys( $this->meta_old ), array_keys( $this->meta_new ) );
@@ -1455,15 +1531,20 @@ class UCF_Degree_Changeset {
 		return $changes;
 	}
 
+	/**
+	 * Returns a string value suitable for printing in a changelog.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @param mixed $val | post/term/meta data value
+	 * @return string | A printable, truncated string
+	 */
 	private function get_changelog_value_truncated( $val ) {
 		if ( is_string( $val ) || is_numeric( $val ) || is_bool( $val ) ) {
 			$val = (string) $val;
 		}
-		else if ( is_array( $val ) ) {
-			$val = implode( ',', $val );
-		}
 		else {
-			$val = '[TRUNCATED]';
+			$val = serialize( $val );
 		}
 
 		if ( strlen( $val ) > 60 ) {
@@ -1473,6 +1554,13 @@ class UCF_Degree_Changeset {
 		return $val;
 	}
 
+	/**
+	 * Returns a printable changelog of all updates for the post.
+	 *
+	 * @author Jo Dickson
+	 * @since 3.0.2
+	 * @return string
+	 */
 	public function get_changelog() {
 		ob_start();
 
@@ -1480,7 +1568,7 @@ class UCF_Degree_Changeset {
 			$degree_name_old = isset( $this->post_old['post_title'] ) ? $this->post_old['post_title'] : '';
 			$degree_name_new = isset( $this->post_new['post_title'] ) ? $this->post_new['post_title'] : '';
 			$degree_name = $degree_name_new ?: $degree_name_old;
-			echo sprintf( "`%s` (ID `%s` | Post ID %d):\n", $degree_name, $this->degree_id, $this->post_id );
+			echo sprintf( "\"%s\" (ID \"%s\" | Post ID %d):\n", $degree_name, $this->degree_id, $this->post_id );
 
 			$post_changes = $this->get_post_changes();
 			$term_changes = $this->get_term_changes();
@@ -1488,48 +1576,45 @@ class UCF_Degree_Changeset {
 
 			if ( ! empty( $post_changes ) ) {
 				if ( isset( $post_changes['updated'] ) ) {
-					echo "\nPOST DATA - UPDATES:\n\n";
 					foreach ( $post_changes['updated'] as $key => $update ) {
 						$old = $this->get_changelog_value_truncated( $update['old'] );
 						$new = $this->get_changelog_value_truncated( $update['new'] );
-						echo sprintf( "`%s`\nOLD: `%s`\nNEW: `%s`\n\n", $key, $old, $new );
+						echo sprintf( "-- Updated %s: \"%s\" ==> \"%s\"\n", $key, $old, $new );
 					}
 				}
 			}
 
 			if ( ! empty( $term_changes ) ) {
 				if ( isset( $term_changes['added'] ) ) {
-					echo "\nTERMS - ADDITIONS:\n\n";
 					foreach ( $term_changes['added'] as $term => $additions ) {
 						$additions = trim( implode( ', ',  $additions ), " ," );
-						echo sprintf( "`%s`: %s\n\n", $term, $additions );
+						echo sprintf( "-- Added %s terms: (%s)\n", $term, $additions );
 					}
 				}
 				if ( isset( $term_changes['removed'] ) ) {
-					echo "\nTERMS - REMOVALS:\n\n";
 					foreach ( $term_changes['removed'] as $term => $removals ) {
 						$removals = trim( implode( ', ',  $removals ), " ," );
-						echo sprintf( "`%s`: %s\n\n", $term, $removals );
+						echo sprintf( "-- Removed %s terms: (%s)\n", $term, $removals );
 					}
 				}
 			}
 
 			if ( ! empty( $meta_changes ) ) {
 				if ( isset( $meta_changes['added'] ) ) {
-					echo "\nPOST META - ADDITIONS:\n\n";
 					foreach ( $meta_changes['added'] as $key => $addition ) {
-						echo sprintf( "`%s`: `%s`\n", $key, $this->get_changelog_value_truncated( $addition ) );
+						echo sprintf( "-- Added post meta %s: \"%s\"\n", $key, $this->get_changelog_value_truncated( $addition ) );
 					}
 				}
 				if ( isset( $meta_changes['updated'] ) ) {
-					echo "\nPOST META - UPDATES:\n\n";
 					foreach ( $meta_changes['updated'] as $key => $update ) {
 						$old = $this->get_changelog_value_truncated( $update['old'] );
 						$new = $this->get_changelog_value_truncated( $update['new'] );
-						echo sprintf( "`%s`\nOLD: `%s`\nNEW: `%s`\n\n", $key, $old, $new );
+						echo sprintf( "-- Updated post meta %s: \"%s\" ==> \"%s\"\n", $key, $old, $new );
 					}
 				}
 			}
+
+			echo "\n";
 		}
 
 		return ob_get_clean();
