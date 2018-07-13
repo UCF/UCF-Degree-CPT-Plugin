@@ -175,32 +175,34 @@ Degree Total    : {$degree_total}
 		$output = "\n-----------------------\n";
 		$output .= $this->get_stats() . "\n";
 
-		$modified_plans = array_filter( $this->updated_plan_posts, function( $val ) {
-			return $val->has_changes();
-		} );
-		$modified_subplans = array_filter( $this->updated_subplan_posts, function( $val ) {
-			return $val->has_changes();
-		} );
+		if ( $this->verbose ) {
+			$modified_plans = array_filter( $this->updated_plan_posts, function( $val ) {
+				return $val->has_changes();
+			} );
+			$modified_subplans = array_filter( $this->updated_subplan_posts, function( $val ) {
+				return $val->has_changes();
+			} );
 
-		ob_start();
+			ob_start();
 
-		echo sprintf( "%d existing plan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_plans ) );
-		if ( $modified_plans ) {
-			foreach ( $modified_plans as $post_id => $changeset ) {
-				echo $changeset->get_changelog();
+			echo sprintf( "%d existing plan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_plans ) );
+			if ( $modified_plans ) {
+				foreach ( $modified_plans as $post_id => $changeset ) {
+					echo $changeset->get_changelog();
+				}
 			}
-		}
 
-		echo sprintf( "%d existing subplan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_subplans ) );
-		if ( $modified_subplans ) {
-			foreach ( $modified_subplans as $post_id => $changeset ) {
-				echo $changeset->get_changelog();
+			echo sprintf( "%d existing subplan posts were updated with changes to post, term, or meta data during this import.\n\n", count( $modified_subplans ) );
+			if ( $modified_subplans ) {
+				foreach ( $modified_subplans as $post_id => $changeset ) {
+					echo $changeset->get_changelog();
+				}
 			}
+
+			echo "That's it!";
+
+			$output .= ob_get_clean();
 		}
-
-		echo "That's it!";
-
-		$output .= ob_get_clean();
 
 		return $output;
 	}
