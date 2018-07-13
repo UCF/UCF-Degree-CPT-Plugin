@@ -315,7 +315,14 @@ Degree Total    : {$degree_total}
 		$posts = get_posts( $args );
 
 		foreach( $posts as $key => $val ) {
-			$retval[intval( $val )] = new UCF_Degree_Changeset( intval( $val ) );
+			// If verbose logging is enabled, generate and store a new
+			// UCF_Degree_Changeset object for each existing degree
+			if ( $this->verbose ) {
+				$retval[intval( $val )] = new UCF_Degree_Changeset( intval( $val ) );
+			}
+			else {
+				$retval[intval( $val )] = intval( $val );
+			}
 		}
 
 		return $retval;
@@ -509,6 +516,9 @@ Degree Total    : {$degree_total}
 	 * Increments internal importer counters and post lists depending on
 	 * whether or not the given degree is new or already existed.
 	 *
+	 * Also handles updating UCF_Degree_Changeset objects with new data
+	 * if verbose logging is enabled.
+	 *
 	 * @author Jo Dickson
 	 * @since 3.0.0
 	 * @param object $degree | UCF_Degree_Import object
@@ -534,16 +544,20 @@ Degree Total    : {$degree_total}
 			$this->new_count++;
 		}
 		else {
-			// Store the existing post's changeset, and remove the
-			// post from the existing post list
-			$existing_post_changeset = $existing_posts[$post_id];
+			// Store $existing_posts[$post_id] (value will be either the
+			// post ID or a UCF_Degree_Changeset obj), and remove it from the
+			// existing post list
+			$existing_post = $existing_posts[$post_id];
 			unset( $existing_posts[$post_id] );
 
 			if ( ! isset( $updated_posts[$post_id] ) ) {
-				// Set the changes to the updated post's changeset
-				$existing_post_changeset->set_new( $post_id );
+				// Set the changes to the updated post's changeset if verbose
+				// logging is enabled
+				if ( $this->verbose && ( $existing_post instanceof UCF_Degree_Changeset ) ) {
+					$existing_post->set_new( $post_id );
+				}
 				// Move the existing post to $updated_posts
-				$updated_posts[$post_id] = $existing_post_changeset;
+				$updated_posts[$post_id] = $existing_post;
 
 				// This is a duplicate if it's in the new posts array
 				if ( isset( $new_posts[$post_id] ) ) {
@@ -633,18 +647,6 @@ Degree Total    : {$degree_total}
 		}
 
 		$publish_progress->finish();
-	}
-
-	/**
-	 * Updates the importer's combined changelog
-	 * @author Jo Dickson
-	 * @since 3.0.2
-	 * @param object $degree | UCF_Degree_Import object
-	 */
-	private function update_changelog( $degree ) {
-		if ( $this->verbose ) {
-			$this->changelog['degrees'][$degree->post_id] = $degree->changelog;
-		}
 	}
 }
 
