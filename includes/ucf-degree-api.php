@@ -256,8 +256,6 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 				$prepared_args['tax_query']['relation'] = 'AND';
 			}
 
-			var_dump( $prepared_args );
-
 			return $prepared_args;
 		}
 
