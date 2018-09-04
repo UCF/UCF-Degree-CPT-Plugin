@@ -215,7 +215,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		/**
 		 * Filters WP_Query arguments when querying degrees via the REST API.
 		 * 
-		 * @since 3.1.0
+		 * @since 3.0.2
 		 * @param array $prepared_args Array of arguments for WP_Query.
 		 * @param WP_REST_Request $request The current request.
 		 */
