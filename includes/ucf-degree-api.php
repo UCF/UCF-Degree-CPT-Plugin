@@ -220,7 +220,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 		 * @param WP_REST_Request $request The current request.
 		 */
 		public static function add_arguments( $prepared_args, $request ) {
-			if ( isset( $request['program_types'] ) ) {
+			if ( ! empty( $request['program_types'] ) ) {
 				$program_type_arg = array(
 					'taxonomy' => 'program_types',
 					'field'    => 'slug',
@@ -236,7 +236,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 				}
 			}
 
-			if ( isset( $request['colleges'] ) ) {
+			if ( ! empty( $request['colleges'] ) ) {
 				$college_arg = array(
 					'taxonomy' => 'colleges',
 					'field'    => 'slug',
@@ -255,6 +255,8 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			if ( isset( $prepared_args['tax_query'] ) && count( $prepared_args['tax_query'] ) > 1 ) {
 				$prepared_args['tax_query']['relation'] = 'AND';
 			}
+
+			var_dump( $prepared_args );
 
 			return $prepared_args;
 		}
