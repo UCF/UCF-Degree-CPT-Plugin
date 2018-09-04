@@ -27,6 +27,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			}
 
 			self::register_fields();
+			add_filter( 'rest_degree_query', array( 'UCF_Degree_API', 'add_arguments' ), 10, 2 );
 			add_action( 'rest_prepare_degree', array( 'UCF_Degree_API', 'remove_tags' ), 10, 3 );
 		}
 
@@ -209,6 +210,53 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			}
 
 			return $retval;
+		}
+
+		/**
+		 * Filters WP_Query arguments when querying degrees via the REST API.
+		 * 
+		 * @since 3.1.0
+		 * @param array $prepared_args Array of arguments for WP_Query.
+		 * @param WP_REST_Request $request The current request.
+		 */
+		public static function add_arguments( $prepared_args, $request ) {
+			if ( isset( $request['program_types'] ) ) {
+				$program_type_arg = array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $request['program_types'] )
+				);
+
+				if ( ! isset( $prepared_args['tax_query'] ) ) {
+					$prepared_args['tax_query'] = array(
+						$program_type_arg
+					);
+				} else {
+					$prepared_args['tax_query'][] = $program_type_arg;
+				}
+			}
+
+			if ( isset( $request['colleges'] ) ) {
+				$college_arg = array(
+					'taxonomy' => 'colleges',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $request['colleges'] )
+				);
+
+				if ( ! isset( $prepared_args['tax_query'] ) ) {
+					$prepared_args['tax_query'] = array(
+						$college_arg
+					);
+				} else {
+					$prepared_args['tax_query'][] = $college_arg;
+				}
+			}
+
+			if ( isset( $prepared_args['tax_query'] ) && count( $prepared_args['tax_query'] ) > 1 ) {
+				$prepared_args['tax_query']['relation'] = 'AND';
+			}
+
+			return $prepared_args;
 		}
 
 		/**
