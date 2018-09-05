@@ -271,6 +271,10 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	public static function get_college_terms( $post, $request ) {
 		$colleges = wp_get_post_terms( $post->ID, 'colleges' );
 
+		if ( is_wp_error( $colleges ) ) {
+			return array();
+		}
+
 		$retval = array();
 
 		foreach( $colleges as $college ) {
