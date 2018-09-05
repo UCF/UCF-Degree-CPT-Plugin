@@ -274,7 +274,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$retval = array();
 
 		foreach( $colleges as $college ) {
-			$retval[$college->term_slug] = $college->name;
+			$retval[$college->slug] = $college->name;
 		}
 
 		return $retval;
