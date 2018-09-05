@@ -246,6 +246,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$hours = get_post_meta( $post->ID, 'degree_hours', true );
 		$terms = wp_get_post_terms( $post->ID, 'program_types' );
 		$term = is_array( $terms ) ? $terms[0]->slug : null;
+		$colleges = self::get_college_terms( $post, $request );
 
 		$retval = array(
 			'title'     => $post->post_title,
@@ -253,8 +254,28 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			'url'       => $permalink,
 			'hours'     => $hours,
 			'type'      => $term,
+			'colleges'  => $colleges,
 			'subplans'  => array()
 		);
+
+		return $retval;
+	}
+
+	/**
+	 * Retrieves a simplified array of college terms
+	 *
+	 * @param WP_Post $post The post object
+	 * @param WP_REST_Request $request The request object
+	 * @return array The array of colleges.
+	 */
+	public static function get_college_terms( $post, $request ) {
+		$colleges = wp_get_post_terms( $post->ID, 'colleges' );
+
+		$retval = array();
+
+		foreach( $colleges as $college ) {
+			$retval[$college->term_slug] = $college->name;
+		}
 
 		return $retval;
 	}
