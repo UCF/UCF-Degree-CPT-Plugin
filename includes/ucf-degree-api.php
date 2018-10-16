@@ -135,6 +135,10 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 				);
 			}
 
+			if ( isset(  $args['tax_query'] ) && count( $args['tax_query'] ) > 1 ) {
+				$args['tax_query']['relation'] = 'AND';
+			}
+
 			$query = new WP_Query( $args );
 
 			// Don't call the normal query. Use relevansse query.
