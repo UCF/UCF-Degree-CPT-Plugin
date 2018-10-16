@@ -2,8 +2,8 @@
 Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
-Tested up to: 4.9.2
-Stable tag: 3.0.1
+Tested up to: 4.9.8
+Stable tag: 3.0.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +31,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.0.2 =
+Enhancements:
+* Adds the `program_types` and `colleges` GET parameters to the `/wp/v2/degrees/` endpoint.
+* Adds very simple college schema to each result in the `ucf-degree-search/v1/degrees/` endpoint.
 
 = 3.0.1 =
 Enhancements:

@@ -25,6 +25,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.0.2 ###
+Enhancements:
+* Adds the `program_types` and `colleges` GET parameters to the `/wp/v2/degrees/` endpoint.
+* Adds very simple college schema to each result in the `ucf-degree-search/v1/degrees/` endpoint.
+
 ### 3.0.1 ###
 Enhancements:
 - Updated profile and description type fetches to cache failed responses for 2 minutes, to avoid subsequent external requests to the API on every admin page load
