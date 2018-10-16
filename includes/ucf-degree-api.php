@@ -135,9 +135,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 				);
 			}
 
-			if ( isset(  $args['tax_query'] ) &&
-				count( $args['tax_query'] ) > 1 )
-			{
+			if ( isset(  $args['tax_query'] ) && count( $args['tax_query'] ) > 1 ) {
 				$args['tax_query']['relation'] = 'AND';
 			}
 
