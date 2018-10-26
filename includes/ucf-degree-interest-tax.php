@@ -10,7 +10,7 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
             $labels = array(
                 'singular' => 'Area of Interest',
                 'plural'   => 'Areas of Interest',
-                'slug'     => 'interest'
+                'slug'     => 'interests'
             );
 
         public static function register_interest() {
