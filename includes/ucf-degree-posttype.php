@@ -134,7 +134,8 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 				'post_tag',
 				'program_types',
 				'colleges',
-				'career_paths'
+				'career_paths',
+				'interests'
 			);
 			$valid_taxonomies = apply_filters( 'ucf_degree_taxonomies', $valid_taxonomies );
 
