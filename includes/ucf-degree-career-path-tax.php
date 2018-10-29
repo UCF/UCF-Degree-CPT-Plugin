@@ -34,7 +34,7 @@ if ( ! class_exists( 'UCF_Degree_CareerPath' ) ) {
 		 */
 		public static function labels( $labels ) {
 			$singular = $labels['singular'];
-            $plural   = $labels['plural'];
+			$plural   = $labels['plural'];
 
 			return array(
 				'name'                       => _x( $plural, 'Taxonomy General Name', 'ucf_degree' ),
@@ -70,16 +70,16 @@ if ( ! class_exists( 'UCF_Degree_CareerPath' ) ) {
 		 */
 		public static function args( $labels ) {
 			$retval =  array(
-				'labels'                     => self::labels( $labels ),
-				'hierarchical'               => false,
-				'public'                     => true,
-				'show_ui'                    => true,
-				'show_admin_column'          => true,
-				'show_in_nav_menus'          => true,
-				'show_tagcloud'              => true,
+				'labels'            => self::labels( $labels ),
+				'hierarchical'      => false,
+				'public'            => true,
+				'show_ui'           => true,
+				'show_admin_column' => true,
+				'show_in_nav_menus' => true,
+				'show_tagcloud'     => true,
 			);
 
-			$retval = apply_filters( 'ucf_degree_career_path_taxonomy_args', $retval );
+			$retval = apply_filters( 'ucf_degree_career_paths_taxonomy_args', $retval );
 
 			return $retval;
 		}
