@@ -72,7 +72,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_interests' ),
-				'pasmission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
 				'args'                => array( 'UCF_Degree_Search_API', 'get_interests_args' )
 			)
 		) );
