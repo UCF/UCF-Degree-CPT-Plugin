@@ -37,6 +37,7 @@ include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	include_once 'includes/ucf-degree-wpcli.php';
 	include_once 'importers/degree-importer.php';
+	include_once 'importers/degree-interests-importer.php';
 
 	WP_CLI::add_command( 'degrees', 'UCF_Degree_Commands' );
 }
