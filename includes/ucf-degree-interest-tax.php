@@ -48,7 +48,7 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
 			<div class="form-field term-group">
 				<label for="interests_display_text"><?php _e( 'Display Text', 'ucf_degree' ); ?></label>
 				<input type="text" id="interests_display_text" name="interests_display_text">
-				<p class="help-text">The text that will be used when displaying Interests on the front end. If the interst you are adding has a comma, enter that here, not in the <code>Name</code> field above. If no text is provided, the value in the <code>Name</code> field will be used.</p>
+				<p class="help-text">The text that will be used when displaying Interests on the front end. If the interest you are adding has a comma, enter that here, not in the <code>Name</code> field above. If no text is provided, the value in the <code>Name</code> field will be used.</p>
 			</div>
 <?php
 		}
@@ -64,7 +64,8 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
 ?>
 			<tr class="form-field term-group-wrap">
 				<th scope="row"><label for="interests_display_text"><?php _e( 'Display Text', 'ucf_degree' ); ?></label>
-				<td><input type="text" id="interests_display_text" name="interests_display_text" value="<?php echo $display_name; ?>"></td>
+				<td><input type="text" id="interests_display_text" name="interests_display_text" value="<?php echo $display_name; ?>">
+				<p class="description">The text that will be used when displaying Interests on the front end. If the interest you are adding has a comma, enter that here, not in the <code>Name</code> field above. If no text is provided, the value in the <code>Name</code> field will be used.</p></td>
 			</tr>
 <?php
 		}
