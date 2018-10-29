@@ -67,6 +67,15 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'args'                => array( 'UCF_Degree_Search_API', 'get_colleges_counts_args' )
 			)
 		) );
+
+		register_rest_route( "{$root}/{$version}", "/interests", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_interests' ),
+				'pasmission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_interests_args' )
+			)
+		) );
 	}
 
 	/**
@@ -647,6 +656,124 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 					'sanitize_callback' => 'sanitize_text_field'
 				),
 				'program_types' => array(
+					'default'           => false,
+					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
+				)
+			)
+		);
+	}
+
+	/**
+	 * Callback for the /interests endpoint
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @param WP_REST_Request $request | Contains get parameters
+	 * @return WP_REST_Response
+	 */
+	public static function get_interests( $request ) {
+		$search        = $request['search'];
+		$program_types = $request['program_types'];
+		$colleges      = $request['colleges'];
+		$limit         = $request['limit'];
+
+		$terms         = array();
+
+		/**
+		 * The `$search` parameter cannot be used in
+		 * conjunction with the `program_types` or `colleges`
+		 * arguments. If one of those two are provided
+		 * the search parameter will be disregarded.
+		 */
+		if ( ! empty( $program_types ) || ! empty( $colleges ) ) {
+			$args = array(
+				'post_type'      => 'degree',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'tax_query'      => array()
+			);
+
+			if ( ! empty( $program_types ) ) {
+				$args['tax_query'][] = array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $program_types )
+				);
+			}
+
+			if ( ! empty( $colleges ) ) {
+				$args['tax_query'][] = array(
+					'taxonomy' => 'colleges',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $colleges )
+				);
+			}
+
+			if ( count( $args['tax_query'] ) > 1 ) {
+				$args['tax_query']['relationship'] = 'AND';
+			}
+
+			$post_ids = get_posts( $args );
+
+			$terms = wp_get_object_terms( $post_ids, 'interests' );
+		} else {
+			$args = array(
+				'taxonomy' => 'interests'
+			);
+
+			if ( $search ) {
+				$args['name__like'] = $search;
+			}
+
+			$terms = get_terms( $args );
+		}
+
+		$retval = self::prepare_interests_for_response( $terms );
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Prepares a term array for JSON response
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @param array $terms | The term array
+	 * @param array The response array
+	 */
+	private static function prepare_interests_for_response( $terms ) {
+		$retval = array();
+
+		foreach( $terms as $term ) {
+			$interest = array(
+				'id'           => abs( $term->term_id ),
+				'name'         => $term->name,
+				'display_text' => get_term_meta( $term->term_id, 'interests_display_text', true ),
+				'slug'         => $term->slug
+			);
+
+			$retval[] = $interest;
+		}
+
+		return $retval;
+	}
+
+	/**
+	 * Defines the args for the /interests endpoint
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @return array
+	 */
+	public static function get_interests_args() {
+		return array(
+			array(
+				'search' => array(
+					'default'           => '',
+					'sanitize_callback' => 'sanitize_text_field'
+				),
+				'program_types' => array(
+					'default'           => false,
+					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
+				),
+				'colleges'      => array(
 					'default'           => false,
 					'sanitize_callback' => array( 'UCF_Degree_Search_API', 'sanitize_array' )
 				)
