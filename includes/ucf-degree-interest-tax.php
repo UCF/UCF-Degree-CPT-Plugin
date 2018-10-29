@@ -13,12 +13,25 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
                 'slug'     => 'interests'
             );
 
+		/**
+		 * Registers the `interests` custom taxonomy
+		 * @author Jim Barnes
+		 * @since 3.1.0
+		 */
         public static function register_interest() {
             $labels = apply_filters( 'ucf_degree_interests_labels', self::$labels );
 
             register_taxonomy( $labels['slug'], array( 'degree' ), self::args( $labels ) );
         }
 
+		/**
+		 * Retrieves the array of labels use in
+		 * registering the custom taxonomy
+		 * @author Jim Barnes
+		 * @since 3.1.0
+		 * @param array $labels The array of singular, plural and slug labels
+		 * @return array
+		 */
         public static function labels( $labels ) {
             $singular = $labels['singular'];
             $plural   = $labels['plural'];
@@ -47,8 +60,16 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
 			);
         }
 
+		/**
+		 * Returns the args array for registering
+		 * the custom taxonomy
+		 * @author Jim Barnes
+		 * @since 3.1.0
+		 * @param array $labels The array of singular, plural and slug labels
+		 * @return array
+		 */
         public static function args( $labels ) {
-            return array(
+            $retval = array(
 				'labels'                     => self::labels( $labels ),
 				'hierarchical'               => false,
 				'public'                     => true,
@@ -57,6 +78,10 @@ if ( ! class_exists( 'UCF_Degree_Interest' ) ) {
 				'show_in_nav_menus'          => true,
 				'show_tagcloud'              => true,
 			);
+
+			$retval = apply_filters( 'ucf_degree_interests_taxonomy_args', $retval );
+
+			return $retval;
         }
     }
 }
