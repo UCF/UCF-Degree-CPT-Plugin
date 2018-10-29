@@ -54,7 +54,9 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		}
 		WP_CLI::success( $import->get_stats() );
 	}
+}
 
+class UCF_Degree_Interests_Commands extends WP_CLI_Command {
 	/**
 	 * Imports interests from a JSON file
 	 *
@@ -66,11 +68,11 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 * # Imports interests from a file called interests.json in a home directory
-	 * $ wp degrees import_intersts ~/interests.json
+	 * $ wp interests import ~/interests.json
 	 *
 	 * @when after_wp_load
 	 */
-	public function import_interests( $args, $assoc_args ) {
+	public function import( $args, $assoc_args ) {
 		list( $filepath ) = $args;
 
 		if ( empty( $filepath ) ) {

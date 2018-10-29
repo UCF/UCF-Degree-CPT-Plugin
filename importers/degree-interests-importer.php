@@ -56,7 +56,8 @@ Programs Processed : {$this->total_programs_processed}
 Programs Updated   : {$this->programs_updated}
 Programs Errors    : {$this->programs_errors}
 
-The follow programs could not be found:";
+The follow programs could not be found:
+";
         foreach( $this->could_not_add as $program ) {
             $retval .= "\n{$program}";
         }
