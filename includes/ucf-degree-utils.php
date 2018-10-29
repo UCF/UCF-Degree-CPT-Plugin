@@ -183,6 +183,31 @@ if ( ! function_exists( 'ucf_degree_add_query_args' ) ) {
 	}
 
 	add_filter( 'rest_degree_query', 'ucf_degree_add_query_args', 10, 2 );
+
+	/**
+	 * Capitalizes a title, excluding specific articles
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @param string $title The title to capitalize
+	 * @return string
+	 */
+	function ucf_degree_capitalize_title( $title ) {
+		$title_array = explode( ' ', $title );
+
+		$small_words = array( 'of','a','the','and','an','or','nor','but','is','if','then','else','when', 'at','from','by','on','off','for','in','out','over','to','into','with' );
+
+		$retval = array();
+
+		foreach( $title_array as $title_word ) {
+			if ( ! in_array( $title_word, $small_words ) ) {
+				$retval[] = ucwords( $title_word );
+			} else {
+				$retval[] = $title_word;
+			}
+		}
+
+		return implode( ' ', $retval );
+	}
 }
 
 ?>
