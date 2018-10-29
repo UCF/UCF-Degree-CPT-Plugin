@@ -6,7 +6,7 @@
  **/
 if ( ! class_exists( 'UCF_Degree_CareerPath' ) ) {
 	class UCF_Degree_CareerPath {
-		public
+		public static
 			$labels = array(
 				'singular' => 'Career Path',
 				'plural'   => 'Career Paths',
