@@ -142,7 +142,7 @@ The follow programs could not be found:
         if ( ! $degree ) return false;
 
         // Append terms to the degree.
-        $retval = wp_set_post_terms( $degree->ID, array( $interest->term_id ), 'interests', true );
+        $retval = wp_set_post_terms( $degree->ID, array( $interest->term_id ), 'interests' );
 
         // $retval will be an array if successful
         return is_array( $retval );
