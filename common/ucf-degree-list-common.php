@@ -66,7 +66,7 @@ if ( ! function_exists( 'ucf_degree_list_display_classic_title' ) ) {
 		$formatted_title = '';
 
 		if ( $title = $args['title'] ) {
-			$formatted_title = '<h2 class=ucf-degree-list-title">' . $title . '</h2>';
+			$formatted_title = '<h2 class="ucf-degree-list-title">' . $title . '</h2>';
 		}
 
 		return $formatted_title;
