@@ -54,7 +54,7 @@ if ( ! function_exists( 'ucf_degree_group_posts_by_tax' ) ) {
 			}
 		}
 
-		return $retval;
+		return apply_filters( 'ucf_degree_group_posts_by_tax', $retval, $taxonomy_slug, $posts );
 	}
 }
 
