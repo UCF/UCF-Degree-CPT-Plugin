@@ -32,7 +32,7 @@ if ( ! function_exists( 'ucf_degree_append_meta' ) ) {
 	}
 }
 
-if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
+if ( ! function_exists( 'ucf_degree_group_posts_by_tax' ) ) {
 	function ucf_degree_group_posts_by_tax( $taxonomy_slug, $posts ) {
 		$retval = array();
 
@@ -54,7 +54,7 @@ if ( ! function_exists( 'ucf_degree_group_by_tax_term' ) ) {
 			}
 		}
 
-		return $retval;
+		return apply_filters( 'ucf_degree_group_posts_by_tax', $retval, $taxonomy_slug, $posts );
 	}
 }
 
