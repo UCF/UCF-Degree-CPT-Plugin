@@ -887,7 +887,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 	/**
 	 * Prepares a tag term array for JSON response
-	 * @author Jim Barnes
+	 * @author Jo Dickson
 	 * @since 3.1.0
 	 * @param array $terms | The term array
 	 * @param array The response array
@@ -910,7 +910,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 	/**
 	 * Defines the args for the /tags endpoint
-	 * @author Jim Barnes
+	 * @author Jo Dickson
 	 * @since 3.1.0
 	 * @return array
 	 */
