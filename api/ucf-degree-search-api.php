@@ -709,7 +709,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$search        = $request['search'];
 		$program_types = $request['program_types'];
 		$colleges      = $request['colleges'];
-		$limit         = $request['limit'];
 
 		$terms         = array();
 
@@ -827,7 +826,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$search        = $request['search'];
 		$program_types = $request['program_types'];
 		$colleges      = $request['colleges'];
-		$limit         = $request['limit'];
 
 		$terms         = array();
 
