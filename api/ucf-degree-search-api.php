@@ -76,6 +76,15 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'args'                => array( 'UCF_Degree_Search_API', 'get_interests_args' )
 			)
 		) );
+
+		register_rest_route( "{$root}/{$version}", "/tags", array(
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( 'UCF_Degree_Search_API', 'get_tags' ),
+				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'args'                => array( 'UCF_Degree_Search_API', 'get_tags_args' )
+			)
+		) );
 	}
 
 	/**
@@ -90,6 +99,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$colleges = $request['colleges'];
 		$program_types = $request['program_types'];
 		$interests = $request['interests'];
+		$tags = $request['post_tag'];
 		$page = $request['page'] ? $request['page'] : 1;
 		$limit = $request['limit'] ? $request['limit'] : 100;
 
@@ -146,6 +156,18 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'taxonomy' => 'interests',
 				'field'    => 'slug',
 				'terms'    => $interests
+			);
+		}
+
+		if ( $tags ) {
+			if ( ! isset( $args['tax_query'] ) ) {
+				$args['tax_query'] = array();
+			}
+
+			$args['tax_query'][] = array(
+				'taxonomy' => 'post_tag',
+				'field'    => 'slug',
+				'terms'    => $tags
 			);
 		}
 
@@ -792,6 +814,108 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Callback for the /tags endpoint
+	 * @author Jo Dickson
+	 * @since 3.1.0
+	 * @param WP_REST_Request $request | Contains get parameters
+	 * @return WP_REST_Response
+	 */
+	public static function get_tags( $request ) {
+		$search        = $request['search'];
+		$program_types = $request['program_types'];
+		$colleges      = $request['colleges'];
+		$limit         = $request['limit'];
+
+		$terms         = array();
+
+		/**
+		 * The `$search` parameter cannot be used in
+		 * conjunction with the `program_types` or `colleges`
+		 * arguments. If one of those two are provided
+		 * the search parameter will be disregarded.
+		 */
+		if ( ! empty( $program_types ) || ! empty( $colleges ) ) {
+			$args = array(
+				'post_type'      => 'degree',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'tax_query'      => array()
+			);
+
+			if ( ! empty( $program_types ) ) {
+				$args['tax_query'][] = array(
+					'taxonomy' => 'program_types',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $program_types )
+				);
+			}
+
+			if ( ! empty( $colleges ) ) {
+				$args['tax_query'][] = array(
+					'taxonomy' => 'colleges',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $colleges )
+				);
+			}
+
+			if ( count( $args['tax_query'] ) > 1 ) {
+				$args['tax_query']['relationship'] = 'AND';
+			}
+
+			$post_ids = get_posts( $args );
+
+			$terms = wp_get_object_terms( $post_ids, 'post_tag' );
+		} else {
+			$args = array(
+				'taxonomy' => 'post_tag'
+			);
+
+			if ( $search ) {
+				$args['name__like'] = $search;
+			}
+
+			$terms = get_terms( $args );
+		}
+
+		$retval = self::prepare_tags_for_response( $terms );
+
+		return new WP_REST_Response( $retval, 200 );
+	}
+
+	/**
+	 * Prepares a tag term array for JSON response
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @param array $terms | The term array
+	 * @param array The response array
+	 */
+	private static function prepare_tags_for_response( $terms ) {
+		$retval = array();
+
+		foreach( $terms as $term ) {
+			$tag = array(
+				'id'   => abs( $term->term_id ),
+				'name' => $term->name,
+				'slug' => $term->slug
+			);
+
+			$retval[] = $tag;
+		}
+
+		return $retval;
+	}
+
+	/**
+	 * Defines the args for the /tags endpoint
+	 * @author Jim Barnes
+	 * @since 3.1.0
+	 * @return array
+	 */
+	public static function get_tags_args() {
+		return get_interests_args();
 	}
 
 	/**
