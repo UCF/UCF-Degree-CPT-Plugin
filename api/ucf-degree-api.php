@@ -151,7 +151,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			}
 
 			// Add post tags to args, if they exist
-			if ( $interests ) {
+			if ( $tags ) {
 				if ( ! isset( $args['tax_query'] ) ) {
 					$args['tax_query'] = array();
 				}
