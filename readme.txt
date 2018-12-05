@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 4.9.8
-Stable tag: 3.0.2
+Stable tag: 3.1.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -32,6 +32,18 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 == Changelog ==
 
+= 3.1.0 =
+Enhancements:
+* Added the "Areas of Interest" (`interests`) taxonomy for Degrees
+* Added API endpoints for interests and post tags
+* Added an importer for interests
+* Added a hook for modifying grouped degree lists by taxonomy (`ucf_degree_group_posts_by_tax`)
+* Added a hook for modifying the sort order of grouped degree lists outputted by the [degree-list] shortcode (`ucf_degree_list_sort_grouped_degrees`)
+
+Bug Fixes:
+* Added missing quote to class attribute on the `ucf-degree-list-title` heading.
+* Fixed an incorrect function name in `function_exists()` call for `ucf_degree_group_posts_by_tax`.
+
 = 3.0.2 =
 Enhancements:
 * Adds the `program_types` and `colleges` GET parameters to the `/wp/v2/degrees/` endpoint.
@@ -39,8 +51,8 @@ Enhancements:
 
 = 3.0.1 =
 Enhancements:
-- Updated profile and description type fetches to cache failed responses for 2 minutes, to avoid subsequent external requests to the API on every admin page load
-- Added default empty option to profile and description type dropdowns on the plugin options page for improved clarity when an option hasn't been selected
+* Updated profile and description type fetches to cache failed responses for 2 minutes, to avoid subsequent external requests to the API on every admin page load
+* Added default empty option to profile and description type dropdowns on the plugin options page for improved clarity when an option hasn't been selected
 
 = 3.0.0 =
 Enhancements:

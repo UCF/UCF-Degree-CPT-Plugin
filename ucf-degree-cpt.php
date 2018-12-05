@@ -2,7 +2,7 @@
 /*
 Plugin Name: UCF Degree Custom Post Type
 Description: Provides a degree program custom post type, career paths and program type taxonomies and related meta fields.
-Version: 3.0.2
+Version: 3.1.0
 Author: UCF Web Communications
 License: GPL3
 */
