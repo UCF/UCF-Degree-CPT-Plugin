@@ -55,3 +55,37 @@ class UCF_Degree_Commands extends WP_CLI_Command {
 		WP_CLI::success( $import->get_stats() );
 	}
 }
+
+class UCF_Degree_Interests_Commands extends WP_CLI_Command {
+	/**
+	 * Imports interests from a JSON file
+	 *
+	 * ## OPTIONS
+	 *
+	 * <filepath>
+	 * : The filepath to a valid JSON file containing interests and assigned program names.
+	 *
+	 * ## EXAMPLES
+	 *
+	 * # Imports interests from a file called interests.json in a home directory
+	 * $ wp interests import ~/interests.json
+	 *
+	 * @when after_wp_load
+	 */
+	public function import( $args, $assoc_args ) {
+		list( $filepath ) = $args;
+
+		if ( empty( $filepath ) ) {
+			WP_CLI::error( 'A filepath to a valid JSON file must be provided.' );
+		}
+
+		$import = new UCF_Degree_Interests_Importer( $filepath );
+		try {
+			$import->import();
+			WP_CLI::success( $import->get_stats() );
+		}
+		catch( Exception $e ) {
+			WP_CLI::error( $e->getMessage(), $e->getCode() );
+		}
+	}
+}

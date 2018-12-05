@@ -52,6 +52,7 @@ if ( ! class_exists( 'UCF_Degree_List_Shortcode' ) ) {
 				}
 
 				usort( $items, array( 'UCF_Degree_List_Shortcode', 'sort_grouped_degrees' ) );
+				$items = apply_filters( 'ucf_degree_list_sort_grouped_degrees', $items );
 			}
 
 			ob_start();

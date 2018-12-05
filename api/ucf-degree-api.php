@@ -97,6 +97,8 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 			$limit         = isset( $request['limit'] ) ? $request['limit'] : 10;
 			$colleges      = isset( $request['colleges'] ) ? $request['colleges'] : null;
 			$program_types = isset( $request['program_types'] ) ? $request['program_types'] : null;
+			$interests     = isset( $request['interests'] ) ? $request['interests'] : null;
+			$tags          = isset( $request['post_tag'] ) ? $request['post_tag'] : null;
 
 			$args = array(
 				'post_type'        => 'degree',
@@ -132,6 +134,32 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					'taxonomy' => 'colleges',
 					'field'    => 'slug',
 					'terms'    => $colleges
+				);
+			}
+
+			// Add interests to args, if they exist
+			if ( $interests ) {
+				if ( ! isset( $args['tax_query'] ) ) {
+					$args['tax_query'] = array();
+				}
+
+				$args['tax_query'][] = array(
+					'taxonomy' => 'interests',
+					'field'    => 'slug',
+					'terms'    => $interests
+				);
+			}
+
+			// Add post tags to args, if they exist
+			if ( $tags ) {
+				if ( ! isset( $args['tax_query'] ) ) {
+					$args['tax_query'] = array();
+				}
+
+				$args['tax_query'][] = array(
+					'taxonomy' => 'post_tag',
+					'field'    => 'slug',
+					'terms'    => $tags
 				);
 			}
 
@@ -218,7 +246,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 
 		/**
 		 * Filters WP_Query arguments when querying degrees via the REST API.
-		 * 
+		 *
 		 * @since 3.0.2
 		 * @param array $prepared_args Array of arguments for WP_Query.
 		 * @param WP_REST_Request $request The current request.
@@ -253,6 +281,38 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					);
 				} else {
 					$prepared_args['tax_query'][] = $college_arg;
+				}
+			}
+
+			if ( ! empty( $request['interests'] ) ) {
+				$interests_arg = array(
+					'taxonomy' => 'interests',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $request['interests'] )
+				);
+
+				if ( ! isset( $prepared_args['tax_query'] ) ) {
+					$prepared_args['tax_query'] = array(
+						$interests_arg
+					);
+				} else {
+					$prepared_args['tax_query'][] = $interests_arg;
+				}
+			}
+
+			if ( ! empty( $request['post_tag'] ) ) {
+				$tags_arg = array(
+					'taxonomy' => 'post_tag',
+					'field'    => 'slug',
+					'terms'    => explode( ',', $request['post_tag'] )
+				);
+
+				if ( ! isset( $prepared_args['tax_query'] ) ) {
+					$prepared_args['tax_query'] = array(
+						$tags_arg
+					);
+				} else {
+					$prepared_args['tax_query'][] = $tags_arg;
 				}
 			}
 

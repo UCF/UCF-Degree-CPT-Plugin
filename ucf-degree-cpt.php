@@ -17,9 +17,10 @@ define( 'UCF_DEGREE__PLUGIN_FILE', __FILE__ );
 
 include_once 'includes/ucf-degree-program-type-tax.php';
 include_once 'includes/ucf-degree-career-path-tax.php';
+include_once 'includes/ucf-degree-interest-tax.php';
 include_once 'includes/ucf-degree-posttype.php';
-include_once 'includes/ucf-degree-api.php';
-include_once 'includes/ucf-degree-search-api.php';
+include_once 'api/ucf-degree-api.php';
+include_once 'api/ucf-degree-search-api.php';
 include_once 'includes/ucf-degree-utils.php';
 include_once 'includes/ucf-degree-search-custom-filters.php';
 include_once 'admin/ucf-degree-admin.php';
@@ -36,8 +37,10 @@ include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	include_once 'includes/ucf-degree-wpcli.php';
 	include_once 'importers/degree-importer.php';
+	include_once 'importers/degree-interests-importer.php';
 
 	WP_CLI::add_command( 'degrees', 'UCF_Degree_Commands' );
+	WP_CLI::add_command( 'interests', 'UCF_Degree_Interests_Commands' );
 }
 
 
@@ -66,6 +69,7 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 	function ucf_degree_init() {
 		add_action( 'init', array( 'UCF_Degree_ProgramType', 'register_programtype'), 10, 0 );
 		add_action( 'init', array( 'UCF_Degree_CareerPath', 'register_careerpath' ), 10, 0 );
+		add_action( 'init', array( 'UCF_Degree_Interest', 'register_interest' ), 10, 0 );
 		add_action( 'init', array( 'UCF_Degree_PostType', 'register_degree_posttype' ), 10, 0 );
 
 		if ( UCF_Degree_Config::rest_api_enabled() && UCF_Degree_Config::get_option_or_default( 'rest_api' ) ) {
