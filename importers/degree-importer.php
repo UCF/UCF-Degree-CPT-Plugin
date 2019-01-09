@@ -535,8 +535,6 @@ class UCF_Degree_Import {
 		$catalog_url,
 		$career,
 		$level,
-		$resident_tuition,
-		$nonresident_tuition,
 		$program_types,
 		$colleges,
 		$departments,
