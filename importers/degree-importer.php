@@ -49,6 +49,7 @@ class UCF_Degree_Importer {
 	 * @return UCF_Degree_Importer
 	 **/
 	public function __construct( $search_url, $api_key, $do_writebacks, $additional_params='' ) {
+		setlocale(LC_MONETARY, 'en_US.UTF-8');
 		$this->search_api = substr( $search_url, -1 ) === '/' ? $search_url : $search_url . '/';
 		$this->additional_params = $additional_params;
 		$this->api_key = $api_key;
@@ -998,13 +999,13 @@ class UCF_Degree_Import {
 
 		if ( $type === 'resident' ) {
 			if ( $this->program->resident_tuition ) {
-				$amount = $this->program->resident_tuition;
+				$amount = money_format( '%.2n', $this->program->resident_tuition );
 			} else {
 				return null;
 			}
 		} else if ( $type === 'nonresident' ) {
 			if ( $this->program->nonresident_tuition ) {
-				$amount = $this->program->nonresident_tuition;
+				$amount = money_format( '%.2n', $this->program->nonresident_tuition );
 			} else {
 				return null;
 			}
@@ -1012,13 +1013,13 @@ class UCF_Degree_Import {
 
 		switch( $this->program->tuition_type ) {
 			case 'SCH':
-				return "$" . $amount . " per credit hour";
+				return $amount . " per credit hour";
 			case 'CRS':
-				return "$" . $amount . " per course";
+				return $amount . " per course";
 			case 'TRM':
-				return "$" . $amount . " per term";
+				return $amount . " per term";
 			case 'ANN':
-				return "$" . $amount . " per year";
+				return $amount . " per year";
 			default:
 				return null;
 		}
