@@ -535,6 +535,8 @@ class UCF_Degree_Import {
 		$catalog_url,
 		$career,
 		$level,
+		$resident_tuition,
+		$nonresident_tuition,
 		$program_types,
 		$colleges,
 		$departments,
@@ -938,13 +940,15 @@ class UCF_Degree_Import {
 	 **/
 	private function get_post_metadata() {
 		$meta = array(
-			'degree_id'           => $this->degree_id,
-			'degree_api_id'       => $this->api_id,
-			'degree_online'       => $this->online,
-			'degree_pdf'          => $this->catalog_url,
-			'degree_plan_code'    => $this->plan_code,
-			'degree_subplan_code' => $this->subplan_code,
-			'degree_name_short'   => $this->name_short
+			'degree_id'                  => $this->degree_id,
+			'degree_api_id'              => $this->api_id,
+			'degree_online'              => $this->online,
+			'degree_pdf'                 => $this->catalog_url,
+			'degree_plan_code'           => $this->plan_code,
+			'degree_subplan_code'        => $this->subplan_code,
+			'degree_name_short'          => $this->name_short,
+			'degree_resident_tuition'    => $this->get_tuition( 'resident' ),
+			'degree_nonresident_tuition' => $this->get_tuition( 'nonresident' )
 		);
 
 		// Allow overrides by themes/other plugins
@@ -982,6 +986,44 @@ class UCF_Degree_Import {
 		}
 
 		return $terms;
+	}
+
+	/**
+	 * Returns a tuition string
+	 * @author Jim Barnes
+	 * @since 3.2.0
+	 * @param string $type The type of string to return
+	 * @return string The tuition string
+	 */
+	private function get_tuition( $type ) {
+		$amount = 0;
+
+		if ( $type === 'resident' ) {
+			if ( $this->program->resident_tuition ) {
+				$amount = $this->program->resident_tuition;
+			} else {
+				return null;
+			}
+		} else if ( $type === 'nonresident' ) {
+			if ( $this->program->nonresident_tuition ) {
+				$amount = $this->program->nonresident_tuition;
+			} else {
+				return null;
+			}
+		}
+
+		switch( $this->program->tuition_type ) {
+			case 'SCH':
+				return "$" . $amount . " per credit hour";
+			case 'CRS':
+				return "$" . $amount . " per course";
+			case 'TRM':
+				return "$" . $amount . " per term";
+			case 'ANN':
+				return "$" . $amount . " per year";
+			default:
+				return null;
+		}
 	}
 
 	/**
