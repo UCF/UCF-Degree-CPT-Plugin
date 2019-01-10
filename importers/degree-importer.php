@@ -1011,18 +1011,27 @@ class UCF_Degree_Import {
 			}
 		}
 
+		$retval = '';
+
 		switch( $this->program->tuition_type ) {
 			case 'SCH':
-				return $amount . " per credit hour";
+				$retval = $amount . " per credit hour";
+				break;
 			case 'CRS':
-				return $amount . " per course";
+				$retval = $amount . " per course";
+				break;
 			case 'TRM':
-				return $amount . " per term";
+				$retval = $amount . " per term";
+				break;
 			case 'ANN':
-				return $amount . " per year";
+				$retval = $amount . " per year";
+				break;
 			default:
-				return null;
+				$retval = '';
+				break;
 		}
+
+		return apply_filters( 'ucf_degree_format_tuition', $retval, $amount, $this->program->tuition_type );
 	}
 
 	/**
