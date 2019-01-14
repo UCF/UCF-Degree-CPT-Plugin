@@ -497,13 +497,13 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 
 			add_settings_field(
 				self::$option_prefix . 'update_tuition',
-				'Update Tuition Exceptions',
+				'Enable Tuition Exception Updates',
 				$display_fn,
 				$settings_slug,
 				$tuition_section,
 				array(
 					'label_for'   => self::$option_prefix . 'update_tuition',
-					'description' => 'When checked, the "Skip Tuition" setting will appear on degrees, allowing TuitionOverride objects to be created from the WP admin screen.',
+					'description' => 'When checked, the "Skip Tuition" setting will appear on degrees, which allows users to save per-degree tuition overrides to the UCF Search Service.',
 					'type'        => 'checkbox'
 				)
 			);

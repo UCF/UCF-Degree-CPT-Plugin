@@ -326,6 +326,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @author Jim Barnes
 		 * @since 3.2.0
 		 * @param int $post_id The post id
+		 * @param bool $value The value of the `degree_tuition_skip` post meta.
 		 */
 		public static function add_tuition_exception( $post_id, $value ) {
 			$plan_code    = get_post_meta( $post_id, 'degree_plan_code', true );
@@ -378,9 +379,10 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @author Jim Barnes
 		 * @since 3.2.0
 		 * @param int $post_id The post id to update
-		 * @param object $result The API record to update
+		 * @param object $existing The API record to update
 		 * @param string $key The API key
 		 * @param string $base_url The base URL of the API
+		 * @param object $value The value of the `degree_tuition_skip` post meta
 		 */
 		private static function update_existing_exception( $post_id, $existing, $base_url, $key, $value ) {
 			$ex_id = $existing->id;
