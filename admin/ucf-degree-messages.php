@@ -68,7 +68,7 @@ if ( ! class_exists( 'UCF_Degree_Messages' ) ) {
         public static function updated_tuition_error_message() {
             ob_start();
         ?>
-            <div class="notice notice-success is-dismissible">
+            <div class="notice notice-error is-dismissible">
                 <p>Failed to update this program's tuition exception on the Search Service.</p>
                 <p>Possible reasons might include:</p>
                 <ul>
