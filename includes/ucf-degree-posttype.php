@@ -37,17 +37,25 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		 **/
 		public static function register_import_metafields( $post ) {
 			wp_nonce_field( 'ucf_degree_import_nonce_save', 'ucf_degree_import_nonce' );
-			$ignore = get_post_meta( $post->ID, 'degree_import_ignore', TRUE );
+			$ignore = get_post_meta( $post->ID, 'degree_import_ignore', true );
+			$skip   = get_post_meta( $post->ID, 'degree_tuition_skip', true );
 ?>
 			<table class="form-table">
 				<tbody>
 					<tr>
 						<th><label class="block" for="degree_import_ignore"><strong>Ignore On Import</label></th>
+						<td>
+							<p class="description">When checked, the degree will not be updated or removed on import.</p>
+							<input type="checkbox" name="degree_import_ignore" id="degree_import_ignore"<?php echo $ignore === 'on' ? ' checked' : ''; ?>>
+						</td>
 					</tr>
-					<td>
-						<p class="description">When checked, the degree will not be updated or removed on import.</p>
-						<input type="checkbox" name="degree_import_ignore" id="degree_import_ignore"<?php echo $ignore === 'on' ? ' checked' : ''; ?>>
-					</td>
+					<tr>
+						<th><label class="block" for="degree_tuition_skip"><strong>Skip Tuition</strong></label></th>
+						<td>
+							<p class="description">When checked, tuition data will not be imported and will be set to null.</p>
+							<input type="checkbox" name="degree_tuition_skip" id="degree_tuition_skip"<?php echo $skip === 'on' ? ' checked' : ''; ?>>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 <?php
@@ -65,12 +73,36 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 
 			if ( isset( $_POST['degree_import_ignore'] ) ) {
 				$ignore = $_POST['degree_import_ignore'];
-				if ( $ignore ) {
-					update_post_meta( $post_id, 'degree_import_ignore', $ignore );
-				}
+			} else {
+				$ignore = 'off';
+			}
+
+			update_post_meta( $post_id, 'degree_import_ignore', $ignore );
+
+			if ( isset( $_POST['degree_tuition_skip'] ) ) {
+				$skip = $_POST['degree_tuition_skip'];
+			} else {
+				$skip = 'off';
+			}
+
+			$current_skip_value = get_post_meta( $post_id, 'degree_tuition_skip', true );
+
+			update_post_meta( $post_id, 'degree_tuition_skip', $skip );
+
+			// Only make these API calls if there is a new value.
+			if ( $current_skip_value !== $skip ) {
+				$skip_bool = $skip === 'on' ? true : false;
+				// Call common function to update value
+				UCF_Degree_Common::add_tuition_exception( $post_id, $skip_bool );
 			}
 		}
 
+		/**
+		 * Returns the labels array
+		 * @author Jim Barnes
+		 * @since 0.0.1
+		 * @return array
+		 */
 		public static function labels() {
 			return array(
 				'name'                  => _x( 'Degrees', 'Post Type General Name', 'ucf_degree' ),
@@ -101,6 +133,12 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 			);
 		}
 
+		/**
+		 * Returns the argument array
+		 * @author Jim Barnes
+		 * @since 0.0.1
+		 * @return array
+		 */
 		public static function args() {
 			$args = array(
 				'label'                 => __( 'Degree', 'ucf_degree' ),
@@ -128,6 +166,13 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 			return $args;
 		}
 
+		/**
+		 * Returns the array of taxonomies that will be associated
+		 * with the custom post type.
+		 * @author Jim Barnes
+		 * @since 0.0.1
+		 * @return array
+		 */
 		public static function taxonomies() {
 			$retval = array();
 			$valid_taxonomies = array(

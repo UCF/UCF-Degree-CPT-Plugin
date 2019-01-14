@@ -25,6 +25,7 @@ include_once 'includes/ucf-degree-utils.php';
 include_once 'includes/ucf-degree-search-custom-filters.php';
 include_once 'admin/ucf-degree-admin.php';
 include_once 'admin/ucf-degree-config.php';
+include_once 'admin/ucf-degree-messages.php';
 
 include_once 'common/ucf-degree-common.php';
 include_once 'common/ucf-degree-list-common.php';
@@ -84,6 +85,7 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 			add_shortcode( 'career-paths', array( 'UCF_Degree_Career_Paths_List_Shortcode', 'shortcode' ) );
 		}
 
+		add_action( 'admin_notices', array( 'UCF_Degree_Messages', 'enqueue_admin_notices' ) );
 		add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
 
 		// Actions for search service hook
