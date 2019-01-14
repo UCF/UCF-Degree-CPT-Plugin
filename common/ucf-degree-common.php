@@ -404,7 +404,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 				$args['method'] = 'DELETE';
 			}
 
-			$response = wp_remote_post( $url, $args );
+			$response = wp_remote_request( $url, $args );
 			$response_code = wp_remote_retrieve_response_code( $response );
 
 			$status = ( $response_code < 400 ) ? 'updated-success' : 'updated-error';
