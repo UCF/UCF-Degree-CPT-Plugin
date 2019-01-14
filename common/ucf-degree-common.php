@@ -337,10 +337,12 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 				'subplan_code' => $subplan_code
 			);
 
-			$base_url = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
-			$key      = UCF_Degree_Config::get_option_or_default( 'api_key' );
+			$base_url       = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
+			$key            = UCF_Degree_Config::get_option_or_default( 'api_key' );
+			$update_tuition = UCF_Degree_Config::get_option_or_default( 'update_tuition' );
 
-			if ( ! $base_url ) return;
+			// Return out if update_tuition is false or url or key are not set.
+			if ( ! $base_url || ! $key || ! $update_tuition ) return;
 
 			$url = $base_url . 'tuition-mappings/';
 

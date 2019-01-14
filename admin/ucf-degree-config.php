@@ -13,6 +13,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'api_key'            => null,
 				'update_desc'        => true,
 				'update_prof'        => true,
+				'update_tuition'     => false,
 				'desc_type'          => null,
 				'prof_type'          => null
 			);
@@ -146,6 +147,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			add_option( self::$option_prefix . 'api_key', $defaults['api_key'] );
 			add_option( self::$option_prefix . 'update_desc', $defaults['update_desc'] );
 			add_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] );
+			add_option( self::$option_prefix . 'update_tuition', $defaults['update_tuition'] );
 			add_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] );
 			add_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] );
 		}
@@ -164,6 +166,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 			delete_option( self::$option_prefix . 'api_key' );
 			delete_option( self::$option_prefix . 'update_desc' );
 			delete_option( self::$option_prefix . 'update_prof' );
+			delete_option( self::$option_prefix . 'update_tuition' );
 			delete_option( self::$option_prefix . 'desc_type' );
 			delete_option( self::$option_prefix . 'prof_type' );
 		}
@@ -185,6 +188,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				'api_key'            => get_option( self::$option_prefix . 'api_key', $defaults['api_key'] ),
 				'update_desc'        => get_option( self::$option_prefix . 'update_desc', $defaults['update_desc'] ),
 				'update_prof'        => get_option( self::$option_prefix . 'update_prof', $defaults['update_prof'] ),
+				'update_tuition'     => get_option( self::$option_prefix . 'update_tuition', $defaults['update_tuition'] ),
 				'desc_type'          => get_option( self::$option_prefix . 'desc_type', $defaults['desc_type'] ),
 				'prof_type'          => get_option( self::$option_prefix . 'prof_type', $defaults['prof_type'] )
 			);
@@ -235,6 +239,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					case 'rest_api':
 					case 'update_desc':
 					case 'update_prof':
+					case 'update_tuition':
 						$list[$key] = filter_var( $val, FILTER_VALIDATE_BOOLEAN );
 						break;
 					case 'desc_type':
@@ -361,6 +366,15 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 				$settings_slug
 			);
 
+			$tuition_section = 'ucf_tuition_section';
+
+			add_settings_section(
+				$tuition_section,
+				'Tuition Updates',
+				'',
+				$settings_slug
+			);
+
 
 			// Register API settings
 			if ( self::rest_api_enabled() ) {
@@ -478,6 +492,19 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 					'description' => 'The profile type to set when writing to the Search Service.',
 					'type'        => 'select',
 					'options'     => self::get_api_select_options( self::get_profile_types() )
+				)
+			);
+
+			add_settings_field(
+				self::$option_prefix . 'update_tuition',
+				'Update Tuition Exceptions',
+				$display_fn,
+				$settings_slug,
+				$tuition_section,
+				array(
+					'label_for'   => self::$option_prefix . 'update_tuition',
+					'description' => 'When checked, the "Skip Tuition" setting will appear on degrees, allowing TuitionOverride objects to be created from the WP admin screen.',
+					'type'        => 'checkbox'
 				)
 			);
 		}

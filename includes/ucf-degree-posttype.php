@@ -36,9 +36,13 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 		 * @return string | The html markup for the metafields
 		 **/
 		public static function register_import_metafields( $post ) {
+			$update_tuition = UCF_Degree_Config::get_option_or_default( 'update_tuition' );
+
 			wp_nonce_field( 'ucf_degree_import_nonce_save', 'ucf_degree_import_nonce' );
 			$ignore = get_post_meta( $post->ID, 'degree_import_ignore', true );
-			$skip   = get_post_meta( $post->ID, 'degree_tuition_skip', true );
+			if ( $update_tuition ) {
+				$skip   = get_post_meta( $post->ID, 'degree_tuition_skip', true );
+			}
 ?>
 			<table class="form-table">
 				<tbody>
@@ -49,6 +53,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 							<input type="checkbox" name="degree_import_ignore" id="degree_import_ignore"<?php echo $ignore === 'on' ? ' checked' : ''; ?>>
 						</td>
 					</tr>
+					<?php if ( $update_tuition ) : ?>
 					<tr>
 						<th><label class="block" for="degree_tuition_skip"><strong>Skip Tuition</strong></label></th>
 						<td>
@@ -56,6 +61,7 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 							<input type="checkbox" name="degree_tuition_skip" id="degree_tuition_skip"<?php echo $skip === 'on' ? ' checked' : ''; ?>>
 						</td>
 					</tr>
+					<?php endif; ?>
 				</tbody>
 			</table>
 <?php
