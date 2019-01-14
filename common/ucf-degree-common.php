@@ -322,6 +322,137 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		}
 
 		/**
+		 * Add a tuition exception for a degree
+		 * @author Jim Barnes
+		 * @since 3.2.0
+		 * @param int $post_id The post id
+		 * @param bool $value The value of the `degree_tuition_skip` post meta.
+		 */
+		public static function add_tuition_exception( $post_id, $value ) {
+			$plan_code    = get_post_meta( $post_id, 'degree_plan_code', true );
+			$subplan_code = get_post_meta( $post_id, 'degree_subplan_code', true );
+
+			# Setup the params
+			$params = array(
+				'plan_code'    => $plan_code,
+				'subplan_code' => $subplan_code
+			);
+
+			$base_url       = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
+			$key            = UCF_Degree_Config::get_option_or_default( 'api_key' );
+			$update_tuition = UCF_Degree_Config::get_option_or_default( 'update_tuition' );
+
+			// Return out if update_tuition is false or url or key are not set.
+			if ( ! $base_url || ! $key || ! $update_tuition ) return;
+
+			$url = $base_url . 'tuition-mappings/';
+
+			# Get first result from search.
+			$results = self::fetch_api_values( $url, $params );
+
+			if ( ! $results ) {
+				$status = 'retrieval-error';
+
+				add_filter( 'redirect_post_location', function( $location ) use ( $status ) {
+					return add_query_arg( 'degree_tuition_status', $status, $location );
+				} );
+			}
+
+			# Make sure the result is correct
+			$existing = null;
+			if ( count( $results ) > 0 ) {
+				$existing = self::return_verified_result( $results, $params );
+			}
+
+			if ( $existing ) {
+				self::update_existing_exception( $post_id, $existing, $base_url, $key, $value );
+			} else {
+				// Only create a new exception if the skip value is true
+				if ( $value ) {
+					self::create_new_exception( $post_id, $plan_code, $subplan_code, $key, $base_url );
+				}
+			}
+		}
+
+		/**
+		 * Helper function for updating existing tuition exceptions.
+		 * @author Jim Barnes
+		 * @since 3.2.0
+		 * @param int $post_id The post id to update
+		 * @param object $existing The API record to update
+		 * @param string $key The API key
+		 * @param string $base_url The base URL of the API
+		 * @param object $value The value of the `degree_tuition_skip` post meta
+		 */
+		private static function update_existing_exception( $post_id, $existing, $base_url, $key, $value ) {
+			$ex_id = $existing->id;
+
+			$url = $base_url . "tuition-mappings/$ex_id/?key=$key";
+
+			$existing->skip = $value;
+
+			$args = array(
+				'headers'     => array( 'Content-Type' => 'application/json; charset=utf-8' ),
+				'body'        => json_encode( $existing ),
+				'method'      => 'PUT',
+				'data_format' => 'body',
+				'timeout'     => 15
+			);
+
+			// This record is only for skipping, and we're not longer skipping. Delete it.
+			if ( $existing->tuition_code === 'SKIP' && $value === false ) {
+				$args['method'] = 'DELETE';
+			}
+
+			$response = wp_remote_request( $url, $args );
+			$response_code = wp_remote_retrieve_response_code( $response );
+
+			$status = ( $response_code < 400 ) ? 'updated-success' : 'updated-error';
+
+			add_filter( 'redirect_post_location', function( $location ) use ( $status ) {
+				return add_query_arg( 'degree_tuition_status', $status, $location );
+			} );
+		}
+
+		/**
+		 * Helper function to create new tuition override exceptions
+		 * @author Jim Barnes
+		 * @since 3.2.0
+		 * @param int $post_id The WP ID of the program being updated
+		 * @param string $plan_code The plan code of the program
+		 * @param string $subplan_code The subplan code of the program
+		 * @param string $key The api key
+		 * @param string $base_url The base URL of the API
+		 */
+		private static function create_new_exception( $post_id, $plan_code, $subplan_code, $key, $base_url ) {
+			$params = array(
+				'tuition_code' => 'SKIP',
+				'plan_code'    => $plan_code,
+				'subplan_code' => $subplan_code,
+				'skip'         => true
+			);
+
+			$url = $base_url . "tuition-mappings/create/?key=$key";
+
+			$args = array(
+				'headers'     => array( 'Content-Type' => 'application/json; charset=utf-8' ),
+				'body'        => json_encode( $params ),
+				'method'      => 'POST',
+				'data_format' => 'body',
+				'timeout'     => 15
+			);
+
+			$response = wp_remote_post( $url, $args );
+			$response_code = wp_remote_retrieve_response_code( $response );
+
+			$status = ( $response_code < 400 ) ? 'created-success' : 'created-error';
+
+			add_filter( 'redirect_post_location', function( $location ) use ( $status ) {
+				return add_query_arg( 'degree_tuition_status', $status, $location );
+			} );
+		}
+
+		/**
 		 * The entry point for the `post_save` hook.
 		 * @param int $post_id | The id of the post being saved.
 		 */
