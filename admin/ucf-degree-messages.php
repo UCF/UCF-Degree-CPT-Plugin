@@ -35,7 +35,7 @@ if ( ! class_exists( 'UCF_Degree_Messages' ) ) {
                 <ul>
                     <li>Incorrect API key defined in the plugin options.</li>
                     <li>Unable to contact the Search Service.</li>
-                    <li>You may not have permission to update <pre><code>TuitionOverride</code></pre> objects.</li>
+                    <li>You may not have permission to update <code>TuitionOverride</code> objects.</li>
                 </ul>
                 <p>Contact <a href="mailto:<?php echo get_option( 'admin_email' );?>"><?php echo get_option( 'admin_email' ); ?></a> for more information.</p>
             </div>
@@ -74,7 +74,7 @@ if ( ! class_exists( 'UCF_Degree_Messages' ) ) {
                 <ul>
                     <li>Incorrect API key defined in the plugin options.</li>
                     <li>Unable to contact the Search Service.</li>
-                    <li>You may not have permission to update <pre><code>TuitionOverride</code></pre> objects.</li>
+                    <li>You may not have permission to update <code>TuitionOverride</code> objects.</li>
                 </ul>
                 <p>Contact <a href="mailto:<?php echo get_option( 'admin_email' );?>"><?php echo get_option( 'admin_email' ); ?></a> for more information.</p>
             </div>
