@@ -349,6 +349,14 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 			# Get first result from search.
 			$results = self::fetch_api_values( $url, $params );
 
+			if ( ! $results ) {
+				$status = 'retrieval-error';
+
+				add_filter( 'redirect_post_location', function( $location ) use ( $status ) {
+					return add_query_arg( 'degree_tuition_status', $status, $location );
+				} );
+			}
+
 			# Make sure the result is correct
 			$existing = null;
 			if ( count( $results ) > 0 ) {

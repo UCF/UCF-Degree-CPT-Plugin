@@ -83,6 +83,29 @@ if ( ! class_exists( 'UCF_Degree_Messages' ) ) {
         }
 
         /**
+         * Displays an error message after failing to contact the search service
+         * @author Jim Barnes
+         * @since 3.2.0
+         * @return string
+         */
+        public static function retrieval_error_message() {
+            ob_start();
+        ?>
+            <div class="notice notice-error is-dismissible">
+                <p>Failed to retrieve results from the search service.</p>
+                <p>Possible reasons might include:</p>
+                <ul>
+                    <li>Incorrect API key defined in the plugin options.</li>
+                    <li>Unable to contact the Search Service.</li>
+                    <li>A program with the appropriate <code>plan_code</code> and <code>subplan_code</code> mat not exist.</li>
+                </ul>
+                <p>Contact <a href="mailto:<?php echo get_option( 'admin_email' );?>"><?php echo get_option( 'admin_email' ); ?></a> for more information.</p>
+            </div>
+        <?php
+            return ob_get_clean();
+        }
+
+        /**
          * Enqueues all messages
          */
         public static function enqueue_admin_notices() {
@@ -102,6 +125,8 @@ if ( ! class_exists( 'UCF_Degree_Messages' ) ) {
                     case 'updated-error':
                         echo self::updated_tuition_error_message();
                         break;
+                    case 'retrieval-error':
+                        echo self::retrieval_error_message();
                 }
             }
         }
