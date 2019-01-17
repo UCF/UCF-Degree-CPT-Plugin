@@ -2,8 +2,8 @@
 Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
-Tested up to: 4.9.8
-Stable tag: 3.1.0
+Tested up to: 4.9.9
+Stable tag: 3.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +31,13 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.0 =
+Enhancements:
+* Updated the degree importer to get the tuition data from the `program` object in the search service (recently added).
+* Adds a filter for adjusting the tuition string.
+* Adds the `degree_tuition_skip` field which, when checked, will add a `TuitionOverride` object to the search service via an API call.
+* Adds admin messages for letting the user know if the API call is successful.
 
 = 3.1.0 =
 Enhancements:

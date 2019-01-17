@@ -25,6 +25,13 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.0 ###
+Enhancements:
+* Updated the degree importer to get the tuition data from the `program` object in the search service (recently added).
+* Adds a filter for adjusting the tuition string.
+* Adds the `degree_tuition_skip` field which, when checked, will add a `TuitionOverride` object to the search service via an API call.
+* Adds admin messages for letting the user know if the API call is successful.
+
 ### 3.1.0 ###
 Enhancements:
 * Added the "Areas of Interest" (`interests`) taxonomy for Degrees
