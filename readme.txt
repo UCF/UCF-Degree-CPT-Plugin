@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 4.9.9
-Stable tag: 3.2.0
+Stable tag: 3.2.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +31,12 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.1. =
+Bug Fixes:
+- Updated `get_parent_program_id()` to return the program's parent ID from `$this->program->parent_program->id` instead of fetching per-parent API results.  See https://github.com/UCF/Search-Service-Django/pull/28.
+- Increased API fetch timeout from 5 seconds to 10
+- Added check in `UCF_Degree_Common::return_verified_result()` to ensure `$results` is an array before attempting to loop through it.  Resolves #83 .
 
 = 3.2.0 =
 Enhancements:
