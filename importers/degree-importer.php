@@ -808,18 +808,10 @@ class UCF_Degree_Import {
 	 * @return mixed | Parent program ID integer, or null on failure
 	 */
 	private function get_parent_program_id() {
-		$id = $parent_program = null;
+		$id = null;
 
 		if ( $this->is_subplan ) {
 			$id = $this->program->parent_program->id;
-			// $params = array();
-
-			// if ( $this->api_key ) $params['key'] = $this->api_key;
-
-			// $parent_program = UCF_Degree_Common::fetch_api_value( $this->program->parent_program->url, $params );
-			// if ( $parent_program ) {
-			// 	$id = $parent_program->id;
-			// }
 		}
 
 		return $id;
