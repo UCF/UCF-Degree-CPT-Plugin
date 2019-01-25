@@ -14,7 +14,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @return mixed JSON-decoded object or false on failure
 		 */
 		public static function fetch_json( $url ) {
-			$response      = wp_remote_get( $url, array( 'timeout' => 5 ) );
+			$response      = wp_remote_get( $url, array( 'timeout' => 10 ) );
 			$response_code = wp_remote_retrieve_response_code( $response );
 			$result        = false;
 
