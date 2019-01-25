@@ -153,6 +153,8 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 			$plan_code = $params['plan_code'];
 			$subplan_code = isset( $params['subplan_code'] ) ? $params['subplan_code'] : null;
 
+			if ( ! is_array( $results ) ) return false;
+
 			foreach( $results as $result ) {
 				if (
 					$result->plan_code === $plan_code &&
