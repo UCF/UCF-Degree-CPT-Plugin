@@ -25,6 +25,12 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.1. ###
+Bug Fixes:
+- Updated `get_parent_program_id()` to return the program's parent ID from `$this->program->parent_program->id` instead of fetching per-parent API results.  See https://github.com/UCF/Search-Service-Django/pull/28.
+- Increased API fetch timeout from 5 seconds to 10
+- Added check in `UCF_Degree_Common::return_verified_result()` to ensure `$results` is an array before attempting to loop through it.  Resolves #83 .
+
 ### 3.2.0 ###
 Enhancements:
 * Updated the degree importer to get the tuition data from the `program` object in the search service (recently added).
