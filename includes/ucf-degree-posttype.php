@@ -95,8 +95,10 @@ if ( ! class_exists( 'UCF_Degree_PostType' ) ) {
 
 			update_post_meta( $post_id, 'degree_tuition_skip', $skip );
 
+			$tuition_api_call = UCF_Degree_Config::get_option_or_default( 'tuition_api_call' );
+
 			// Only make these API calls if there is a new value.
-			if ( $current_skip_value !== $skip ) {
+			if ( $current_skip_value !== $skip && $tuition_api_call ) {
 				$skip_bool = $skip === 'on' ? true : false;
 				// Call common function to update value
 				UCF_Degree_Common::add_tuition_exception( $post_id, $skip_bool );
