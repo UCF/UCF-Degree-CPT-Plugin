@@ -515,7 +515,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 
 			add_settings_field(
 				self::$option_prefix . 'tuition_api_call',
-				'Enable Search Service Updated for Tuition',
+				'Enable Search Service Updates for Tuition',
 				$display_fn,
 				$settings_slug,
 				$tuition_section,
