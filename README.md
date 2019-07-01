@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.2 ###
+Enhancements:
+- Added ability to turn api calls to search service on and off for tuition
+
 ### 3.2.1. ###
 Bug Fixes:
 - Updated `get_parent_program_id()` to return the program's parent ID from `$this->program->parent_program->id` instead of fetching per-parent API results.  See https://github.com/UCF/Search-Service-Django/pull/28.

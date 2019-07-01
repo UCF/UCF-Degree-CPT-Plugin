@@ -14,7 +14,7 @@ if ( ! class_exists( 'UCF_Degree_Search_Custom_Filters' ) ) {
 		 * @param $wp_query WP_Query | Global WP_Query reference
 		 * @return string | The modified order_by clause.
 		 **/
-		public static function order_by_tax_orderby( $orderby, &$wp_query ) {
+		public static function order_by_tax_orderby( $orderby, $wp_query ) {
 			global $wpdb;
 
 			if ( UCF_Degree_Search_Custom_Filters::valid_taxonomy( $wp_query->get( 'order_by_taxonomy' ) ) ) {
