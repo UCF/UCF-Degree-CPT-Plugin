@@ -96,7 +96,7 @@ if ( ! function_exists( 'ucf_degree_search_join_filter' ) ) {
 			$join .= " LEFT JOIN $wpdb->term_relationships as wtr ON ($wpdb->posts.ID = wtr.object_id)";
 			$join .= " LEFT JOIN $wpdb->term_taxonomy as wtt ON (wtr.term_taxonomy_id = wtt.term_taxonomy_id)";
 			$join .= " LEFT JOIN $wpdb->terms as wt ON (wtt.term_id = wt.term_id)";
-			$join .= " left join $wpdb->postmeta as wpm ON ($wpdb->posts.ID = wpm.post_id)";
+			$join .= " LEFT JOIN $wpdb->postmeta as wpm ON ($wpdb->posts.ID = wpm.post_id)";
 		}
 
 		return $join;
