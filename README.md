@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.3 ###
+Bug Fixes:
+- Removed incorrect syntax in filter parameters.
+
 ### 3.2.2 ###
 Enhancements:
 - Added ability to turn api calls to search service on and off for tuition
