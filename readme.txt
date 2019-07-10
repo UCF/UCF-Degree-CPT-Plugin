@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 4.9.9
-Stable tag: 3.2.2
+Stable tag: 3.2.3
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +31,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.3 =
+Bug Fixes:
+- Removed incorrect syntax in filter parameters.
 
 = 3.2.2 =
 Enhancements:
