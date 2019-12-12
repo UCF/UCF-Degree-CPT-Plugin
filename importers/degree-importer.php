@@ -1064,9 +1064,7 @@ class UCF_Degree_Import {
 					if ( is_taxonomy_hierarchical( $tax ) ) {
 						$term_id = $existing_term['term_id'];
 					} else {
-						$term_id = $existing_term['term_id'];
-						$term_obj = get_term( $term_id, $tax );
-						$term_id = $term_obj->name;
+						$term_id = $term;
 					}
 				} else {
 					$args = array();
@@ -1079,7 +1077,7 @@ class UCF_Degree_Import {
 						if ( is_taxonomy_hierarchical( $tax ) ) {
 							$term_id = $new_term['term_id'];
 						} else {
-							$term_id = $new_term['term_name'];
+							$term_id = $term;
 						}
 					}
 				}
