@@ -1061,7 +1061,11 @@ class UCF_Degree_Import {
 				$existing_term = term_exists( $term, $tax );
 
 				if ( ! empty( $existing_term ) && is_array( $existing_term ) ) {
-					$term_id = $existing_term['term_id'];
+					if ( is_taxonomy_hierarchical( $tax ) ) {
+						$term_id = $existing_term['term_id'];
+					} else {
+						$term_id = $term;
+					}
 				} else {
 					$args = array();
 					if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
@@ -1070,7 +1074,11 @@ class UCF_Degree_Import {
 
 					$new_term = wp_insert_term( $term, $tax, $args );
 					if ( is_array( $new_term ) ) {
-						$term_id = $new_term['term_id'];
+						if ( is_taxonomy_hierarchical( $tax ) ) {
+							$term_id = $new_term['term_id'];
+						} else {
+							$term_id = $term;
+						}
 					}
 				}
 
