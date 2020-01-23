@@ -254,7 +254,7 @@ if ( ! class_exists( 'UCF_Degree_Common' ) ) {
 		 * @return void
 		 */
 		private static function update_profile( $post_id, $result ) {
-			$prof_type = (int)UCF_Degree_Config::get_option_or_default( 'prof_type' );
+			$prof_type = UCF_Degree_Config::get_option_or_default( 'prof_type' );
 			$base_url  = UCF_Degree_Config::get_option_or_default( 'api_base_url' );
 			$key       = UCF_Degree_Config::get_option_or_default( 'api_key' );
 			$match     = false;
