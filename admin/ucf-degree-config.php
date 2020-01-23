@@ -95,7 +95,7 @@ if ( ! class_exists( 'UCF_Degree_Config' ) ) {
 		 * @return array
 		 */
 		private static function get_api_select_options( $values, $empty_val='-----------' ) {
-			$retval = array( '' => $empty_val );
+			$retval = array( 0 => $empty_val );
 
 			if ( $values ) {
 				$retval = array_merge( $retval, $values );
