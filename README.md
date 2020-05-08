@@ -25,6 +25,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.4 ###
+Bug Fixes:
+- Updated degree importer to account for hierarchical taxonomies, which can't be added by ID.
+- Fixed array merge bug in `UCF_Degree_Config::get_api_select_options()` to preserve associative array key integrity.
+
 ### 3.2.3 ###
 Bug Fixes:
 - Removed incorrect syntax in filter parameters.

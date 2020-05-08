@@ -2,8 +2,9 @@
 Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
-Tested up to: 4.9.9
-Stable tag: 3.2.3
+Tested up to: 5.3
+Stable tag: 3.2.4
+Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
 
@@ -31,6 +32,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.4 =
+Bug Fixes:
+- Updated degree importer to account for hierarchical taxonomies, which can't be added by ID.
+- Fixed array merge bug in `UCF_Degree_Config::get_api_select_options()` to preserve associative array key integrity.
 
 = 3.2.3 =
 Bug Fixes:
