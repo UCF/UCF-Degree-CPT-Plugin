@@ -1055,11 +1055,20 @@ class UCF_Degree_Import {
 	 * @since 1.0.0
 	 **/
 	private function process_post_terms() {
+		// Delete all existing term relationships for each
+		// taxonomy we're processing here (so that stale
+		// data is removed):
+		wp_delete_object_term_relationships( $this->post_id, array_keys( $this->post_terms ) );
+
+		// Assign terms to the post for each taxonomy:
 		foreach ( $this->post_terms as $tax => $terms ) {
 			foreach ( $terms as $term ) {
 				$term_id = null;
 				$existing_term = term_exists( $term, $tax );
 
+				// Retrieve the term_id for each term being
+				// assigned to the post.  Create new terms
+				// as necessary here:
 				if ( ! empty( $existing_term ) && is_array( $existing_term ) ) {
 					if ( is_taxonomy_hierarchical( $tax ) ) {
 						$term_id = $existing_term['term_id'];
@@ -1082,16 +1091,15 @@ class UCF_Degree_Import {
 					}
 				}
 
+				// Assign the term to the post:
 				if ( $term_id ) {
-					// Set the alias
 					wp_set_post_terms( $this->post_id, $term_id, $tax, true );
-				} else {
-					wp_delete_object_term_relationships( $this->post_id, $tax );
-				}
 
-				if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
-					$alias = $this->get_college_alias( $term );
-					update_term_meta( $term_id, 'colleges_alias', $alias );
+					// Set college aliases:
+					if ( $tax === 'colleges' && class_exists( 'UCF_College_Taxonomy' ) ) {
+						$alias = $this->get_college_alias( $term );
+						update_term_meta( $term_id, 'colleges_alias', $alias );
+					}
 				}
 			}
 		}
