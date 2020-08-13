@@ -25,6 +25,13 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.5 ###
+Bug Fixes:
+- Updated the degree importer to ensure existing taxonomy term associations are removed from each degree before assigning new terms
+
+Enhancements:
+- Removed the careers column from the degree CPT admin view to reduce clutter.
+
 ### 3.2.4 ###
 Bug Fixes:
 - Updated degree importer to account for hierarchical taxonomies, which can't be added by ID.
