@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 5.3
-Stable tag: 3.2.4
+Stable tag: 3.2.5
 Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
@@ -32,6 +32,13 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.5 =
+Bug Fixes:
+- Updated the degree importer to ensure existing taxonomy term associations are removed from each degree before assigning new terms
+
+Enhancements:
+- Removed the careers column from the degree CPT admin view to reduce clutter.
 
 = 3.2.4 =
 Bug Fixes:
