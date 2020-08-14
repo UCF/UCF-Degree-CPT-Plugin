@@ -35,6 +35,8 @@ include_once 'common/ucf-degree-program-types-common.php';
 include_once 'shortcodes/ucf-degree-list-shortcode.php';
 include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 
+include_once 'layouts/ucf-degree-list-twocol.php';
+
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	include_once 'includes/ucf-degree-wpcli.php';
 	include_once 'importers/degree-importer.php';
