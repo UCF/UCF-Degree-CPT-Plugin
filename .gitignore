@@ -19,6 +19,16 @@ CVS
 =======
 *~
 ._*
+.DS_Store
 Thumbs.db
-node_modules/
-*.log
+
+# npm, bower, and other dependencies
+node_modules
+bower_components
+src/components/*
+gulp-config.json
+typings
+.sass-cache/
+
+# debug files
+npm-debug.log
