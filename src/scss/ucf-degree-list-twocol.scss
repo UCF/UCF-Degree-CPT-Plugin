@@ -1,0 +1,7 @@
+// Two-Column layout styles
+@media (min-width: 992px) {
+  .degree-list-twocol {
+    column-gap: 3.5rem;
+    columns: 2;
+  }
+}
