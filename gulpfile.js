@@ -130,7 +130,7 @@ gulp.task('scss-lint-plugin', () => {
 
 // Compile plugin stylesheet
 gulp.task('scss-build-plugin', () => {
-  return buildCSS(`${config.src.scssPath}/style.scss`);
+  return buildCSS(`${config.src.scssPath}/ucf-degree-list-twocol.scss`);
 });
 
 // All plugin css-related tasks

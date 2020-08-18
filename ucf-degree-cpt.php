@@ -35,6 +35,7 @@ include_once 'common/ucf-degree-program-types-common.php';
 include_once 'shortcodes/ucf-degree-list-shortcode.php';
 include_once 'shortcodes/ucf-degree-career-paths-shortcode.php';
 
+include_once 'layouts/ucf-degree-list-classic.php';
 include_once 'layouts/ucf-degree-list-twocol.php';
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -89,6 +90,7 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 
 		add_action( 'admin_notices', array( 'UCF_Degree_Messages', 'enqueue_admin_notices' ) );
 		add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
+		// add_action( 'wp_enqueue_scripts', array( 'UCF_Degree_List_Common', 'enqueue_twocol_assets' ) );
 
 		// Actions for search service hook
 		if ( ! defined( 'WP_CLI' ) ) {
