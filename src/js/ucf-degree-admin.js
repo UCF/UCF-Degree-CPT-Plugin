@@ -1,11 +1,11 @@
-var initializeColorPicker = function($) {
-  if ( $.fn.wpColorPicker ) {
+const initializeColorPicker = function ($) {
+  if ($.fn.wpColorPicker) {
     $('.wp-color-field').wpColorPicker();
   }
 };
 
-if ( typeof jQuery !== 'undefined' ) {
-  jQuery(document).ready(function($) {
+if (typeof jQuery !== 'undefined') {
+  jQuery(document).ready(($) => {
     initializeColorPicker($);
-  }); 
+  });
 }
