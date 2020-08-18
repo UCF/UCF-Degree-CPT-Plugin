@@ -1,6 +1,6 @@
 <?php
 /**
- * Functions that define the degree list two column layout
+ * Functions that define the degree list two-column layout
  **/
 
 if ( ! function_exists( 'ucf_degree_list_display_twocol' ) ) {
