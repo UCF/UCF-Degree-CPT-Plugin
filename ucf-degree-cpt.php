@@ -90,7 +90,6 @@ if ( ! function_exists( 'ucf_degree_init' ) ) {
 
 		add_action( 'admin_notices', array( 'UCF_Degree_Messages', 'enqueue_admin_notices' ) );
 		add_action( 'admin_enqueue_scripts', array( 'UCF_Degree_Admin', 'enqueue_admin_scripts' ) );
-		// add_action( 'wp_enqueue_scripts', array( 'UCF_Degree_List_Common', 'enqueue_twocol_assets' ) );
 
 		// Actions for search service hook
 		if ( ! defined( 'WP_CLI' ) ) {
