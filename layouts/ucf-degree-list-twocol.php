@@ -23,7 +23,7 @@ if ( ! function_exists( 'ucf_degree_list_display_twocol_grouped' ) ) {
 	function ucf_degree_list_display_twocol_grouped( $content, $items, $args, $grouped ) {
 		ob_start();
 		if ( $items ) :
-			foreach ( $items as $index => $group ) :
+			foreach ( $items as $group ) :
 		?>
 			<div class="degree-list-group">
 				<h3 class="degree-list-heading"><?php echo $group['group_name']; ?></h3>
