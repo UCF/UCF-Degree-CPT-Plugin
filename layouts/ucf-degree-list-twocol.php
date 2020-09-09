@@ -43,8 +43,8 @@ if ( ! function_exists( 'ucf_degree_list_display_twocol_grouped' ) ) {
 }
 
 /**
- * Enqueues twocol assets if degree-list shortcode layout attr is
- * set to 'twocol' and the groupby attr is empty.
+ * Enqueues twocol assets if degree-list shortcode
+ * layout attr is set to 'twocol'.
  *
  * @since 3.2.6
  * @author Cadie Stockman
@@ -59,7 +59,7 @@ if ( ! function_exists( 'ucf_degree_list_enqueue_twocol_assets' ) ) {
 			return $output;
 		}
 
-		if ( isset( $attr['layout'] ) && $attr['layout'] === 'twocol' && empty( $attr['groupby'] ) ) {
+		if ( isset( $attr['layout'] ) && $attr['layout'] === 'twocol' ) {
 			$plugin_data = get_plugin_data( UCF_DEGREE__PLUGIN_FILE, false, false );
 			$version     = $plugin_data['Version'];
 
