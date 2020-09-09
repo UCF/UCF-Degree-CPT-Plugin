@@ -25,6 +25,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.6 ###
+Enhancements:
+- Updated dependencies, added configs and GitHub templates.
+- Added a two-column layout ('twocol') to be used with the degree-list shortcode.
+
 ### 3.2.5 ###
 Bug Fixes:
 - Updated the degree importer to ensure existing taxonomy term associations are removed from each degree before assigning new terms
