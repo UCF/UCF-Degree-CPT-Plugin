@@ -33,6 +33,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 == Changelog ==
 
+= 3.2.7 =
+Enhancements:
+- Updated the twocol_grouped layout.
+
 = 3.2.6 =
 Enhancements:
 - Updated dependencies, added configs and GitHub templates.
