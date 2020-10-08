@@ -3,5 +3,10 @@
   .degree-list-twocol {
     column-gap: 3.5rem;
     columns: 2;
+
+    .degree-list-program {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   }
 }
