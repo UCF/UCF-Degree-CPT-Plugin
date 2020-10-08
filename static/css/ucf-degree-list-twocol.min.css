@@ -1,1 +1,1 @@
-@media (min-width:992px){.degree-list-twocol{-webkit-column-gap:3.5rem;-moz-column-gap:3.5rem;column-gap:3.5rem;-webkit-columns:2;-moz-columns:2;columns:2}}
+@media (min-width:992px){.degree-list-twocol{-webkit-column-gap:3.5rem;-moz-column-gap:3.5rem;column-gap:3.5rem;-webkit-columns:2;-moz-columns:2;columns:2}.degree-list-twocol .degree-list-program{-webkit-column-break-inside:avoid;-moz-column-break-inside:avoid;break-inside:avoid;page-break-inside:avoid}}
