@@ -33,6 +33,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 == Changelog ==
 
+= 3.2.8 =
+Bug Fixes:
+- Fixed splitting columns in twocol layout for Safari and Firefox.
+
 = 3.2.7 =
 Enhancements:
 - Updated the twocol_grouped layout.
