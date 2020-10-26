@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 5.3
-Stable tag: 3.2.6
+Stable tag: 3.2.9
 Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
@@ -32,6 +32,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.9 =
+Bug Fixes:
+- Updates the degree importer logic to ignore degrees that have the "Ignore on Import" flag checked.
 
 = 3.2.8 =
 Bug Fixes:
