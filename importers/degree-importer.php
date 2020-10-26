@@ -23,6 +23,7 @@ class UCF_Degree_Importer {
 		$existing_count = 0,
 		$removed_count = 0,
 		$duplicate_count = 0,
+		$ignored_count = 0,
 
 		$program_types = array(
 			'Undergraduate Program' => array(
@@ -155,6 +156,7 @@ New             : {$this->new_count}
 Updated         : {$this->existing_count}
 Removed         : {$this->removed_count}
 Duplicates      : {$this->duplicate_count}
+Ignored         : {$this->ignored_count}
 Degree Total    : {$degree_total}
 ";
 	}
@@ -368,7 +370,10 @@ Degree Total    : {$degree_total}
 			if ( $ss_program->parent_program === null ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program , $this->api_key );
-				$degree->import_post();
+
+				if ( $degree->import_ignore === false ) {
+					$degree->import_post();
+				}
 
 				// Update our new/existing post lists and increment counters
 				$this->update_counters( $degree );
@@ -392,7 +397,9 @@ Degree Total    : {$degree_total}
 			if ( $ss_program->parent_program !== null ) {
 				// Import the degree as a new WP Post draft, or update existing
 				$degree = new UCF_Degree_Import( $ss_program, $this->api_key );
-				$degree->import_post();
+				if ( $degree->import_ignore === false ) {
+					$degree->import_post();
+				}
 
 				// Update our new/existing post lists and increment counters
 				$this->update_counters( $degree );
@@ -415,6 +422,11 @@ Degree Total    : {$degree_total}
 	private function update_counters( $degree ) {
 		$post_id = $degree->post_id;
 		$new_posts = $existing_posts = $updated_posts = array();
+
+		if ( $degree->import_ignore ) {
+			$this->ignored_count++;
+			return;
+		}
 
 		if ( $degree->is_subplan ) {
 			$new_posts      = &$this->new_subplan_posts;
@@ -581,6 +593,7 @@ class UCF_Degree_Import {
 		$this->parent_post_id = $this->get_parent_post_id();
 		$this->existing_post  = $this->get_existing_post();
 		$this->is_new         = $this->existing_post === null ? true : false;
+		$this->import_ignore  = $this->get_import_ignore();
 
 		$this->name_short = $this->get_name_short();
 		$this->slug       = $this->get_slug();
@@ -887,6 +900,38 @@ class UCF_Degree_Import {
 		}
 
 		return $existing_post;
+	}
+
+	/**
+	 * Returns a boolean indicating if the degree should be processed
+	 * or not.
+	 *
+	 * @author Jim Barnes
+	 * @since 3.2.9
+	 * @return bool
+	 */
+	private function get_import_ignore() {
+		// If this is a new degree, just go ahead and return false.
+		if ( $this->is_new ) {
+			// Return false by default if it's new.
+			// Make sure to run it through the filter so this behavior
+			// can be overidden.
+			return apply_filters( 'ucf_degree_get_import_ignore', false, $this->program, $this->existing_post );
+		}
+
+		$ignore_value = get_post_meta( $this->existing_post->ID, 'degree_import_ignore', true );
+
+		// If the value is null, assume (default to) false
+		if ( $ignore_value === null ) {
+			// Return false by default if there's no value in the meta.
+			// Make sure to run it through the filter so this behavior
+			// can be overidden.
+			return apply_filters( 'ucf_degree_get_import_ignore', false, $this->program, $this->existing_post );
+		}
+
+		$retval = filter_var( $ignore_value, FILTER_VALIDATE_BOOLEAN );
+
+		return apply_filters( 'ucf_degree_get_import_ignore', $retval, $this->program, $this->existing_post );
 	}
 
 	/**
