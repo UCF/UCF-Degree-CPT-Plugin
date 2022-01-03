@@ -730,7 +730,7 @@ class UCF_Degree_Import {
 			$retval = array();
 
 			foreach ( $colleges as $college ) {
-				$retval[] = $this->get_college_name( $college->full_name );
+				$retval[] = $this->get_college_name( $college->name );
 			}
 
 			return $retval;
@@ -757,7 +757,7 @@ class UCF_Degree_Import {
 			$retval = array();
 
 			foreach ( $departments as $department ) {
-				$retval[] = $department->full_name;
+				$retval[] = $department->name;
 			}
 
 			return $retval;
