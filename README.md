@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.10 ###
+Enhancements:
+- Updated imported college and department terms to use `name` field from search service instead of `full_name`, in anticipation of search service v2.5.0 updates.
+
 ### 3.2.9 ###
 Bug Fixes:
 - Updates the degree importer logic to ignore degrees that have the "Ignore on Import" flag checked.

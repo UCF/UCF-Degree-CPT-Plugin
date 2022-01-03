@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 5.3
-Stable tag: 3.2.9
+Stable tag: 3.2.10
 Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
@@ -32,6 +32,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.10 =
+Enhancements:
+- Updated imported college and department terms to use `name` field from search service instead of `full_name`, in anticipation of search service v2.5.0 updates.
 
 = 3.2.9 =
 Bug Fixes:
