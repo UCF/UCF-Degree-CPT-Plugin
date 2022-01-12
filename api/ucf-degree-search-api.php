@@ -913,7 +913,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 	 * @return array
 	 */
 	public static function get_tags_args() {
-		return get_interests_args();
+		return self::get_interests_args();
 	}
 
 	/**
