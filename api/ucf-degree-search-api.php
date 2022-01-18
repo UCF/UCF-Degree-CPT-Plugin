@@ -438,7 +438,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 		$args = array(
 			'taxonomy'   => 'program_types',
-			'hide_empty' => true
+			'hide_empty' => true,
+			'post_types' => 'degree' // NOTE: requires Query Terms by Post Type plugin. Arg has no effect otherwise
 		);
 
 		$terms = get_terms( $args );
@@ -446,7 +447,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		foreach( $terms as $term ) {
 			if ( isset( $retval[$term->term_id] ) ) continue;
 
-			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
+			if ( $term->count === 0 ) continue; // Throw out empty program_types.
 
 			$alias = get_term_meta( $term->term_id, 'program_types_alias', true );
 			$alias = $alias ? $alias : $term->name;
@@ -595,13 +596,14 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 
 		$args = array(
 			'taxonomy'   => 'colleges',
-			'hide_empty' => true
+			'hide_empty' => true,
+			'post_types' => 'degree' // NOTE: requires Query Terms by Post Type plugin. Arg has no effect otherwise
 		);
 
 		$terms = get_terms( $args );
 
 		foreach( $terms as $term ) {
-			if ( $term->count === 0 ) { continue; } // Throw out empty program_types.
+			if ( $term->count === 0 ) continue; // Throw out empty colleges.
 
 			$alias = get_term_meta( $term->term_id, 'colleges_alias', true );
 			$alias = $alias ? $alias : $term->name;
@@ -751,7 +753,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$terms = wp_get_object_terms( $post_ids, 'interests' );
 		} else {
 			$args = array(
-				'taxonomy' => 'interests'
+				'taxonomy'   => 'interests',
+				'post_types' => 'degree' // NOTE: requires Query Terms by Post Type plugin. Arg has no effect otherwise
 			);
 
 			if ( $search ) {
@@ -868,7 +871,8 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$terms = wp_get_object_terms( $post_ids, 'post_tag' );
 		} else {
 			$args = array(
-				'taxonomy' => 'post_tag'
+				'taxonomy'   => 'post_tag',
+				'post_types' => 'degree' // NOTE: requires Query Terms by Post Type plugin. Arg has no effect otherwise
 			);
 
 			if ( $search ) {
