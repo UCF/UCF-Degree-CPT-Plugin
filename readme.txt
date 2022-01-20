@@ -178,7 +178,7 @@ n/a
 
 == Installation Requirements ==
 
-None
+None, though this plugin supports the [Query Terms by Post Types plugin](https://github.com/UCF/Query-Terms-by-Post-Type), and its use is recommended if degree search REST endpoints are enabled.
 
 
 == Development & Contributing ==
