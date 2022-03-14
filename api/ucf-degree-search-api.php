@@ -242,38 +242,44 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			$retval[$key]['degrees'] = array();
 			foreach( $program_type['degrees'] as $degree ) {
 
+				// Force certain values to ints, because
+				// Relevanssi apparently like to return these as strings.....
+				$degree_id = intval( $degree->ID );
+				$degree_post_parent = intval( $degree->post_parent );
+
 				$children = get_children( array(
-					'post_parent' => $degree->ID,
+					'post_parent' => $degree_id,
 					'post_type'   => 'degree',
 					'post_status' => 'publish',
 					'numberposts' => -1
 				) );
 
-				if ( isset( $retval[$key][$degree->ID] ) ) {
+				if ( isset( $retval[$key][$degree_id] ) ) {
 					continue;
 				}
 
-				if ( $degree->post_parent === 0 && count( $children ) === 0 ) {
-					$retval[$key]['degrees'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
+				if ( intval( $degree_post_parent ) === 0 && count( $children ) === 0 ) {
+					$retval[$key]['degrees'][$degree_id] = self::prepare_degree_for_response( $degree, $request );
 				}
 
 				if ( count( $children ) ) {
 					$parent_degree = self::prepare_degree_for_response( $degree, $request );
 
 					foreach( $children as $child ) {
-						$parent_degree['subplans'][$child->ID] = self::prepare_degree_for_response( $child, $request );
+						$child_id = intval( $child->ID );
+						$parent_degree['subplans'][$child_id] = self::prepare_degree_for_response( $child, $request );
 					}
 
-					$retval[$key]['degrees'][$degree->ID] = $parent_degree;
+					$retval[$key]['degrees'][$degree_id] = $parent_degree;
 				}
 
-				if ( $degree->post_parent !== 0 ) {
-					if ( ! isset( $retval[$key]['degrees'][$degree->post_parent] ) ) {
-						$parent = get_post( $degree->post_parent );
-						$retval[$key]['degrees'][$degree->post_parent] = self::prepare_degree_for_response( $parent, $request );
+				if ( $degree_post_parent !== 0 ) {
+					if ( ! isset( $retval[$key]['degrees'][$degree_post_parent] ) ) {
+						$parent = get_post( $degree_post_parent );
+						$retval[$key]['degrees'][$degree_post_parent] = self::prepare_degree_for_response( $parent, $request );
 					}
 
-					$retval[$key]['degrees'][$degree->post_parent]['subplans'][$degree->ID] = self::prepare_degree_for_response( $degree, $request );
+					$retval[$key]['degrees'][$degree_post_parent]['subplans'][$degree_id] = self::prepare_degree_for_response( $degree, $request );
 				}
 			}
 
