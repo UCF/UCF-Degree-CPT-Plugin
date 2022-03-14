@@ -171,7 +171,19 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			);
 		}
 
-		$query = new WP_Query( $args );
+
+		// If we're performing a search for a program
+		// and Relevanssi is enabled, use Relevanssi to respect
+		// custom indexing options (e.g. search by tag.)
+		// Otherwise, just initialize a new WP_Query directly.
+		if ( $search && function_exists( 'relevanssi_do_query' ) ) {
+			$query = new WP_Query();
+			$query->parse_query( $args );
+			relevanssi_do_query( $query );
+		} else {
+			$query = new WP_Query( $args );
+		}
+
 		$number_pages = $query->max_num_pages;
 		$total_posts = $query->found_posts;
 
