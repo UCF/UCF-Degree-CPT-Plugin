@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.2.11 ###
+Enhancements:
+- Updates our degree search endpoints for taxonomies to filter results using the post_types argument for get_terms(), where possible, to help ensure results only include terms assigned to at least one degree post. The post_types argument is provided by the Query Terms by Post Types plugin, and will be ignored/have no effect if that plugin is not activated.
+
 ### 3.2.10 ###
 Enhancements:
 - Updated imported college and department terms to use `name` field from search service instead of `full_name`, in anticipation of search service v2.5.0 updates.
@@ -170,7 +174,7 @@ n/a
 
 ## Installation Requirements ##
 
-None
+None, though this plugin supports the [Query Terms by Post Types plugin](https://github.com/UCF/Query-Terms-by-Post-Type), and its use is recommended if degree search REST endpoints are enabled.
 
 
 ## Development & Contributing ##

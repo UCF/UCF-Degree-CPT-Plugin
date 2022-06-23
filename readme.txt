@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 5.3
-Stable tag: 3.2.10
+Stable tag: 3.2.11
 Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
@@ -32,6 +32,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.2.11 =
+Enhancements:
+- Updates our degree search endpoints for taxonomies to filter results using the post_types argument for get_terms(), where possible, to help ensure results only include terms assigned to at least one degree post. The post_types argument is provided by the Query Terms by Post Types plugin, and will be ignored/have no effect if that plugin is not activated.
 
 = 3.2.10 =
 Enhancements:
