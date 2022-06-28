@@ -991,7 +991,16 @@ class UCF_Degree_Import {
 			unset( $post_data['post_date'] );
 		}
 
-		return $post_data;
+		/**
+		 * Filter that allows child themes and plugins to adjust
+		 * the formatted post data before the post is saved.
+		 * @author Jim Barnes
+		 * @since 3.2.12
+		 * @param array $post_data The already processed post data
+		 * @param UCF_Degree_Import $degree A reference to the degree import object
+		 * @return array The filtered post data array
+		 */
+		return apply_filters( 'ucf_degree_formatted_post_data', $post_data, $this );
 	}
 
 	/**
