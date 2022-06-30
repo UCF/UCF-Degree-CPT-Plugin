@@ -1026,7 +1026,8 @@ class UCF_Degree_Import {
 
 		// Allow overrides by themes/other plugins
 		if ( has_filter( 'ucf_degree_get_post_metadata' ) ) {
-			$meta = apply_filters( 'ucf_degree_get_post_metadata', $meta, $this->program );
+			$existing_id = ( ! $this->is_new ) ? $this->existing_post->ID : null;
+			$meta = apply_filters( 'ucf_degree_get_post_metadata', $meta, $this->program, $existing_id );
 		}
 
 		return $meta;
