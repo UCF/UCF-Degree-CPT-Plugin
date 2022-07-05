@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.3.0 ###
+Enhancements:
+- Added a number of filters to the degree importer that allows for customized behavior on imports on child themes and plugins.
+
 ### 3.2.11 ###
 Enhancements:
 - Updates our degree search endpoints for taxonomies to filter results using the post_types argument for get_terms(), where possible, to help ensure results only include terms assigned to at least one degree post. The post_types argument is provided by the Query Terms by Post Types plugin, and will be ignored/have no effect if that plugin is not activated.
