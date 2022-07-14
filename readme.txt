@@ -3,7 +3,7 @@ Contributors: ucfwebcom
 Tags: ucf, degree
 Requires at least: 4.5.3
 Tested up to: 5.3
-Stable tag: 3.2.11
+Stable tag: 3.3.1
 Requires PHP: 7.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/copyleft/gpl-3.0.html
@@ -32,6 +32,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 
 == Changelog ==
+
+= 3.3.1 =
+Bug Fix:
+- Updated register_rest_route permission_callback param to quiet Notice
 
 = 3.3.0 =
 Enhancements:
