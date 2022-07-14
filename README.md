@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.3.1 ###
+Bug Fix:
+- Updated register_rest_route permission_callback param to quiet Notice
+
 ### 3.3.0 ###
 Enhancements:
 - Added a number of filters to the degree importer that allows for customized behavior on imports on child themes and plugins.
