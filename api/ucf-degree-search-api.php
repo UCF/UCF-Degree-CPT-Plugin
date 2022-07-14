@@ -27,7 +27,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_degrees' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions'),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_degrees_args' )
 			)
 		) );
@@ -36,7 +36,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_program_types' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_program_types_args' )
 			)
 		) );
@@ -45,7 +45,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_program_types_counts' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_program_types_counts_args' )
 			)
 		) );
@@ -54,7 +54,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_colleges' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_colleges_args' )
 			)
 		) );
@@ -63,7 +63,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_colleges_counts' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_colleges_counts_args' )
 			)
 		) );
@@ -72,7 +72,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_interests' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_interests_args' )
 			)
 		) );
@@ -81,7 +81,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( 'UCF_Degree_Search_API', 'get_tags' ),
-				'permission_callback' => array( 'UCF_Degree_Search_API', 'get_permissions' ),
+				'permission_callback' => '__return_true',
 				'args'                => array( 'UCF_Degree_Search_API', 'get_tags_args' )
 			)
 		) );
@@ -329,15 +329,6 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		}
 
 		return $retval;
-	}
-
-	/**
-	 * Get permissions callback. Read only, so just return true.
-	 * @author Jim Barnes
-	 * @since 1.0.0
-	 **/
-	public static function get_permissions() {
-		return true;
 	}
 
 	/**

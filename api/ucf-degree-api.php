@@ -22,6 +22,7 @@ if ( ! class_exists( 'UCF_Degree_API' ) ) {
 					array(
 						'method'              => WP_REST_Server::READABLE,
 						'callback'            => array( 'UCF_Degree_API', 'get_relevanssi_results' ),
+						'permission_callback' => '__return_true'
 					)
 				) );
 			}
