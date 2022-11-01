@@ -569,7 +569,6 @@ class UCF_Degree_Import {
 		$colleges,
 		$departments,
 		$parent_post_id, // if this degree is a subplan, this references the parent plan's post ID
-		$existing_post, // an existing post object that matches the provided search service program
 		$name_short,
 		$slug,
 		$post_meta,
@@ -580,7 +579,8 @@ class UCF_Degree_Import {
 		$program,
 		$is_subplan,
 		$is_new,
-		$post_id; // ID of the new or existing post, set in $this->process_post()
+		$post_id, // ID of the new or existing post, set in $this->process_post()
+		$existing_post; // an existing post object that matches the provided search service program
 
 	/**
 	 * Constructor
