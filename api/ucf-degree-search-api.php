@@ -291,6 +291,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$terms = wp_get_post_terms( $post->ID, 'program_types' );
 		$term = is_array( $terms ) ? $terms[0]->slug : null;
 		$colleges = self::get_college_terms( $post, $request );
+		$excerpt = $post->post_excerpt;
 
 		$retval = array(
 			'title'     => $post->post_title,
@@ -298,6 +299,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 			'url'       => $permalink,
 			'hours'     => $hours,
 			'type'      => $term,
+			'excerpt'   => $excerpt,
 			'colleges'  => $colleges,
 			'subplans'  => array()
 		);
