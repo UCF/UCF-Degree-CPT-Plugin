@@ -25,6 +25,11 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.3.2 ###
+Enhancements:
+* Moved a private variable to public so it's accessible when passed to hooks.
+* Import the excerpt by default.
+
 ### 3.3.1 ###
 Bug Fix:
 - Updated register_rest_route permission_callback param to quiet Notice
