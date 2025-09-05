@@ -98,6 +98,7 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 		$search = $request['search'];
 		$colleges = $request['colleges'];
 		$program_types = $request['program_types'];
+		$departments = $request['departments'];
 		$interests = $request['interests'];
 		$tags = $request['post_tag'];
 		$page = $request['page'] ? $request['page'] : 1;
@@ -144,6 +145,18 @@ class UCF_Degree_Search_API extends WP_REST_Controller {
 				'taxonomy' => 'colleges',
 				'field'    => 'slug',
 				'terms'    => $colleges
+			);
+		}
+
+		if ( $departments ) {
+			if ( ! isset( $args['tax_query'] ) ) {
+				$args['tax_query'] = array();
+			}
+
+			$args['tax_query'][] = array(
+				'taxonomy' => 'departments',
+				'field'    => 'slug',
+				'terms'    => $departments
 			);
 		}
 
