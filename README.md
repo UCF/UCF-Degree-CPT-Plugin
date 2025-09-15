@@ -25,6 +25,10 @@ See the [project wiki](https://github.com/UCF/UCF-Degree-CPT-Plugin/wiki) for se
 
 ## Changelog ##
 
+### 3.4.0 ###
+Enhancements:
+* Added departments as a filter to the ucf-degree-search endpoint.
+
 ### 3.3.3 ###
 Enhancements:
 * Added composer file.
