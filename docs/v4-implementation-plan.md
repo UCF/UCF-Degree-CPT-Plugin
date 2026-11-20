@@ -162,8 +162,8 @@ The default layout is defined once, as the pattern `ucf-degree/default-layout` i
 
 A degree gets the layout in one of two ways:
 
-- **Add New.** The post type's `template` argument is `[ [ 'core/pattern', [ 'slug' => 'ucf-degree/default-layout' ] ] ]`, so the Pattern block expands into the layout when the editor opens a new draft. We expect this to work the way Pattern blocks do in site templates, but we should confirm it early in Phase 5.
-- **Import.** The editor only applies `template` to new drafts, and the importer creates degrees in code. So when the importer creates a degree, it takes the same pattern's markup from the pattern registry and writes it to `post_content`. Using the registry means there is still only one definition of the layout. After creation, the importer never writes `post_content` again.
+- **Add New.** A `default_content` filter, limited to the `degree` post type, returns the pattern's markup, so the editor opens a new degree with the layout's real blocks already in it. The post type sets no `template` argument. That argument only accepts an array of block names and attributes, which can't carry the text inside static blocks such as headings and paragraphs. And if we used a single Pattern block as a placeholder, a degree could end up saving a reference to the shared layout instead of its own copy.
+- **Import.** When the importer creates a degree, it writes the same pattern markup to `post_content`. Both paths take the markup from the pattern registry, so there is one definition of the layout, and a degree's layout hash comes out the same whichever way it was created. After creation, the importer never writes `post_content` again.
 
 ### Shared content
 
