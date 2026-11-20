@@ -97,12 +97,13 @@ A fetch gets the program record by its cached ID, or through `find_program()` wh
 
 We cache in postmeta rather than transients. Postmeta is per-post, survives an object-cache flush, is easy to purge one degree at a time, and lets us keep serving the last good copy when the Search Service is down.
 
-- **Fresh copy.** It is served as-is. The default lifetime is 24 hours, which is an estimate we will tune once we see how often deadlines and tuition actually change. The lifetime is a setting.
+- **Fresh copy.** It is served as-is. The default lifetime is 24 hours, and the lifetime is a setting. The Search Service only takes in new program data once a month, so a daily re-read happens far more often than the data changes. We keep it anyway because it's cheap. It also picks up anything corrected directly in the Search Service between imports, if direct corrections turn out to be possible, which we haven't confirmed.
 - **Stale copy.** It is served anyway, and a `ucf_degree_refresh_program` single event is scheduled for that post. A short lock transient keeps a traffic spike from queuing duplicate refreshes.
 - **No copy at all.** We fetch synchronously with a 5-second timeout, under the same lock. This should be rare, because the importer fills the cache.
 - **Failed fetch.** The previous copy stays in place, the error is recorded, and we wait 15 minutes before trying that post again.
 - **Schema or source change.** A copy whose `schema_version` doesn't match the code, or whose `source` doesn't match the configured service, is treated as stale.
-- **Background sweep.** An hourly cron job refreshes the oldest stale copies in batches of 50 (configurable).
+- **Refresh after each import.** A full refresh of every degree runs right after each monthly Search Service import, so new data reaches every page within hours of the import, not one degree at a time as copies happen to expire. The refresh runs on a schedule set to match the Search Service's import dates, or when the Search Service signals that an import finished, if it can.
+- **Background sweep.** An hourly cron job refreshes the oldest stale copies in batches of 50 (configurable). It catches pages nobody visits and anything the post-import refresh missed.
 
 ### Access points
 
@@ -244,6 +245,7 @@ The current site and the other properties (Online, Colleges) stay on 3.x, pinned
 - **Will the new site use Relevanssi?** If it does, we add cached descriptions, highlights and careers to the index through `relevanssi_content_to_index`, because they no longer live in postmeta.
 - **What are the new platform's WordPress and PHP versions?** They set the minimums we declare.
 - **When should the writebacks turn on?** We need a launch-day plan for switching the Search Service's profile URLs from the current site to the new one.
+- **When does the monthly Search Service import run, and can it tell us when it finishes?** The post-import refresh depends on one or the other. We also need to know whether program data can be corrected directly in the Search Service between imports, or only by fixing the source system and waiting for the next import.
 - **Will the Search Service add exact lookup by code and `expand`, and when?** The plugin doesn't wait on either. Knowing the timeline tells us how long the search-and-verify fallback has to carry production.
 - **Does every subplan share its parent's plan code?** Parent matching depends on it. We should check it against the full program list before Phase 3.
 - **Is the `career_paths` taxonomy needed on the new site beyond display?** If not, careers can come only from the cache and the taxonomy can go.

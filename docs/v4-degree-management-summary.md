@@ -16,7 +16,7 @@ That means work on a new degree is optional. A new program has a correct page fr
 
 ## What we edit, and what updates itself
 
-- **Search Service information updates itself.** It refreshes about once a day, a starting point we expect to adjust once we see how often the data changes. When one of these facts is wrong, we fix it in the Search Service, not on the page. A correction made there fixes every page that shows it.
+- **Search Service information updates itself.** The Search Service takes in new program data once a month, and our pages pick up the changes within hours of each import. When one of these facts is wrong, we fix it in the Search Service, not on the page, and the correction then fixes every page that shows it. The catch is timing. A fix that comes in through the monthly import can take up to a month to appear. We haven't yet confirmed whether a correction can be made directly in the Search Service to get it on the page sooner.
 - **The layout is ours.** We can move sections around. For example, a graduate program with an early deadline can put deadlines above the description. We can also remove a section that doesn't serve a program, or add one that's missing.
 - **Editorial sections are ours.** Course overview, skills, admission copy, curated testimonials and news are added from a short set of ready-made degree sections in the editor, then written for each degree.
 - **Shared sections are edited once.** Badges, Start Your Application, the UCF Online callout and the message shown when a program has no deadlines posted each live in one place. An edit there changes every degree at once. If one degree needs something different, we detach that section on that page and edit it there.
@@ -45,7 +45,7 @@ The new site also starts fresh. We are not moving the current degree pages over.
 
 ## What we still need to decide
 
-- **How we correct Search Service data.** Since fixes belong in the Search Service, we need a named process for requesting corrections and a clear sense of how long they take to reach the page.
+- **How we correct Search Service data.** Since fixes belong in the Search Service, we need a named process for requesting corrections. We also need a plan for the ones that can't wait for the next monthly import, such as a wrong application deadline in the middle of an admissions cycle.
 - **The standard layout.** We need to decide which sections it includes, in what order, and whether details like program length stay.
 - **Which sections every degree must keep.** We can lock a section so it can be moved but not deleted. Our plan is to start with no locks and add them only if we find we need them.
 
