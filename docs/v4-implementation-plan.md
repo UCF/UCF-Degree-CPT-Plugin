@@ -19,12 +19,33 @@ The rest of this document describes that end state and the order we build it in.
 - **Presentation follows block-theme conventions.** Blocks declare block supports (color, spacing, typography, border) and are styled through `theme.json` `styles.blocks`. The plugin ships only structural CSS. Interactive pieces, such as the request-info dialog and deadline tabs, use the Interactivity API with a native `<dialog>` element rather than Bootstrap.
 - **The Search Service is the source of truth, and postmeta is a cache of it.** A page render never waits on the Search Service when a cached copy exists.
 - **Meta and option names get a clean namespace.** Since nothing upgrades in place, every key moves to a `ucf_degree_` prefix and v3's names are not carried over.
+- **The Search Service is whatever the environment says it is.** Nothing in the plugin assumes production. Every request (import, render-time fetch, refresh and writeback) goes through one resolved base URL, so pointing a site at a non-production service is a configuration change, not a code change.
+
+## Search Service configuration
+
+The configuration question isn't whether the URL is a setting, since it already is in v3. It is whether one site can end up talking to two services at once. v3 hardcodes `https://search.cm.ucf.edu/api/v1/` as the default and lets `wp degrees import --api_base_url` override it for a single run. That was harmless when the import was the only time the plugin talked to the Search Service. In v4 the cache refreshes on its own schedule, so a one-off import from staging would leave degrees cached from one service and refreshed from another.
+
+A single `UCF_Degree_Search_Service` class owns the connection. Every other class asks it for URLs and never builds one itself. It resolves the base URL and key in this order:
+
+1. **Constants:** `UCF_DEGREE_SEARCH_SERVICE_URL` and `UCF_DEGREE_SEARCH_SERVICE_KEY` in `wp-config.php`, or environment variables of the same names. When a constant is set, the matching settings field is shown read-only, along with where the value came from.
+2. **Options:** `ucf_degree_search_service_url` and `ucf_degree_search_service_key` from the settings screen.
+3. **Nothing.** There is no built-in default. A site with no service configured imports and fetches nothing, and both the settings screen and Site Health say so.
+
+Constants come first because databases get copied between environments. When production's database is cloned to staging, the option comes along with it, but the staging `wp-config.php` constant still wins. That keeps a refreshed staging site on the staging service without anyone remembering to change a setting.
+
+- **Every cache entry records its source.** Each one stores the host it came from. If the configured service changes, entries from a different host are treated as stale and refetched from the new one, so a site never shows a mix of production and staging data for long.
+- **Degrees are matched by plan and subplan codes.** The importer records `ucf_degree_source` (the host) next to `ucf_degree_api_id`. When the host changes, the data service finds the program again by plan and subplan code through `programs/search/`, the same lookup v3 uses for writebacks, and doesn't trust the stored ID. We haven't confirmed whether program IDs differ between service instances, and this design works either way.
+- **Linked URLs must point at the configured host.** The program record links to outcomes, projections, deadlines, careers and writeback `update_url`s as absolute URLs. We follow a link only if its host matches the configured service. Otherwise we rewrite it onto the configured base and log a warning. We don't know yet whether non-production instances ever return production links, but this guards against reading production data while configured for staging, and worse, writing to production.
+- **Other caches are keyed by host.** The description-type and profile-type transients include the host in their key.
+- **There is no per-command URL override.** `wp degrees import` uses the resolved service, just like rendering does. `wp degrees service` prints the active URL and its source, then tests the connection with the key. Anyone who needs a different service for a session sets the environment variable for that shell.
+
+What follows from this section: the class is built in Phase 1, before the data layer, so that no later code can bypass it.
 
 ## Data model
 
 ### Postmeta
 
-- **Identity.** `ucf_degree_id` (plan and subplan code), `ucf_degree_api_id`, `ucf_degree_plan_code` and `ucf_degree_subplan_code` tie a post to its Search Service program.
+- **Identity.** `ucf_degree_id` (plan and subplan code), `ucf_degree_api_id`, `ucf_degree_plan_code` and `ucf_degree_subplan_code` tie a post to its Search Service program. `ucf_degree_source` records which service host the API ID belongs to.
 - **Listing and search.** `ucf_degree_name_short`, `ucf_degree_hours` and `ucf_degree_online` feed the degree search API and Query Loops, which work across hundreds of degrees and can't fetch each one from the Search Service.
 - **Import controls.** `ucf_degree_import_ignore`, `ucf_degree_tuition_skip` and `ucf_degree_lock_excerpt` keep v3's behavior.
 - **Editorial values the template needs.** `ucf_degree_undergraduate_slate_id` is the only one today. It feeds `request-info`, which lives in the template, and the Search Service only provides graduate Slate IDs. Any further per-degree values that a template slot needs are added the same way and exposed through the core `core/post-meta` bindings source.
@@ -39,7 +60,7 @@ The plugin keeps registering the `program_types`, `career_paths` and `interests`
 A new `UCF_Degree_Program_Data` class (`includes/class-ucf-degree-program-data.php`) is the only code that talks to the Search Service for display data. The public helper `ucf_degree_get_program( $post = null )` returns a normalized array:
 
 ```
-schema_version, fetched_at
+schema_version, fetched_at, source (service host)
 name, name_short, credit_hours, online, catalog_url, graduate_slate_id, excerpt
 tuition       { resident, nonresident, unit }          raw numbers; formatting happens at render
 descriptions  { catalog, full, custom, by_type_id{} }
@@ -63,13 +84,13 @@ We cache in postmeta rather than transients. Postmeta is per-post, survives an o
 - **Stale copy.** It is served anyway, and a `ucf_degree_refresh_program` single event is scheduled for that post. A short lock transient keeps a traffic spike from queuing duplicate refreshes.
 - **No copy at all.** We fetch synchronously with a 5-second timeout, under the same lock. This should be rare, because the importer fills the cache.
 - **Failed fetch.** The previous copy stays in place, the error is recorded, and we wait 15 minutes before trying that post again.
-- **Schema change.** A copy whose `schema_version` doesn't match the code is treated as stale.
+- **Schema or source change.** A copy whose `schema_version` doesn't match the code, or whose `source` doesn't match the configured service, is treated as stale.
 - **Background sweep.** An hourly cron job refreshes the oldest stale copies in batches of 50 (configurable).
 
 ### Access points
 
 - **REST.** `GET ucf-degree/v1/degrees/<id>/program` returns the normalized data for editor previews, and `POST …/program/refresh` forces a refresh. Both require `edit_post`. A read-only `program` field on `/wp/v2/degrees` exposes the same data publicly.
-- **WP-CLI.** `wp degrees cache refresh [--post=<id>] [--all]` and `wp degrees cache status` report how old the copies are and which posts have errors.
+- **WP-CLI.** `wp degrees cache refresh [--post=<id>] [--all]` refreshes copies. `wp degrees cache status` reports how old the copies are, which service they came from, and which posts have errors.
 - **Block Bindings.** A `ucf-degree/program` source has a server-side `get_value_callback` and a matching JS `registerBlockBindingsSource`. It binds single values (short name, credit hours, catalog URL, apply URL, tuition, outcome and projection figures) to core Paragraph, Heading, Button and Image blocks in the template. It is the right tool wherever a value sits inside editorial layout and nothing needs to hide when the value is empty.
 
 What follows from this section: Phase 2 builds the data layer in full before any block depends on it.
@@ -128,7 +149,7 @@ What follows from this section: the plugin's templates have to look right in the
 
 The Settings › UCF Degrees screen is rebuilt around the new options:
 
-- **Search Service.** Base URL, API key, and an optional import filter.
+- **Search Service.** Base URL and API key (read-only when set by a constant, with the source shown), a "Test connection" button, and an optional import filter.
 - **Application and RFI.** Undergraduate and graduate application URLs, plus RFI base URLs and form IDs.
 - **Disclaimers and ordering.** The tuition disclaimer, the undergraduate and graduate deadline disclaimers, and the deadline group order for each level.
 - **Writebacks.** The profile (permalink) writeback and the tuition-exception call, both **off by default** (see the next section).
@@ -139,7 +160,7 @@ The Settings › UCF Degrees screen is rebuilt around the new options:
 - **Lean meta only.** The importer writes the keys above with `update_post_meta()`, fills the cache from the program object and its linked resources in the same pass, and reuses the careers response for the `career_paths` terms. New posts are inserted with empty `post_content`.
 - **The filters get a documented contract.** `ucf_degree_get_post_metadata`, `ucf_degree_get_post_terms`, `ucf_degree_formatted_post_data` and `ucf_degree_api_results` stay as extension points. They operate on the v4 keys, and the docs say so.
 - **The description writeback is removed.** It PUT `post_content` to the Search Service, which in v4 would be block markup, and descriptions now come from the Search Service anyway.
-- **The profile and tuition-exception writebacks change the shared Search Service.** The new site imports from the same Search Service as the current one. If a development or staging copy has the profile writeback on, saving a degree points the Search Service's profile URL for that program at a non-production address. The tuition-exception call changes shared data the same way. That is why both default to off: we turn them on only on production, and only once the new site is the one that should own those URLs.
+- **Writebacks are only as safe as the service they target.** Pointing a development site at a non-production service, which is the reason the URL is configurable, makes writebacks safe to test there. The risk that remains is a non-production WordPress writing to the production service, which would point a program's profile URL at a development address or change shared tuition exceptions. So both writebacks default to off, and the settings screen shows the target host next to each switch. A `UCF_DEGREE_ALLOW_WRITEBACKS` constant must also be `true` before either one runs, which means a database cloned from production can't carry writebacks into another environment.
 - **The metabox becomes an editor panel.** The classic "Degree Import Options" metabox is replaced by a `PluginDocumentSettingPanel` with ignore, skip tuition, lock excerpt, undergraduate Slate ID, cache status with a refresh button, and read-only identity fields.
 
 ## What v4 removes
@@ -158,9 +179,9 @@ The current site and the other properties (Online, Colleges) stay on 3.x, pinned
 
 ## Phases
 
-1. **Foundation.** Strip out the items listed under "What v4 removes", set up `@wordpress/scripts`, register the new meta, make REST unconditional for the post type, and build the sidebar panel and settings screen. Bump the minimum to WordPress 6.8. *Done when:* a degree opens in the block editor on a block theme, and the panel saves the import flags.
+1. **Foundation.** Strip out the items listed under "What v4 removes", set up `@wordpress/scripts`, build `UCF_Degree_Search_Service` with its constant and option resolution and `wp degrees service`, register the new meta, make REST unconditional for the post type, and build the sidebar panel and settings screen. Bump the minimum to WordPress 6.8. *Done when:* a degree opens in the block editor on a block theme, the panel saves the import flags, and `wp degrees service` reports the right service and source for both a constant and an option.
 2. **Data layer.** Build the program data service, cache, cron sweep, REST routes, WP-CLI commands and bindings source. *Done when:* `wp degrees cache refresh --all` fills every degree and `cache status` reports no errors.
-3. **Importer.** Switch to lean meta, move the theme's former responsibilities into the plugin, fill the cache during import, and remove the description writeback. *Done when:* a fresh import into an empty site produces degrees that carry only v4 keys, have a full cache, and leave the writebacks off.
+3. **Importer.** Switch to lean meta, move the theme's former responsibilities into the plugin, fill the cache during import, and remove the description writeback. *Done when:* a fresh import from a non-production service into an empty site produces degrees that carry only v4 keys and a full cache from that host. Switching the configured service then refetches every degree from the new host and re-matches them by plan and subplan code.
 4. **Blocks.** Build them in this order: `program-details`, `tuition`, `description`, `deadlines`, `application-requirements`, `apply-button`, `request-info`, `highlights`, `careers`, `outcomes`, `projections`, `quote`, `subplans`, then JSON-LD. *Done when:* each block renders from the cache in the post editor and on the front end, shows placeholder content in the Site Editor, drops out entirely when its data is empty, and takes styles from `theme.json`.
 5. **Templates and patterns.** Add both templates and the starter patterns, done with the new theme in hand. *Done when:* an untouched imported degree renders a complete page, and an editor can add a starter pattern to a new degree.
 6. **Release.** Update the readme, Composer version and changelog, and document the meta keys, filters and the `ucf_degree_get_program()` helper for other teams.
@@ -173,4 +194,5 @@ The current site and the other properties (Online, Colleges) stay on 3.x, pinned
 - **Will the new site use Relevanssi?** If it does, we add cached descriptions, highlights and careers to the index through `relevanssi_content_to_index`, because they no longer live in postmeta.
 - **What are the new platform's WordPress and PHP versions?** They set the minimums we declare.
 - **When should the writebacks turn on?** We need a launch-day plan for switching the Search Service's profile URLs from the current site to the new one.
+- **How do the non-production services differ from production?** Specifically: whether program IDs and plan and subplan codes match production, whether their linked resource URLs point at their own host, and whether they accept writebacks. The design handles every combination, but the answers tell us how much of the defensive code we actually exercise.
 - **Is the `career_paths` taxonomy needed on the new site beyond display?** If not, careers can come only from the cache and the taxonomy can go.
