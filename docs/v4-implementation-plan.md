@@ -33,19 +33,35 @@ A single `UCF_Degree_Search_Service` class owns the connection. Every other clas
 
 Constants come first because databases get copied between environments. When production's database is cloned to staging, the option comes along with it, but the staging `wp-config.php` constant still wins. That keeps a refreshed staging site on the staging service without anyone remembering to change a setting.
 
-- **Every cache entry records its source.** Each one stores the host it came from. If the configured service changes, entries from a different host are treated as stale and refetched from the new one, so a site never shows a mix of production and staging data for long.
-- **Degrees are matched by plan and subplan codes.** The importer records `ucf_degree_source` (the host) next to `ucf_degree_api_id`. When the host changes, the data service finds the program again by plan and subplan code through `programs/search/`, the same lookup v3 uses for writebacks, and doesn't trust the stored ID. We haven't confirmed whether program IDs differ between service instances, and this design works either way.
-- **Linked URLs must point at the configured host.** The program record links to outcomes, projections, deadlines, careers and writeback `update_url`s as absolute URLs. We follow a link only if its host matches the configured service. Otherwise we rewrite it onto the configured base and log a warning. We don't know yet whether non-production instances ever return production links, but this guards against reading production data while configured for staging, and worse, writing to production.
+Each environment's Search Service is a completely separate system. Program IDs differ between them, while plan and subplan codes are the same everywhere, because those codes come from a system outside the Search Service. The rest of this section follows from that.
+
+- **Every cache entry records its source.** Each one stores the host it came from and the program ID that host assigned. If the configured service changes, entries from another host are treated as stale and refetched from the new service by plan and subplan code, so a site never shows a mix of data from two systems for long.
+- **Linked URLs must point at the configured host.** The program record links to outcomes, projections, deadlines, careers and writeback `update_url`s as absolute URLs. We follow a link only if its host matches the configured service. Otherwise we refuse it and log an error. Since each environment is self-contained, a mismatched host means something is misconfigured, and failing loudly is safer than quietly reading from (or writing to) another system.
 - **Other caches are keyed by host.** The description-type and profile-type transients include the host in their key.
 - **There is no per-command URL override.** `wp degrees import` uses the resolved service, just like rendering does. `wp degrees service` prints the active URL and its source, then tests the connection with the key. Anyone who needs a different service for a session sets the environment variable for that shell.
 
-What follows from this section: the class is built in Phase 1, before the data layer, so that no later code can bypass it.
+### Finding a program
+
+Since plan and subplan codes are the only identifiers shared across environments, every lookup starts from them. A single `find_program( $plan_code, $subplan_code )` method on the data service is the only place that turns codes into a program record.
+
+Today's API has no exact lookup, so `find_program()` queries `programs/search/` with `plan_code`, plus `subplan_code` or `subplan_code__isnull=True`, and then checks for an exact match on its side. Search can return near matches, so we can't skip that check. It's the same approach v3's writeback code takes in `return_verified_result()`. The program ID it finds is cached with the entry and reused on refreshes against the same host. If a request by cached ID returns a 404, we look the program up by code again.
+
+Subplans find their parent by code as well. A subplan's parent is the degree with the same plan code and no subplan code. v3 matched parents by Search Service ID instead, which doesn't survive a change of service. We believe the shared plan code always holds for subplans, but we should confirm it against the data before relying on it.
+
+We'd like the Search Service to add two things:
+
+- **Exact lookup by code.** An endpoint such as `programs/code/{plan_code}/` and `programs/code/{plan_code}/{subplan_code}/` would return exactly one program or a 404. That removes the search-and-verify step and the near-match risk that comes with it.
+- **Embedded related data.** An `expand` parameter on that endpoint (for example `?expand=outcomes,projections,deadlines,careers,quotes`) would return the related resources inline. That cuts a fetch from about six requests to one, and it also makes the linked-host check above unnecessary.
+
+`find_program()` tries the exact-lookup endpoint once per host and remembers whether it exists. If it does, the plugin switches over without a release or a setting. Until then it uses search-and-verify, and when `expand` is missing it falls back to following links.
+
+What follows from this section: the Search Service changes are an improvement we can request now and pick up whenever they ship; nothing in this plan waits on them. `UCF_Degree_Search_Service` and `find_program()` are built in Phase 1, before the data layer, so that no later code can bypass them.
 
 ## Data model
 
 ### Postmeta
 
-- **Identity.** `ucf_degree_id` (plan and subplan code), `ucf_degree_api_id`, `ucf_degree_plan_code` and `ucf_degree_subplan_code` tie a post to its Search Service program. `ucf_degree_source` records which service host the API ID belongs to.
+- **Identity.** `ucf_degree_plan_code` and `ucf_degree_subplan_code` identify a degree, and `ucf_degree_id` holds the two joined together for fast lookups. These codes are the same in every environment. The Search Service program ID is not stored as meta, because each environment assigns its own. It lives only inside the cache entry from the service that issued it.
 - **Listing and search.** `ucf_degree_name_short`, `ucf_degree_hours` and `ucf_degree_online` feed the degree search API and Query Loops, which work across hundreds of degrees and can't fetch each one from the Search Service.
 - **Import controls.** `ucf_degree_import_ignore`, `ucf_degree_tuition_skip` and `ucf_degree_lock_excerpt` keep v3's behavior.
 - **Editorial values the template needs.** `ucf_degree_undergraduate_slate_id` is the only one today. It feeds `request-info`, which lives in the template, and the Search Service only provides graduate Slate IDs. Any further per-degree values that a template slot needs are added the same way and exposed through the core `core/post-meta` bindings source.
@@ -60,7 +76,7 @@ The plugin keeps registering the `program_types`, `career_paths` and `interests`
 A new `UCF_Degree_Program_Data` class (`includes/class-ucf-degree-program-data.php`) is the only code that talks to the Search Service for display data. The public helper `ucf_degree_get_program( $post = null )` returns a normalized array:
 
 ```
-schema_version, fetched_at, source (service host)
+schema_version, fetched_at, source (service host), api_id (as issued by source)
 name, name_short, credit_hours, online, catalog_url, graduate_slate_id, excerpt
 tuition       { resident, nonresident, unit }          raw numbers; formatting happens at render
 descriptions  { catalog, full, custom, by_type_id{} }
@@ -74,7 +90,7 @@ projections   { begin_year, end_year, begin_employment, end_employment,
 careers       [ string ]
 ```
 
-A fetch calls `programs/{api_id}/`, then follows the program's `outcomes`, `projection_totals`, `application_deadlines` and `careers` URLs, plus `marketing/quotes/{id}/` for each quote. That is about six requests per degree. A `ucf_degree_program_data` filter runs on the normalized array.
+A fetch gets the program record by its cached ID, or through `find_program()` when there's no cached ID for the current host. It then follows the program's `outcomes`, `projection_totals`, `application_deadlines` and `careers` URLs, plus `marketing/quotes/{id}/` for each quote. That is about six requests per degree. A `ucf_degree_program_data` filter runs on the normalized array.
 
 ### Cache policy
 
@@ -157,7 +173,7 @@ The Settings › UCF Degrees screen is rebuilt around the new options:
 
 ## Importer and writebacks
 
-- **Lean meta only.** The importer writes the keys above with `update_post_meta()`, fills the cache from the program object and its linked resources in the same pass, and reuses the careers response for the `career_paths` terms. New posts are inserted with empty `post_content`.
+- **Lean meta only.** The importer writes the keys above with `update_post_meta()`, fills the cache from the program object and its linked resources in the same pass, and reuses the careers response for the `career_paths` terms. New posts are inserted with empty `post_content`. The importer matches existing posts on `ucf_degree_id`, and it finds a subplan's parent by plan code, not by Search Service ID.
 - **The filters get a documented contract.** `ucf_degree_get_post_metadata`, `ucf_degree_get_post_terms`, `ucf_degree_formatted_post_data` and `ucf_degree_api_results` stay as extension points. They operate on the v4 keys, and the docs say so.
 - **The description writeback is removed.** It PUT `post_content` to the Search Service, which in v4 would be block markup, and descriptions now come from the Search Service anyway.
 - **Writebacks are only as safe as the service they target.** Pointing a development site at a non-production service, which is the reason the URL is configurable, makes writebacks safe to test there. The risk that remains is a non-production WordPress writing to the production service, which would point a program's profile URL at a development address or change shared tuition exceptions. So both writebacks default to off, and the settings screen shows the target host next to each switch. A `UCF_DEGREE_ALLOW_WRITEBACKS` constant must also be `true` before either one runs, which means a database cloned from production can't carry writebacks into another environment.
@@ -194,5 +210,6 @@ The current site and the other properties (Online, Colleges) stay on 3.x, pinned
 - **Will the new site use Relevanssi?** If it does, we add cached descriptions, highlights and careers to the index through `relevanssi_content_to_index`, because they no longer live in postmeta.
 - **What are the new platform's WordPress and PHP versions?** They set the minimums we declare.
 - **When should the writebacks turn on?** We need a launch-day plan for switching the Search Service's profile URLs from the current site to the new one.
-- **How do the non-production services differ from production?** Specifically: whether program IDs and plan and subplan codes match production, whether their linked resource URLs point at their own host, and whether they accept writebacks. The design handles every combination, but the answers tell us how much of the defensive code we actually exercise.
+- **Will the Search Service add exact lookup by code and `expand`, and when?** The plugin doesn't wait on either. Knowing the timeline tells us how long the search-and-verify fallback has to carry production.
+- **Does every subplan share its parent's plan code?** Parent matching depends on it. We should check it against the full program list before Phase 3.
 - **Is the `career_paths` taxonomy needed on the new site beyond display?** If not, careers can come only from the cache and the taxonomy can go.
